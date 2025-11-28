@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -18,39 +18,45 @@ const Survey = () => {
     styleType: "",
     colorPreferences: [] as string[],
     budgetRange: "",
-    bodyType: "",
     lifestyle: "",
     occasions: [] as string[],
-    favoriteBrands: [] as string[],
   });
+
+  useEffect(() => {
+    // Load from localStorage if guest user
+    const saved = localStorage.getItem('guest_preferences');
+    if (saved) {
+      setFormData(JSON.parse(saved));
+    }
+  }, []);
 
   const handleSubmit = async () => {
     setLoading(true);
     try {
+      // Save to localStorage for guests
+      localStorage.setItem('guest_preferences', JSON.stringify(formData));
+
       const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user) {
-        toast.error("Please log in to save your preferences");
-        navigate("/auth");
-        return;
+      if (user) {
+        // If authenticated, save to database
+        const { error } = await supabase
+          .from("style_preferences")
+          .upsert({
+            user_id: user.id,
+            style_type: formData.styleType,
+            color_preferences: formData.colorPreferences,
+            budget_range: formData.budgetRange,
+            body_type: "",
+            lifestyle: formData.lifestyle,
+            occasions: formData.occasions,
+            favorite_brands: [],
+          });
+
+        if (error) throw error;
       }
 
-      const { error } = await supabase
-        .from("style_preferences")
-        .upsert({
-          user_id: user.id,
-          style_type: formData.styleType,
-          color_preferences: formData.colorPreferences,
-          budget_range: formData.budgetRange,
-          body_type: formData.bodyType,
-          lifestyle: formData.lifestyle,
-          occasions: formData.occasions,
-          favorite_brands: formData.favoriteBrands,
-        });
-
-      if (error) throw error;
-
-      toast.success("Preferences saved! Generating your wardrobe...");
+      toast.success("Generating your wardrobe...");
       navigate("/wardrobe");
     } catch (error) {
       console.error("Error saving preferences:", error);
@@ -69,141 +75,129 @@ const Survey = () => {
   const progress = (step / 4) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-secondary/10 to-background py-12 px-4">
-      <div className="max-w-3xl mx-auto">
-        <Button
-          variant="ghost"
-          onClick={() => step > 1 ? setStep(step - 1) : navigate("/")}
-          className="mb-8 font-light"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
-
-        {/* Progress Bar */}
-        <div className="mb-12">
-          <div className="flex justify-between mb-3">
-            <p className="text-sm font-light text-muted-foreground">Step {step} of 4</p>
-            <p className="text-sm font-light text-muted-foreground">{progress.toFixed(0)}% Complete</p>
+    <div className="min-h-screen bg-background pb-20">
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border/50 px-4 py-4">
+        <div className="flex items-center justify-between max-w-lg mx-auto">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => step > 1 ? setStep(step - 1) : navigate("/")}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex-1 mx-4">
+            <div className="h-1 bg-secondary rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-primary transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
           </div>
-          <div className="h-1 bg-secondary rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-primary transition-all duration-500 ease-out"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
+          <span className="text-sm text-muted-foreground">{step}/4</span>
         </div>
+      </div>
 
-        <Card className="shadow-elegant border-border/50 backdrop-blur-sm">
-          <CardHeader className="space-y-3 pb-8">
-            <CardTitle className="text-4xl font-light tracking-tight">
-              {step === 1 && "Your Style Personality"}
-              {step === 2 && "Color Preferences"}
-              {step === 3 && "Budget & Lifestyle"}
-              {step === 4 && "Occasions"}
-            </CardTitle>
-            <CardDescription className="text-base font-light">
-              {step === 1 && "Help us understand your aesthetic preferences"}
-              {step === 2 && "Select the colors that resonate with you"}
-              {step === 3 && "Tell us about your lifestyle and budget"}
-              {step === 4 && "When do you need to look your best?"}
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent className="space-y-8 pb-10">
+      <div className="max-w-lg mx-auto px-4 py-6">
+        <Card className="shadow-elegant">
+          <CardContent className="p-6 space-y-6">
+            <div className="space-y-2">
+              <h2 className="text-2xl font-light">
+                {step === 1 && "Your Style"}
+                {step === 2 && "Color Palette"}
+                {step === 3 && "Lifestyle"}
+                {step === 4 && "Occasions"}
+              </h2>
+              <p className="text-sm text-muted-foreground font-light">
+                {step === 1 && "What's your aesthetic?"}
+                {step === 2 && "Colors you love"}
+                {step === 3 && "Your daily life"}
+                {step === 4 && "Where do you go?"}
+              </p>
+            </div>
+
             {step === 1 && (
-              <div className="space-y-6">
-                <RadioGroup value={formData.styleType} onValueChange={(value) => setFormData({...formData, styleType: value})}>
-                  {["Classic", "Minimalist", "Trendy", "Bohemian", "Edgy", "Romantic"].map((style) => (
-                    <div 
-                      key={style} 
-                      className={`flex items-center space-x-4 p-5 rounded-lg border-2 transition-all cursor-pointer ${
-                        formData.styleType === style 
-                          ? 'border-primary bg-primary/5' 
-                          : 'border-border hover:border-primary/30 hover:bg-accent/50'
-                      }`}
-                      onClick={() => setFormData({...formData, styleType: style})}
-                    >
-                      <RadioGroupItem value={style} id={style} />
-                      <Label htmlFor={style} className="cursor-pointer text-lg font-light flex-1">{style}</Label>
-                      {formData.styleType === style && <Check className="w-5 h-5 text-primary" />}
-                    </div>
-                  ))}
-                </RadioGroup>
-              </div>
+              <RadioGroup value={formData.styleType} onValueChange={(value) => setFormData({...formData, styleType: value})}>
+                {["Classic", "Minimalist", "Trendy", "Bohemian", "Edgy", "Romantic"].map((style) => (
+                  <div 
+                    key={style} 
+                    className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all cursor-pointer ${
+                      formData.styleType === style 
+                        ? 'border-primary bg-primary/5' 
+                        : 'border-border hover:border-primary/30'
+                    }`}
+                    onClick={() => setFormData({...formData, styleType: style})}
+                  >
+                    <RadioGroupItem value={style} id={style} />
+                    <Label htmlFor={style} className="cursor-pointer font-light flex-1">{style}</Label>
+                    {formData.styleType === style && <Check className="w-4 h-4 text-primary" />}
+                  </div>
+                ))}
+              </RadioGroup>
             )}
 
             {step === 2 && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {["Neutral", "Black", "White", "Earth Tones", "Pastels", "Bold Colors", "Jewel Tones"].map((color) => (
-                    <div 
-                      key={color} 
-                      className={`flex items-center space-x-4 p-5 rounded-lg border-2 transition-all cursor-pointer ${
-                        formData.colorPreferences.includes(color)
-                          ? 'border-primary bg-primary/5' 
-                          : 'border-border hover:border-primary/30 hover:bg-accent/50'
-                      }`}
-                      onClick={() => setFormData({
-                        ...formData,
-                        colorPreferences: toggleArrayItem(formData.colorPreferences, color)
-                      })}
-                    >
-                      <Checkbox
-                        checked={formData.colorPreferences.includes(color)}
-                        onCheckedChange={() => setFormData({
-                          ...formData,
-                          colorPreferences: toggleArrayItem(formData.colorPreferences, color)
-                        })}
-                        id={color}
-                      />
-                      <Label htmlFor={color} className="cursor-pointer text-base font-light flex-1">{color}</Label>
-                      {formData.colorPreferences.includes(color) && <Check className="w-5 h-5 text-primary" />}
-                    </div>
-                  ))}
-                </div>
+              <div className="space-y-3">
+                {["Neutral", "Black", "White", "Earth Tones", "Pastels", "Bold Colors"].map((color) => (
+                  <div 
+                    key={color} 
+                    className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all cursor-pointer ${
+                      formData.colorPreferences.includes(color)
+                        ? 'border-primary bg-primary/5' 
+                        : 'border-border hover:border-primary/30'
+                    }`}
+                    onClick={() => setFormData({
+                      ...formData,
+                      colorPreferences: toggleArrayItem(formData.colorPreferences, color)
+                    })}
+                  >
+                    <Checkbox
+                      checked={formData.colorPreferences.includes(color)}
+                      id={color}
+                    />
+                    <Label htmlFor={color} className="cursor-pointer font-light flex-1">{color}</Label>
+                    {formData.colorPreferences.includes(color) && <Check className="w-4 h-4 text-primary" />}
+                  </div>
+                ))}
               </div>
             )}
 
             {step === 3 && (
-              <div className="space-y-8">
-                <div className="space-y-4">
-                  <Label className="text-xl font-light">Budget Range</Label>
+              <div className="space-y-4">
+                <div className="space-y-3">
+                  <p className="text-sm font-light">Budget Range</p>
                   <RadioGroup value={formData.budgetRange} onValueChange={(value) => setFormData({...formData, budgetRange: value})}>
                     {["Under $500", "$500-$1000", "$1000-$2000", "Over $2000"].map((budget) => (
                       <div 
                         key={budget} 
-                        className={`flex items-center space-x-4 p-5 rounded-lg border-2 transition-all cursor-pointer ${
+                        className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all cursor-pointer ${
                           formData.budgetRange === budget 
                             ? 'border-primary bg-primary/5' 
-                            : 'border-border hover:border-primary/30 hover:bg-accent/50'
+                            : 'border-border hover:border-primary/30'
                         }`}
                         onClick={() => setFormData({...formData, budgetRange: budget})}
                       >
                         <RadioGroupItem value={budget} id={budget} />
-                        <Label htmlFor={budget} className="cursor-pointer text-base font-light flex-1">{budget}</Label>
-                        {formData.budgetRange === budget && <Check className="w-5 h-5 text-primary" />}
+                        <Label htmlFor={budget} className="cursor-pointer font-light flex-1">{budget}</Label>
                       </div>
                     ))}
                   </RadioGroup>
                 </div>
 
-                <div className="space-y-4">
-                  <Label className="text-xl font-light">Lifestyle</Label>
+                <div className="space-y-3">
+                  <p className="text-sm font-light">Lifestyle</p>
                   <RadioGroup value={formData.lifestyle} onValueChange={(value) => setFormData({...formData, lifestyle: value})}>
-                    {["Professional", "Casual", "Active", "Social", "Creative"].map((lifestyle) => (
+                    {["Professional", "Casual", "Active", "Social"].map((lifestyle) => (
                       <div 
                         key={lifestyle} 
-                        className={`flex items-center space-x-4 p-5 rounded-lg border-2 transition-all cursor-pointer ${
+                        className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all cursor-pointer ${
                           formData.lifestyle === lifestyle 
                             ? 'border-primary bg-primary/5' 
-                            : 'border-border hover:border-primary/30 hover:bg-accent/50'
+                            : 'border-border hover:border-primary/30'
                         }`}
                         onClick={() => setFormData({...formData, lifestyle: lifestyle})}
                       >
                         <RadioGroupItem value={lifestyle} id={lifestyle} />
-                        <Label htmlFor={lifestyle} className="cursor-pointer text-base font-light flex-1">{lifestyle}</Label>
-                        {formData.lifestyle === lifestyle && <Check className="w-5 h-5 text-primary" />}
+                        <Label htmlFor={lifestyle} className="cursor-pointer font-light flex-1">{lifestyle}</Label>
                       </div>
                     ))}
                   </RadioGroup>
@@ -212,43 +206,36 @@ const Survey = () => {
             )}
 
             {step === 4 && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {["Work", "Casual Outings", "Date Night", "Events", "Travel", "Working Out"].map((occasion) => (
-                    <div 
-                      key={occasion} 
-                      className={`flex items-center space-x-4 p-5 rounded-lg border-2 transition-all cursor-pointer ${
-                        formData.occasions.includes(occasion)
-                          ? 'border-primary bg-primary/5' 
-                          : 'border-border hover:border-primary/30 hover:bg-accent/50'
-                      }`}
-                      onClick={() => setFormData({
-                        ...formData,
-                        occasions: toggleArrayItem(formData.occasions, occasion)
-                      })}
-                    >
-                      <Checkbox
-                        checked={formData.occasions.includes(occasion)}
-                        onCheckedChange={() => setFormData({
-                          ...formData,
-                          occasions: toggleArrayItem(formData.occasions, occasion)
-                        })}
-                        id={occasion}
-                      />
-                      <Label htmlFor={occasion} className="cursor-pointer text-base font-light flex-1">{occasion}</Label>
-                      {formData.occasions.includes(occasion) && <Check className="w-5 h-5 text-primary" />}
-                    </div>
-                  ))}
-                </div>
+              <div className="space-y-3">
+                {["Work", "Casual Outings", "Date Night", "Events", "Travel"].map((occasion) => (
+                  <div 
+                    key={occasion} 
+                    className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all cursor-pointer ${
+                      formData.occasions.includes(occasion)
+                        ? 'border-primary bg-primary/5' 
+                        : 'border-border hover:border-primary/30'
+                    }`}
+                    onClick={() => setFormData({
+                      ...formData,
+                      occasions: toggleArrayItem(formData.occasions, occasion)
+                    })}
+                  >
+                    <Checkbox
+                      checked={formData.occasions.includes(occasion)}
+                      id={occasion}
+                    />
+                    <Label htmlFor={occasion} className="cursor-pointer font-light flex-1">{occasion}</Label>
+                    {formData.occasions.includes(occasion) && <Check className="w-4 h-4 text-primary" />}
+                  </div>
+                ))}
               </div>
             )}
 
-            <div className="flex justify-between pt-8 border-t border-border/50">
+            <div className="flex gap-3 pt-4">
               {step < 4 ? (
                 <Button 
                   onClick={() => setStep(step + 1)} 
-                  className="ml-auto" 
-                  size="lg"
+                  className="w-full" 
                   variant="luxury"
                   disabled={
                     (step === 1 && !formData.styleType) ||
@@ -261,13 +248,12 @@ const Survey = () => {
               ) : (
                 <Button 
                   onClick={handleSubmit} 
-                  className="ml-auto" 
-                  size="lg"
+                  className="w-full" 
                   variant="luxury"
                   disabled={loading || formData.occasions.length === 0}
                 >
                   {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                  Generate My Wardrobe
+                  See My Wardrobe
                 </Button>
               )}
             </div>

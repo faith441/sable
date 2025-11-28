@@ -7,6 +7,10 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Survey from "./pages/Survey";
 import Wardrobe from "./pages/Wardrobe";
+import Cart from "./pages/Cart";
+import AIStyleChat from "./pages/AIStyleChat";
+import VirtualTryOn from "./pages/VirtualTryOn";
+import OutfitPlanner from "./pages/OutfitPlanner";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
@@ -23,6 +27,10 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/survey" element={<Survey />} />
           <Route path="/wardrobe" element={<Wardrobe />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/ai-stylist" element={<AIStyleChat />} />
+          <Route path="/virtual-tryon" element={<VirtualTryOn />} />
+          <Route path="/outfit-planner" element={<OutfitPlanner />} />
           <Route path="/admin" element={<Admin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

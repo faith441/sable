@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { userId } = await req.json();
+    const { userId, preferences: guestPreferences } = await req.json();
     
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -20,15 +20,29 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get user preferences
-    const { data: preferences, error: prefsError } = await supabase
-      .from("style_preferences")
-      .select("*")
-      .eq("user_id", userId)
-      .single();
+    let preferences = guestPreferences;
 
-    if (prefsError) {
-      throw new Error("Failed to fetch user preferences");
+    // If userId provided, try to get from database
+    if (userId && !preferences) {
+      const { data: dbPreferences, error: prefsError } = await supabase
+        .from("style_preferences")
+        .select("*")
+        .eq("user_id", userId)
+        .single();
+
+      if (!prefsError && dbPreferences) {
+        preferences = {
+          styleType: dbPreferences.style_type,
+          colorPreferences: dbPreferences.color_preferences,
+          budgetRange: dbPreferences.budget_range,
+          lifestyle: dbPreferences.lifestyle,
+          occasions: dbPreferences.occasions,
+        };
+      }
+    }
+
+    if (!preferences) {
+      throw new Error("No preferences provided");
     }
 
     // Get available products (mock for now - in production, this would fetch from brand APIs)
@@ -46,9 +60,9 @@ serve(async (req) => {
     const prompt = `You are a professional fashion stylist. Based on the following user preferences, suggest a capsule wardrobe of 8-12 essential pieces.
 
 User Preferences:
-- Style: ${preferences.style_type}
-- Colors: ${preferences.color_preferences?.join(", ")}
-- Budget: ${preferences.budget_range}
+- Style: ${preferences.styleType}
+- Colors: ${preferences.colorPreferences?.join(", ")}
+- Budget: ${preferences.budgetRange}
 - Lifestyle: ${preferences.lifestyle}
 - Occasions: ${preferences.occasions?.join(", ")}
 
@@ -98,27 +112,28 @@ Return a JSON object with the following structure:
     const aiData = await aiResponse.json();
     const wardrobeData = JSON.parse(aiData.choices[0].message.content);
 
-    // Create wardrobe
-    const { data: wardrobe, error: wardrobeError } = await supabase
-      .from("capsule_wardrobes")
-      .insert({
-        user_id: userId,
-        name: wardrobeData.wardrobe_name,
-        description: wardrobeData.description,
-        season: wardrobeData.season,
-        total_pieces: wardrobeData.items.length,
-      })
-      .select()
-      .single();
+    // Create wardrobe if userId provided
+    if (userId) {
+      const { data: wardrobe, error: wardrobeError } = await supabase
+        .from("capsule_wardrobes")
+        .insert({
+          user_id: userId,
+          name: wardrobeData.wardrobe_name,
+          description: wardrobeData.description,
+          season: wardrobeData.season,
+          total_pieces: wardrobeData.items.length,
+        })
+        .select()
+        .single();
 
-    if (wardrobeError) {
-      throw wardrobeError;
+      if (wardrobeError) {
+        console.error("Wardrobe error:", wardrobeError);
+      }
     }
 
-    // For now, we'll create mock products if none exist
-    // In production, this would match AI recommendations with actual product inventory
+    // For now, we'll create mock products
     const mockProducts = wardrobeData.items.map((item: any, index: number) => ({
-      id: `mock-${index}`,
+      id: crypto.randomUUID(),
       name: item.item_name,
       category: item.category,
       price: parseFloat(item.price_range.replace(/[^0-9.]/g, "")) || 50,
@@ -130,7 +145,6 @@ Return a JSON object with the following structure:
 
     return new Response(
       JSON.stringify({ 
-        wardrobe,
         products: mockProducts,
         message: "Wardrobe generated successfully",
       }),
