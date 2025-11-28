@@ -14,8 +14,14 @@ export default {
     },
     extend: {
       fontFamily: {
-        serif: ['Cormorant Garamond', 'serif'],
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        serif: ['Cormorant Garamond', 'Garamond', 'Georgia', 'serif'],
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
+      },
+      letterSpacing: {
+        tighter: '-0.04em',
+        tight: '-0.02em',
+        wide: '0.02em',
+        wider: '0.04em',
       },
       colors: {
         border: "hsl(var(--border))",
@@ -88,6 +94,12 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "fade-in": "fadeIn 0.6s ease-out",
+        "slide-up": "slideUp 0.8s ease-out",
+        "scale-in": "scaleIn 0.5s ease-out",
+      },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
       },
     },
   },
