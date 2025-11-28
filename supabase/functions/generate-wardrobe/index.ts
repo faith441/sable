@@ -110,7 +110,20 @@ Return a JSON object with the following structure:
     }
 
     const aiData = await aiResponse.json();
-    const wardrobeData = JSON.parse(aiData.choices[0].message.content);
+    let content = aiData.choices[0].message.content;
+    
+    // Strip markdown code blocks if present
+    content = content.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+    
+    console.log("AI Response content:", content);
+    
+    let wardrobeData;
+    try {
+      wardrobeData = JSON.parse(content);
+    } catch (parseError) {
+      console.error("Failed to parse AI response:", content);
+      throw new Error("Failed to parse wardrobe data");
+    }
 
     // Create wardrobe if userId provided
     if (userId) {
