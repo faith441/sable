@@ -1,0 +1,4 @@
+project_id = "lfsfzgkcygdzsgobgxwi"
+
+[functions.generate-wardrobe]
+verify_jwt = true
