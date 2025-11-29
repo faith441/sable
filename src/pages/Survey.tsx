@@ -536,7 +536,12 @@ const Survey = () => {
                   
                   {/* Jean Sizes */}
                   <div className="space-y-3 mb-6">
-                    <h4 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">Jean Size (by brand)</h4>
+                    <h4 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">
+                      Jean Size (by brand) <span className="text-xs lowercase">optional*</span>
+                    </h4>
+                    <p className="text-xs text-muted-foreground font-light mb-3">
+                      This helps us find out what jean size works for you for other brands.
+                    </p>
                     {["Levi's", "Madewell", "AG Jeans", "J Brand", "Citizens of Humanity"].map((brand) => (
                       <div key={brand} className="flex items-center gap-3">
                         <span className="text-sm font-light min-w-[140px]">{brand}</span>
@@ -557,13 +562,34 @@ const Survey = () => {
                   {/* Bra Size */}
                   <div className="space-y-3 mb-6">
                     <h4 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">Bra Size</h4>
-                    <input
-                      type="text"
-                      placeholder="e.g., 34C, 36D"
-                      className="w-full px-4 py-3 rounded-lg border border-border bg-background"
-                      value={formData.braSize}
-                      onChange={(e) => setFormData({...formData, braSize: e.target.value})}
-                    />
+                    <div className="mb-3">
+                      <Card
+                        className={`cursor-pointer transition-all ${
+                          formData.braSize === "No bra"
+                            ? 'border-primary bg-primary/5'
+                            : 'hover:border-primary/50'
+                        }`}
+                        onClick={() => setFormData({...formData, braSize: "No bra"})}
+                      >
+                        <CardContent className="p-4 flex items-center justify-between">
+                          <span className="text-sm font-light">No bra / I don't wear a bra</span>
+                          {formData.braSize === "No bra" && (
+                            <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                              <Heart className="w-4 h-4 text-white fill-white" />
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </div>
+                    {formData.braSize !== "No bra" && (
+                      <input
+                        type="text"
+                        placeholder="e.g., 34C, 36D"
+                        className="w-full px-4 py-3 rounded-lg border border-border bg-background"
+                        value={formData.braSize === "No bra" ? "" : formData.braSize}
+                        onChange={(e) => setFormData({...formData, braSize: e.target.value})}
+                      />
+                    )}
                   </div>
 
                   {/* Cleavage Preference */}
