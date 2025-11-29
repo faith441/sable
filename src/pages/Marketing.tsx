@@ -2,17 +2,86 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, Shirt, Calendar, MessageSquare, Check, ArrowRight } from "lucide-react";
+import { Sparkles, Shirt, Calendar, MessageSquare, Check, ArrowRight, Download } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import heroImage from "@/assets/hero-wardrobe.jpg";
 
 const Marketing = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
+  const [email, setEmail] = useState("");
+
+  const handleWaitlistSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    
+    toast({
+      title: "You're on the waitlist!",
+      description: "We'll notify you when the app is available for download.",
+    });
+    setEmail("");
+    setWaitlistOpen(false);
+  };
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Fixed Header with Download Button */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/50">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="text-2xl font-bold gradient-text">Sable</div>
+          <Button 
+            variant="luxury" 
+            size="lg"
+            onClick={() => setWaitlistOpen(true)}
+            className="gap-2"
+          >
+            <Download className="h-5 w-5" />
+            Download App
+          </Button>
+        </div>
+      </header>
+
+      {/* Waitlist Dialog */}
+      <Dialog open={waitlistOpen} onOpenChange={setWaitlistOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">Join the Waitlist</DialogTitle>
+            <DialogDescription className="text-base">
+              Get early access to the Sable app. Enter your email to join the waitlist and be notified when we launch.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleWaitlistSubmit} className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="waitlist-email">Email Address</Label>
+              <Input
+                id="waitlist-email"
+                type="email"
+                placeholder="your@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <Button type="submit" variant="luxury" size="lg" className="w-full">
+              Join Waitlist
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center px-4 py-20 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-hero opacity-30" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,hsl(var(--bronze))_0%,transparent_50%)] opacity-10" />
+      <section className="relative min-h-screen flex items-center justify-center px-4 py-20 pt-32 overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${heroImage})` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/80 to-background/95" />
+        <div className="absolute inset-0 bg-gradient-hero opacity-20" />
         
         <div className="relative z-10 max-w-4xl mx-auto text-center space-y-8 animate-fade-in">
           <Badge variant="cream" className="text-sm px-4 py-2">
