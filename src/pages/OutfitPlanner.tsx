@@ -539,7 +539,7 @@ const OutfitPlanner = () => {
                                       <button
                                         key={index}
                                         onClick={() => selectLocation(suggestion)}
-                                        className="w-full px-4 py-3 text-left hover:bg-secondary/50 transition-colors flex flex-col gap-1 border-b border-border/50 last:border-0"
+                                        className="w-full px-4 py-3 text-left hover:bg-secondary/50 transition-colors flex flex-col gap-1 border-b border-border/50 last:border-0 bg-background"
                                       >
                                         <span className="text-sm font-light">{suggestion.name}</span>
                                         <span className="text-xs text-muted-foreground">
@@ -585,18 +585,18 @@ const OutfitPlanner = () => {
             </div>
 
             <Tabs defaultValue="Monday" className="w-full">
-              <TabsList className="grid w-full grid-cols-7 mb-6">
+              <TabsList className="grid w-full grid-cols-7 mb-6 h-auto">
                 {days.map((day, index) => {
                   const dayForecast = weeklyForecast[index];
                   return (
-                    <TabsTrigger key={day} value={day} className="text-xs px-1 flex flex-col gap-1 py-3">
-                      <span>{day.slice(0, 3)}</span>
+                    <TabsTrigger key={day} value={day} className="text-xs px-1 flex flex-col gap-1 py-2 h-auto">
+                      <span className="font-medium">{day.slice(0, 3)}</span>
                       {locationEnabled && dayForecast && (
                         <>
-                          <span className="text-[10px] text-muted-foreground font-normal">
+                          <div className="text-[10px] text-muted-foreground font-normal whitespace-nowrap">
                             {dayForecast.high}°/{dayForecast.low}°
-                          </span>
-                          <div className="flex items-center justify-center mt-0.5">
+                          </div>
+                          <div className="flex items-center justify-center">
                             {getWeatherIconForDay(dayForecast.condition)}
                           </div>
                         </>
@@ -616,70 +616,97 @@ const OutfitPlanner = () => {
                         <CardContent className="p-6 space-y-4">
                           <div className="flex items-start justify-between">
                             <h3 className="text-xl font-light">{outfit.name}</h3>
-                            <div className="flex gap-2">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => generateDayOutfit(day)}
-                                disabled={generatingDay === day}
-                              >
-                                {generatingDay === day ? (
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                  <RotateCw className="w-4 h-4" />
-                                )}
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => deleteOutfit(outfit.id, day)}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
                           </div>
                           {outfit.image_url && (
                             <div className="aspect-[3/4] rounded-lg overflow-hidden">
                               <img src={outfit.image_url} alt={outfit.name} className="w-full h-full object-cover" />
                             </div>
                           )}
-                          <div className="space-y-2">
-                            {outfit.items.map((item: any, idx: number) => (
-                              <div 
-                                key={idx} 
-                                className="flex items-center gap-3 p-3 bg-secondary/20 rounded-lg hover:bg-secondary/30 transition-colors group"
-                              >
-                                <Checkbox
-                                  checked={checkedItems.has(`${outfit.id}-${item.id || idx}`)}
-                                  onCheckedChange={() => toggleItemCheck(`${outfit.id}-${item.id || idx}`)}
-                                  className="flex-shrink-0"
-                                />
-                                <div 
-                                  className="w-12 h-16 bg-background rounded overflow-hidden flex-shrink-0 cursor-pointer"
-                                  onClick={() => openItemDetails(item)}
+                          
+                          <div className="pt-4">
+                            <h4 className="text-sm font-light text-muted-foreground mb-4">Packing Checklist</h4>
+                            <div className="grid grid-cols-2 gap-3">
+                              {outfit.items.map((item: any, idx: number) => (
+                                <Card 
+                                  key={idx} 
+                                  className="relative overflow-hidden group hover:shadow-md transition-shadow"
                                 >
-                                  {item.image_url && (
-                                    <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
-                                  )}
-                                </div>
-                                <div 
-                                  className="flex-1 cursor-pointer"
-                                  onClick={() => openItemDetails(item)}
-                                >
-                                  <p className="text-sm font-light">{item.name}</p>
-                                  <p className="text-xs text-muted-foreground">{item.category}</p>
-                                  {item.layer && (
-                                    <p className="text-xs text-muted-foreground/70 capitalize">{item.layer} layer</p>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
+                                  <CardContent className="p-0">
+                                    <div 
+                                      className="aspect-[3/4] bg-secondary/20 cursor-pointer relative"
+                                      onClick={() => openItemDetails(item)}
+                                    >
+                                      {item.image_url ? (
+                                        <img 
+                                          src={item.image_url} 
+                                          alt={item.name} 
+                                          className="w-full h-full object-cover"
+                                        />
+                                      ) : (
+                                        <div className="w-full h-full flex items-center justify-center">
+                                          <Plus className="w-8 h-8 text-muted-foreground" />
+                                        </div>
+                                      )}
+                                      <div className="absolute top-2 right-2">
+                                        <div onClick={(e) => e.stopPropagation()}>
+                                          <Checkbox
+                                            checked={checkedItems.has(`${outfit.id}-${item.id || idx}`)}
+                                            onCheckedChange={() => toggleItemCheck(`${outfit.id}-${item.id || idx}`)}
+                                            className="bg-background/90 backdrop-blur-sm"
+                                          />
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="p-3 space-y-2">
+                                      <div 
+                                        className="cursor-pointer"
+                                        onClick={() => openItemDetails(item)}
+                                      >
+                                        <p className="text-sm font-light line-clamp-1">{item.name}</p>
+                                        <p className="text-xs text-muted-foreground">{item.category}</p>
+                                        {item.layer && (
+                                          <p className="text-xs text-muted-foreground/70 capitalize">{item.layer}</p>
+                                        )}
+                                      </div>
+                                      <div className="flex gap-1 pt-1">
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-7 w-7 flex-1"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            // TODO: Implement regenerate single item
+                                            toast("Feature coming soon: Regenerate this item");
+                                          }}
+                                        >
+                                          <RotateCw className="w-3 h-3" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-7 w-7 flex-1"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            // TODO: Implement delete single item
+                                            toast("Feature coming soon: Remove this item");
+                                          }}
+                                        >
+                                          <Trash2 className="w-3 h-3" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              ))}
+                            </div>
+                          </div>
                             
-                            {outfit.recommended_additions && outfit.recommended_additions.length > 0 && (
-                              <div className="mt-4 pt-4 border-t border-border/50">
-                                <p className="text-xs text-muted-foreground font-light mb-2">Suggested additions:</p>
+                          {outfit.recommended_additions && outfit.recommended_additions.length > 0 && (
+                            <div className="mt-6 pt-4 border-t border-border/50">
+                              <p className="text-xs text-muted-foreground font-light mb-3">Suggested additions:</p>
+                              <div className="space-y-2">
                                 {outfit.recommended_additions.map((addition: any, idx: number) => (
-                                  <div key={idx} className="flex items-start gap-2 p-2 bg-secondary/10 rounded-lg mb-2">
+                                  <div key={idx} className="flex items-start gap-2 p-3 bg-secondary/10 rounded-lg">
                                     <Plus className="w-3 h-3 text-muted-foreground mt-0.5 flex-shrink-0" />
                                     <div className="flex-1">
                                       <p className="text-xs font-light">{addition.description}</p>
@@ -690,7 +717,35 @@ const OutfitPlanner = () => {
                                   </div>
                                 ))}
                               </div>
-                            )}
+                            </div>
+                          )}
+
+                          <div className="flex gap-2 pt-4">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => generateDayOutfit(day)}
+                              disabled={generatingDay === day}
+                              className="flex-1"
+                            >
+                              {generatingDay === day ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <>
+                                  <RotateCw className="w-4 h-4 mr-2" />
+                                  Regenerate All
+                                </>
+                              )}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => deleteOutfit(outfit.id, day)}
+                              className="flex-1"
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Delete Outfit
+                            </Button>
                           </div>
                         </CardContent>
                       </Card>
