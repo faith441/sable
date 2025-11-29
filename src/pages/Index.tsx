@@ -71,7 +71,7 @@ const Index = () => {
             onClick={() => navigate(user ? "/wardrobe" : "/")}
             className="text-2xl font-light tracking-tight cursor-pointer hover:text-primary transition-colors"
           >
-            StyleCapsule
+            Sable
           </h1>
           <div className="flex gap-2 items-center">
             {user ? (
@@ -171,7 +171,7 @@ const Index = () => {
                 ONE ADVISOR. ONE APP.<br />ONE CAPSULE SYSTEM.
               </h2>
               <h3 className="text-2xl font-light leading-tight">
-                Meet <span className="gradient-text font-normal text-3xl">StyleCapsule</span>
+                Meet <span className="gradient-text font-normal text-3xl">Sable</span>
               </h3>
             </div>
             

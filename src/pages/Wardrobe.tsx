@@ -246,7 +246,7 @@ const Wardrobe = () => {
             onClick={() => navigate("/wardrobe")}
             className="text-xl font-light cursor-pointer hover:text-primary transition-colors"
           >
-            StyleCapsule
+            Sable
           </h1>
           <ProfileMenu 
             onProfileClick={() => setProfileOpen(true)}

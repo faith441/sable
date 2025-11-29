@@ -36,7 +36,7 @@ const TermsAndConditions = () => {
       <div className="max-w-lg mx-auto px-4 py-6">
         <Card>
           <CardHeader>
-            <CardTitle className="font-light text-2xl">StyleCapsule Terms of Service</CardTitle>
+            <CardTitle className="font-light text-2xl">Sable Terms of Service</CardTitle>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-[600px] pr-4">
@@ -44,14 +44,14 @@ const TermsAndConditions = () => {
                 <section>
                   <h3 className="font-medium text-lg mb-2">1. Acceptance of Terms</h3>
                   <p className="text-muted-foreground">
-                    By accessing and using StyleCapsule, you accept and agree to be bound by the terms and provision of this agreement.
+                    By accessing and using Sable, you accept and agree to be bound by the terms and provision of this agreement.
                   </p>
                 </section>
 
                 <section>
                   <h3 className="font-medium text-lg mb-2">2. Use of Service</h3>
                   <p className="text-muted-foreground">
-                    StyleCapsule provides AI-powered personal styling and wardrobe curation services. You agree to use the service only for lawful purposes and in accordance with these Terms.
+                    Sable provides AI-powered personal styling and wardrobe curation services. You agree to use the service only for lawful purposes and in accordance with these Terms.
                   </p>
                 </section>
 
@@ -93,21 +93,21 @@ const TermsAndConditions = () => {
                 <section>
                   <h3 className="font-medium text-lg mb-2">8. AI Recommendations</h3>
                   <p className="text-muted-foreground">
-                    StyleCapsule uses AI technology to provide style recommendations. While we strive for accuracy, recommendations are suggestions only and may not suit every individual.
+                    Sable uses AI technology to provide style recommendations. While we strive for accuracy, recommendations are suggestions only and may not suit every individual.
                   </p>
                 </section>
 
                 <section>
                   <h3 className="font-medium text-lg mb-2">9. Intellectual Property</h3>
                   <p className="text-muted-foreground">
-                    All content on StyleCapsule, including text, graphics, logos, and software, is the property of StyleCapsule and protected by copyright and other intellectual property laws.
+                    All content on Sable, including text, graphics, logos, and software, is the property of Sable and protected by copyright and other intellectual property laws.
                   </p>
                 </section>
 
                 <section>
                   <h3 className="font-medium text-lg mb-2">10. Limitation of Liability</h3>
                   <p className="text-muted-foreground">
-                    StyleCapsule shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of the service.
+                    Sable shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of the service.
                   </p>
                 </section>
 
