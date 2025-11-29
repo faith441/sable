@@ -288,7 +288,7 @@ const Wardrobe = () => {
             {capsules.map((capsule, capsuleIndex) => (
               <TabsContent key={capsuleIndex} value={capsuleIndex.toString()} className="space-y-6">
                 {/* Capsule Overview Card */}
-                <Card className="bg-gradient-to-br from-sage/10 via-accent/5 to-primary/5 border-sage/20">
+                <Card className="bg-gradient-to-br from-cream via-sage/10 to-accent/5 border-sage/20 shadow-soft">
                   <CardContent className="p-6 space-y-4">
                     <div>
                       <h2 className="text-2xl font-light mb-2">{capsule.name}</h2>
@@ -296,7 +296,7 @@ const Wardrobe = () => {
                     </div>
                     
                     <div className="grid grid-cols-3 gap-4 py-4">
-                      <div className="text-center">
+                      <div className="text-center bg-cream/50 rounded-lg py-3 border border-sage/10">
                         <p className="text-2xl font-light text-sage">{capsule.total_pieces}</p>
                         <p className="text-xs text-muted-foreground font-light">Pieces</p>
                       </div>

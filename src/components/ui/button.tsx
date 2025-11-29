@@ -17,6 +17,7 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         luxury: "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-elegant hover:shadow-[0_25px_70px_-20px_hsl(var(--primary)/0.25)] hover:scale-[1.02] transform transition-all duration-300",
         sage: "bg-sage text-sage-foreground hover:bg-sage/90 shadow-soft hover:shadow-elegant",
+        cream: "bg-cream text-cream-foreground hover:bg-cream/90 border border-sage/20 shadow-soft hover:shadow-elegant",
       },
       size: {
         default: "h-11 px-6 py-2.5",

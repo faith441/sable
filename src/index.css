@@ -40,6 +40,10 @@ All colors MUST be HSL. Inspired by natural materials: clay, sand, stone, bronze
     --sage: 80 20% 55%;
     --sage-foreground: 25 20% 18%;
 
+    /* Cream: Light warm ivory accent */
+    --cream: 40 50% 94%;
+    --cream-foreground: 25 20% 18%;
+
     /* Destructive: Warm red-clay */
     --destructive: 8 70% 50%;
     --destructive-foreground: 35 35% 96%;
@@ -112,6 +116,10 @@ All colors MUST be HSL. Inspired by natural materials: clay, sand, stone, bronze
     /* Sage: Deep olive in dark mode */
     --sage: 80 18% 40%;
     --sage-foreground: 35 30% 92%;
+
+    /* Cream: Warm off-white in dark mode */
+    --cream: 38 20% 88%;
+    --cream-foreground: 20 18% 12%;
 
     --destructive: 8 70% 50%;
     --destructive-foreground: 35 30% 92%;
