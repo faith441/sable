@@ -5,9 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { ArrowLeft, ShoppingBag, Loader2, Sparkles, Heart, Package } from "lucide-react";
+import { ShoppingBag, Loader2, Heart, Package } from "lucide-react";
 import MobileNav from "@/components/MobileNav";
 import VideoGuide from "@/components/VideoGuide";
+import ProfileMenu from "@/components/ProfileMenu";
+import ProfileSheet from "@/components/ProfileSheet";
+import ProductDetailDialog from "@/components/ProductDetailDialog";
 
 interface Product {
   id: string;
@@ -36,6 +39,9 @@ const Wardrobe = () => {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [capsules, setCapsules] = useState<Capsule[]>([]);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [productDetailOpen, setProductDetailOpen] = useState(false);
 
   useEffect(() => {
     loadWardrobe();
@@ -161,13 +167,9 @@ const Wardrobe = () => {
     <div className="min-h-screen bg-background pb-24">
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border/50 px-4 py-4">
         <div className="flex items-center justify-between max-w-lg mx-auto">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+          <div className="w-9" /> {/* Spacer for alignment */}
           <h1 className="text-xl font-light">Your Capsule Wardrobes</h1>
-          <Button variant="ghost" size="sm" onClick={generateWardrobe} disabled={generating}>
-            <Sparkles className="h-4 w-4" />
-          </Button>
+          <ProfileMenu onProfileClick={() => setProfileOpen(true)} />
         </div>
       </div>
 
@@ -238,14 +240,27 @@ const Wardrobe = () => {
                   <h3 className="text-lg font-light px-2">Items in This Capsule</h3>
                   
                   {capsule.products.map((product) => (
-                    <Card key={product.id} className="overflow-hidden">
+                    <Card 
+                      key={product.id} 
+                      className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                      onClick={() => {
+                        setSelectedProduct(product);
+                        setProductDetailOpen(true);
+                      }}
+                    >
                       <CardContent className="p-0">
                         <div className="flex gap-4">
                           <div className="w-32 h-40 bg-secondary flex-shrink-0 relative">
                             {product.image_url && (
                               <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
                             )}
-                            <button className="absolute top-2 right-2 w-8 h-8 bg-background/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-background transition-colors">
+                            <button 
+                              className="absolute top-2 right-2 w-8 h-8 bg-background/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-background transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Handle favorite
+                              }}
+                            >
                               <Heart className="w-4 h-4" />
                             </button>
                           </div>
@@ -270,7 +285,10 @@ const Wardrobe = () => {
                               <Button 
                                 size="sm" 
                                 variant="luxury"
-                                onClick={() => addToCart(product)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  addToCart(product);
+                                }}
                               >
                                 <ShoppingBag className="w-4 h-4 mr-2" />
                                 Add
@@ -287,6 +305,14 @@ const Wardrobe = () => {
           </Tabs>
         )}
       </div>
+
+      <ProfileSheet open={profileOpen} onOpenChange={setProfileOpen} />
+      <ProductDetailDialog 
+        product={selectedProduct}
+        open={productDetailOpen}
+        onOpenChange={setProductDetailOpen}
+        onAddToCart={addToCart}
+      />
 
       <MobileNav />
     </div>
