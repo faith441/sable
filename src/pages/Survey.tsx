@@ -31,6 +31,8 @@ const Survey = () => {
     jeanSizes: {} as Record<string, string>,
     braSize: "",
     cleavagePreference: "",
+    buttPreference: "",
+    legPreference: "",
     hairStyle: [] as string[],
   });
 
@@ -594,25 +596,74 @@ const Survey = () => {
                     </Card>
                   </div>
 
-                  {/* Cleavage Preference */}
-                  <div className="space-y-3 mb-6">
-                    <h4 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">Cleavage in Clothing Style</h4>
-                    <div className="grid grid-cols-3 gap-3">
-                      {["None", "A Little", "A Lot"].map((pref) => (
-                        <Card
-                          key={pref}
-                          className={`cursor-pointer transition-all ${
-                            formData.cleavagePreference === pref
-                              ? 'border-primary bg-primary/5'
-                              : 'hover:border-primary/50'
-                          }`}
-                          onClick={() => setFormData({...formData, cleavagePreference: pref})}
-                        >
-                          <CardContent className="p-4 text-center">
-                            <span className="text-sm font-light">{pref}</span>
-                          </CardContent>
-                        </Card>
-                      ))}
+                  {/* Body Showing Preferences */}
+                  <div className="space-y-4 mb-6">
+                    <h4 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">Skin Showing in Clothing Style</h4>
+                    
+                    {/* Breast Showing */}
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground font-light">Breast showing</p>
+                      <div className="grid grid-cols-3 gap-3">
+                        {["None", "A Little", "A Lot"].map((pref) => (
+                          <Card
+                            key={pref}
+                            className={`cursor-pointer transition-all ${
+                              formData.cleavagePreference === pref
+                                ? 'border-primary bg-primary/5'
+                                : 'hover:border-primary/50'
+                            }`}
+                            onClick={() => setFormData({...formData, cleavagePreference: pref})}
+                          >
+                            <CardContent className="p-4 text-center">
+                              <span className="text-sm font-light">{pref}</span>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Butt Showing */}
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground font-light">Butt showing</p>
+                      <div className="grid grid-cols-3 gap-3">
+                        {["None", "A Little", "A Lot"].map((pref) => (
+                          <Card
+                            key={pref}
+                            className={`cursor-pointer transition-all ${
+                              formData.buttPreference === pref
+                                ? 'border-primary bg-primary/5'
+                                : 'hover:border-primary/50'
+                            }`}
+                            onClick={() => setFormData({...formData, buttPreference: pref})}
+                          >
+                            <CardContent className="p-4 text-center">
+                              <span className="text-sm font-light">{pref}</span>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Leg Showing */}
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground font-light">Leg showing</p>
+                      <div className="grid grid-cols-3 gap-3">
+                        {["None", "A Little", "A Lot"].map((pref) => (
+                          <Card
+                            key={pref}
+                            className={`cursor-pointer transition-all ${
+                              formData.legPreference === pref
+                                ? 'border-primary bg-primary/5'
+                                : 'hover:border-primary/50'
+                            }`}
+                            onClick={() => setFormData({...formData, legPreference: pref})}
+                          >
+                            <CardContent className="p-4 text-center">
+                              <span className="text-sm font-light">{pref}</span>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
