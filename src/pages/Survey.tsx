@@ -26,6 +26,7 @@ const Survey = () => {
     legLength: "",
     hairColor: [] as string[],
     eyeColor: [] as string[],
+    skinTone: "",
     weight: "",
     // Female-specific
     jeanSizes: {} as Record<string, string>,
@@ -502,6 +503,28 @@ const Survey = () => {
                       {formData.eyeColor.includes(color) && (
                         <Heart className="w-3 h-3 mx-auto mt-1 text-primary fill-primary" />
                       )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* Skin Tone */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">Skin Tone</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {["Fair", "Light", "Medium", "Olive", "Tan", "Brown", "Deep", "Dark"].map((tone) => (
+                  <Card
+                    key={tone}
+                    className={`cursor-pointer transition-all ${
+                      formData.skinTone === tone
+                        ? 'border-primary bg-primary/5'
+                        : 'hover:border-primary/50'
+                    }`}
+                    onClick={() => setFormData({...formData, skinTone: tone})}
+                  >
+                    <CardContent className="p-4 text-center">
+                      <span className="text-sm font-light">{tone}</span>
                     </CardContent>
                   </Card>
                 ))}
