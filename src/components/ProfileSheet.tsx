@@ -35,7 +35,7 @@ const HAIR_TYPES = ["Straight", "Wavy", "Curly", "Coily", "Fine/Thin", "Thick/Co
 const ProfileSheet = ({ open, onOpenChange }: ProfileSheetProps) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<any>({
-    gender: [],
+    gender: "",
     styleType: [],
     colorPreferences: [],
     budgetRange: [],
@@ -58,7 +58,7 @@ const ProfileSheet = ({ open, onOpenChange }: ProfileSheetProps) => {
       if (preferences) {
         const parsed = JSON.parse(preferences);
         setFormData({
-          gender: parsed.gender || [],
+          gender: parsed.gender || "",
           styleType: parsed.styleType || [],
           colorPreferences: parsed.colorPreferences || [],
           budgetRange: parsed.budgetRange || [],
@@ -106,7 +106,7 @@ const ProfileSheet = ({ open, onOpenChange }: ProfileSheetProps) => {
             style_type: formData.styleType.length > 0 ? formData.styleType.join(", ") : "Not specified",
             color_preferences: formData.colorPreferences,
             budget_range: formData.budgetRange.length > 0 ? formData.budgetRange.join(", ") : "Not specified",
-            body_type: formData.gender.length > 0 ? formData.gender.join(", ") : null,
+            body_type: formData.gender || null,
             lifestyle: formData.lifestyle.length > 0 ? formData.lifestyle.join(", ") : "Not specified",
             occasions: formData.occasions,
             favorite_brands: [],
@@ -186,8 +186,8 @@ const ProfileSheet = ({ open, onOpenChange }: ProfileSheetProps) => {
                     <BadgeOption
                       key={gender}
                       item={gender}
-                      isSelected={formData.gender?.includes(gender)}
-                      onClick={() => toggleArrayItem('gender', gender)}
+                      isSelected={formData.gender === gender}
+                      onClick={() => setFormData((prev: any) => ({ ...prev, gender }))}
                     />
                   ))}
                 </div>
@@ -288,7 +288,7 @@ const ProfileSheet = ({ open, onOpenChange }: ProfileSheetProps) => {
               </div>
 
               {/* Women-specific sections */}
-              {formData.gender?.includes("Women's") && (
+              {formData.gender === "Women's" && (
                 <>
                   {/* Jean Sizes */}
                   <div className="space-y-2">
