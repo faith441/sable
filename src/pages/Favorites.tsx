@@ -58,6 +58,13 @@ const Favorites = () => {
         session_id: user ? null : sessionId,
         product_id: product.id,
         quantity: 1,
+        product_data: {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          image_url: product.image_url,
+          brand: product.brand,
+        },
       });
 
       if (error) throw error;

@@ -51,18 +51,7 @@ const Cart = () => {
 
       const query = supabase
         .from("cart_items")
-        .select(`
-          id,
-          quantity,
-          size,
-          products (
-            id,
-            name,
-            price,
-            image_url,
-            brands (name)
-          )
-        `);
+        .select("id, quantity, size, product_data");
 
       if (user) {
         query.eq("user_id", user.id);
@@ -78,10 +67,7 @@ const Cart = () => {
         id: item.id,
         quantity: item.quantity,
         size: item.size,
-        product: {
-          ...item.products,
-          brand: item.products.brands
-        }
+        product: item.product_data as any,
       })) || []);
     } catch (error) {
       console.error("Error loading cart:", error);
