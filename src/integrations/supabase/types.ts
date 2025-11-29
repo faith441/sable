@@ -277,6 +277,166 @@ export type Database = {
         }
         Relationships: []
       }
+      external_api_billing: {
+        Row: {
+          api_key_id: string | null
+          billing_period_end: string
+          billing_period_start: string
+          created_at: string | null
+          id: string
+          invoice_url: string | null
+          paid_at: string | null
+          status: string | null
+          tier: string
+          total_cost: number | null
+          total_requests: number | null
+          total_tokens: number | null
+        }
+        Insert: {
+          api_key_id?: string | null
+          billing_period_end: string
+          billing_period_start: string
+          created_at?: string | null
+          id?: string
+          invoice_url?: string | null
+          paid_at?: string | null
+          status?: string | null
+          tier: string
+          total_cost?: number | null
+          total_requests?: number | null
+          total_tokens?: number | null
+        }
+        Update: {
+          api_key_id?: string | null
+          billing_period_end?: string
+          billing_period_start?: string
+          created_at?: string | null
+          id?: string
+          invoice_url?: string | null
+          paid_at?: string | null
+          status?: string | null
+          tier?: string
+          total_cost?: number | null
+          total_requests?: number | null
+          total_tokens?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "external_api_billing_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "external_api_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      external_api_keys: {
+        Row: {
+          api_key: string
+          contact_email: string
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          key_name: string
+          last_used_at: string | null
+          metadata: Json | null
+          monthly_quota: number | null
+          organization_name: string
+          rate_limit_per_day: number | null
+          rate_limit_per_minute: number | null
+          tier: string
+          updated_at: string | null
+        }
+        Insert: {
+          api_key: string
+          contact_email: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          key_name: string
+          last_used_at?: string | null
+          metadata?: Json | null
+          monthly_quota?: number | null
+          organization_name: string
+          rate_limit_per_day?: number | null
+          rate_limit_per_minute?: number | null
+          tier?: string
+          updated_at?: string | null
+        }
+        Update: {
+          api_key?: string
+          contact_email?: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          key_name?: string
+          last_used_at?: string | null
+          metadata?: Json | null
+          monthly_quota?: number | null
+          organization_name?: string
+          rate_limit_per_day?: number | null
+          rate_limit_per_minute?: number | null
+          tier?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      external_api_usage: {
+        Row: {
+          api_key_id: string | null
+          created_at: string | null
+          endpoint: string
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          method: string
+          request_tokens: number | null
+          response_time_ms: number | null
+          response_tokens: number | null
+          status_code: number | null
+          total_tokens: number | null
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string | null
+          endpoint: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          method: string
+          request_tokens?: number | null
+          response_time_ms?: number | null
+          response_tokens?: number | null
+          status_code?: number | null
+          total_tokens?: number | null
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string | null
+          endpoint?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          method?: string
+          request_tokens?: number | null
+          response_time_ms?: number | null
+          response_tokens?: number | null
+          status_code?: number | null
+          total_tokens?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "external_api_usage_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "external_api_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       garment_metadata: {
         Row: {
           care_instructions: string[] | null
@@ -675,6 +835,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_rate_limit: {
+        Args: {
+          _api_key_id: string
+          _rate_limit_per_day: number
+          _rate_limit_per_minute: number
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
