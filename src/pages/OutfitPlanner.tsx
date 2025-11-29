@@ -34,11 +34,19 @@ const OutfitPlanner = () => {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [generatingDay, setGeneratingDay] = useState<string | null>(null);
-  const [locationEnabled, setLocationEnabled] = useState(false);
+  const [locationEnabled, setLocationEnabled] = useState(() => {
+    const saved = localStorage.getItem('outfitPlanner_locationEnabled');
+    return saved === 'true';
+  });
   const [weather, setWeather] = useState<any>(null);
-  const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null);
+  const [location, setLocation] = useState<{ lat: number; lon: number } | null>(() => {
+    const saved = localStorage.getItem('outfitPlanner_location');
+    return saved ? JSON.parse(saved) : null;
+  });
   const [weeklyForecast, setWeeklyForecast] = useState<any[]>([]);
-  const [locationName, setLocationName] = useState<string>("");
+  const [locationName, setLocationName] = useState<string>(() => {
+    return localStorage.getItem('outfitPlanner_locationName') || '';
+  });
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
   const [locationInput, setLocationInput] = useState("");
   const [searchingLocation, setSearchingLocation] = useState(false);
@@ -66,6 +74,11 @@ const OutfitPlanner = () => {
     
     setDynamicDays(nextSevenDays);
     setCurrentDayIndex(0); // Today is always index 0
+
+    // Restore weather data if location was previously enabled
+    if (locationEnabled && location) {
+      fetchWeather(location.lat, location.lon);
+    }
   }, []);
 
   const checkAuth = async () => {
@@ -156,8 +169,11 @@ const OutfitPlanner = () => {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
-        setLocation({ lat: latitude, lon: longitude });
+        const locationData = { lat: latitude, lon: longitude };
+        setLocation(locationData);
         setLocationEnabled(true);
+        localStorage.setItem('outfitPlanner_location', JSON.stringify(locationData));
+        localStorage.setItem('outfitPlanner_locationEnabled', 'true');
         await fetchWeather(latitude, longitude);
         await getLocationName(latitude, longitude);
         toast.success("Location enabled");
@@ -166,6 +182,7 @@ const OutfitPlanner = () => {
         console.error("Error getting location:", error);
         toast.error("Failed to get location. Please enable location services.");
         setLocationEnabled(false);
+        localStorage.setItem('outfitPlanner_locationEnabled', 'false');
       }
     );
   };
@@ -180,6 +197,7 @@ const OutfitPlanner = () => {
         const result = data.results[0];
         const name = result.name || result.admin1 || "Unknown";
         setLocationName(name);
+        localStorage.setItem('outfitPlanner_locationName', name);
       }
     } catch (error) {
       console.error("Error getting location name:", error);
@@ -222,11 +240,16 @@ const OutfitPlanner = () => {
     const { latitude, longitude, name, admin1, country } = result;
     const displayName = admin1 ? `${name}, ${admin1}, ${country}` : `${name}, ${country}`;
     
-    setLocation({ lat: latitude, lon: longitude });
+    const locationData = { lat: latitude, lon: longitude };
+    setLocation(locationData);
     setLocationName(name);
     setLocationInput(displayName);
     setLocationEnabled(true);
     setShowSuggestions(false);
+    
+    localStorage.setItem('outfitPlanner_location', JSON.stringify(locationData));
+    localStorage.setItem('outfitPlanner_locationName', name);
+    localStorage.setItem('outfitPlanner_locationEnabled', 'true');
     
     await fetchWeather(latitude, longitude);
     
@@ -319,6 +342,9 @@ const OutfitPlanner = () => {
       setWeeklyForecast([]);
       setLocation(null);
       setLocationName("");
+      localStorage.setItem('outfitPlanner_locationEnabled', 'false');
+      localStorage.removeItem('outfitPlanner_location');
+      localStorage.removeItem('outfitPlanner_locationName');
     }
   };
 
