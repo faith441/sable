@@ -292,7 +292,7 @@ const Survey = () => {
         {/* Step 5: Lifestyle */}
         {step === 5 && (
           <div className="space-y-3">
-            {["Professional", "Casual", "Active", "Social", "Creative", "Entrepreneurial", "Remote Worker", "Student", "Parent", "Traveler", "Outdoor/Adventure", "Fitness Enthusiast", "Nightlife", "Minimalist", "Luxury"].map((lifestyle) => (
+            {["Professional", "Casual", "Active", "Social", "Creative", "Entrepreneurial", "Remote Worker", "Student", "Parent", "Traveler", "Outdoor/Adventure", "Fitness Enthusiast", "Nightlife", "Minimalist", "Luxury", "Executive", "High Society", "Jet Set", "Philanthropist", "Country Club", "Yacht Club", "Equestrian", "Art Collector", "Fine Dining", "Opera & Theater", "Private Aviation", "Estate Living", "Concierge Lifestyle"].map((lifestyle) => (
               <Card
                 key={lifestyle}
                 className={`cursor-pointer transition-all ${
