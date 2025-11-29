@@ -77,7 +77,22 @@ const Survey = () => {
   useEffect(() => {
     const saved = localStorage.getItem('guest_preferences');
     if (saved) {
-      setFormData(JSON.parse(saved));
+      const parsed = JSON.parse(saved);
+      setFormData({
+        ...parsed,
+        // Ensure all array fields exist with fallbacks
+        gender: parsed.gender || [],
+        styleType: parsed.styleType || [],
+        colorPreferences: parsed.colorPreferences || [],
+        budgetRange: parsed.budgetRange || [],
+        lifestyle: parsed.lifestyle || [],
+        occasions: parsed.occasions || [],
+        bodyType: parsed.bodyType || [],
+        hairColor: parsed.hairColor || [],
+        eyeColor: parsed.eyeColor || [],
+        hairStyle: parsed.hairStyle || [],
+        jeanSizes: parsed.jeanSizes || {},
+      });
     }
     updateAiMessage(1);
   }, []);
