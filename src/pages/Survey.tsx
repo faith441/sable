@@ -97,6 +97,14 @@ const Survey = () => {
         eyeColor: parsed.eyeColor || [],
         hairStyle: parsed.hairStyle || [],
         jeanSizes: parsed.jeanSizes || {},
+        photos: parsed.photos && Array.isArray(parsed.photos)
+          ? [
+              parsed.photos[0] ?? null,
+              parsed.photos[1] ?? null,
+              parsed.photos[2] ?? null,
+              parsed.photos[3] ?? null,
+            ]
+          : [null, null, null, null],
       });
     }
     updateAiMessage(1);
