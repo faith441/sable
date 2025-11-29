@@ -338,23 +338,41 @@ export type Database = {
       }
       user_wardrobe: {
         Row: {
+          custom_brand: string | null
+          custom_category: string | null
+          custom_description: string | null
+          custom_image_url: string | null
+          custom_size: string | null
           id: string
+          is_custom: boolean | null
           notes: string | null
-          product_id: string
+          product_id: string | null
           purchased_at: string
           user_id: string
         }
         Insert: {
+          custom_brand?: string | null
+          custom_category?: string | null
+          custom_description?: string | null
+          custom_image_url?: string | null
+          custom_size?: string | null
           id?: string
+          is_custom?: boolean | null
           notes?: string | null
-          product_id: string
+          product_id?: string | null
           purchased_at?: string
           user_id: string
         }
         Update: {
+          custom_brand?: string | null
+          custom_category?: string | null
+          custom_description?: string | null
+          custom_image_url?: string | null
+          custom_size?: string | null
           id?: string
+          is_custom?: boolean | null
           notes?: string | null
-          product_id?: string
+          product_id?: string | null
           purchased_at?: string
           user_id?: string
         }

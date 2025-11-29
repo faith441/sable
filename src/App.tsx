@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Survey from "./pages/Survey";
 import Wardrobe from "./pages/Wardrobe";
+import Closet from "./pages/Closet";
 import Cart from "./pages/Cart";
 import AIStyleChat from "./pages/AIStyleChat";
 import VirtualTryOn from "./pages/VirtualTryOn";
@@ -28,7 +29,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/survey" element={<Survey />} />
           <Route path="/wardrobe" element={<Wardrobe />} />
-          <Route path="/closet" element={<Wardrobe />} />
+          <Route path="/closet" element={<Closet />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/ai-stylist" element={<AIStyleChat />} />
           <Route path="/virtual-tryon" element={<VirtualTryOn />} />
