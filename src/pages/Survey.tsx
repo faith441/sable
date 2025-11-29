@@ -123,7 +123,7 @@ const Survey = () => {
       "Almost there! Tell me about your lifestyle - select all that apply!",
       "Now, let's talk about the occasions you dress for. Select all that apply!",
       "Great! Now help me understand your body features so I can recommend pieces that will fit and flatter you perfectly!",
-      "Final step! Please upload 4 clear selfie photos of your face without sunglasses. This helps me understand your unique features and provide the most personalized recommendations!"
+      "Final step! Optionally upload up to 4 clear selfie photos of your face without sunglasses. This helps me understand your unique features and provide even more personalized recommendations!"
     ];
     setAiMessage(messages[currentStep - 1] || messages[0]);
   };
@@ -738,9 +738,9 @@ const Survey = () => {
         {step === 8 && (
           <div className="space-y-6">
             <div className="text-center space-y-2 mb-6">
-              <h3 className="text-lg font-normal">Upload Your Selfie Photos</h3>
+              <h3 className="text-lg font-normal">Upload Your Selfie Photos (Optional)</h3>
               <p className="text-sm text-muted-foreground font-light">
-                Please upload 4 clear photos of your face without sunglasses
+                Upload up to 4 clear photos of your face without sunglasses for more personalized recommendations
               </p>
             </div>
 
@@ -811,7 +811,6 @@ const Survey = () => {
               <ul className="text-xs text-muted-foreground font-light space-y-1 list-disc list-inside">
                 <li>Clear, well-lit photos of your face</li>
                 <li>No sunglasses or face coverings</li>
-                <li>Different angles are helpful (front, side views)</li>
                 <li>Natural expressions work best</li>
               </ul>
             </div>
@@ -851,7 +850,7 @@ const Survey = () => {
               onClick={handleSubmit} 
               className="flex-1" 
               variant="luxury"
-              disabled={loading || formData.photos.filter(p => p !== null).length < 4}
+              disabled={loading}
             >
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
               Generate My Wardrobe
