@@ -22,11 +22,16 @@ const BrandsManager = () => {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBrand, setEditingBrand] = useState<any>(null);
+  const [showApiKey, setShowApiKey] = useState<{ [key: string]: boolean }>({});
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     website_url: "",
     api_endpoint: "",
+    api_key: "",
+    webhook_url: "",
+    payment_provider: "",
+    order_tracking_enabled: false,
   });
 
   useEffect(() => {
@@ -53,10 +58,17 @@ const BrandsManager = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const dataToSubmit = { ...formData };
+      
+      // Generate API key if creating new brand and no key exists
+      if (!editingBrand && !formData.api_key) {
+        dataToSubmit.api_key = `sbr_${crypto.randomUUID().replace(/-/g, '')}`;
+      }
+
       if (editingBrand) {
         const { error } = await supabase
           .from("brands")
-          .update(formData)
+          .update(dataToSubmit)
           .eq("id", editingBrand.id);
 
         if (error) throw error;
@@ -64,7 +76,7 @@ const BrandsManager = () => {
       } else {
         const { error } = await supabase
           .from("brands")
-          .insert([formData]);
+          .insert([dataToSubmit]);
 
         if (error) throw error;
         toast.success("Brand added successfully");
@@ -72,12 +84,32 @@ const BrandsManager = () => {
 
       setIsDialogOpen(false);
       setEditingBrand(null);
-      setFormData({ name: "", description: "", website_url: "", api_endpoint: "" });
+      setFormData({ 
+        name: "", 
+        description: "", 
+        website_url: "", 
+        api_endpoint: "",
+        api_key: "",
+        webhook_url: "",
+        payment_provider: "",
+        order_tracking_enabled: false,
+      });
       loadBrands();
     } catch (error) {
       console.error("Error saving brand:", error);
       toast.error("Failed to save brand");
     }
+  };
+
+  const generateNewApiKey = () => {
+    const newKey = `sbr_${crypto.randomUUID().replace(/-/g, '')}`;
+    setFormData({ ...formData, api_key: newKey });
+    toast.success("New API key generated");
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success("Copied to clipboard");
   };
 
   const handleDelete = async (id: string) => {
@@ -125,7 +157,16 @@ const BrandsManager = () => {
           <DialogTrigger asChild>
             <Button onClick={() => {
               setEditingBrand(null);
-              setFormData({ name: "", description: "", website_url: "", api_endpoint: "" });
+              setFormData({ 
+                name: "", 
+                description: "", 
+                website_url: "", 
+                api_endpoint: "",
+                api_key: "",
+                webhook_url: "",
+                payment_provider: "",
+                order_tracking_enabled: false,
+              });
             }}>
               <Plus className="mr-2 h-4 w-4" />
               Add Brand
@@ -221,6 +262,10 @@ const BrandsManager = () => {
                       description: brand.description || "",
                       website_url: brand.website_url || "",
                       api_endpoint: brand.api_endpoint || "",
+                      api_key: brand.api_key || "",
+                      webhook_url: brand.webhook_url || "",
+                      payment_provider: brand.payment_provider || "",
+                      order_tracking_enabled: brand.order_tracking_enabled || false,
                     });
                     setIsDialogOpen(true);
                   }}
