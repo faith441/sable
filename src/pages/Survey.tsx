@@ -13,12 +13,12 @@ const Survey = () => {
   const [aiMessage, setAiMessage] = useState("");
   
   const [formData, setFormData] = useState({
-    gender: "",
-    styleType: "",
+    gender: [] as string[],
+    styleType: [] as string[],
     likedImages: [] as string[],
     colorPreferences: [] as string[],
-    budgetRange: "",
-    lifestyle: "",
+    budgetRange: [] as string[],
+    lifestyle: [] as string[],
     occasions: [] as string[],
   });
 
@@ -28,7 +28,17 @@ const Survey = () => {
     Trendy: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400&h=500&fit=crop",
     Bohemian: "https://images.unsplash.com/photo-1532453288672-3a27e9be9efd?w=400&h=500&fit=crop",
     Edgy: "https://images.unsplash.com/photo-1558769132-cb1aea588c87?w=400&h=500&fit=crop",
-    Romantic: "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=400&h=500&fit=crop"
+    Romantic: "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=400&h=500&fit=crop",
+    Vintage: "https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=400&h=500&fit=crop",
+    Military: "https://images.unsplash.com/photo-1578632292335-df3abbb0d586?w=400&h=500&fit=crop",
+    Streetwear: "https://images.unsplash.com/photo-1529374255404-311a2a4f1fd9?w=400&h=500&fit=crop",
+    Bold: "https://images.unsplash.com/photo-1525562723836-dca67a71d5f1?w=400&h=500&fit=crop",
+    Formal: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&h=500&fit=crop",
+    Chic: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&h=500&fit=crop",
+    Western: "https://images.unsplash.com/photo-1516762689617-e1cffcef479d?w=400&h=500&fit=crop",
+    Mountain: "https://images.unsplash.com/photo-1551232864-3f0890e580d9?w=400&h=500&fit=crop",
+    Beach: "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=400&h=500&fit=crop",
+    Sexy: "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&h=500&fit=crop"
   };
 
   const colorImages = {
@@ -56,12 +66,12 @@ const Survey = () => {
 
   const updateAiMessage = (currentStep: number) => {
     const messages = [
-      "Hi! I'm Luna, your personal AI stylist. Let's discover your perfect style together! First, what style resonates with you?",
-      "Great choice! Now, which gender preference should I focus on for your wardrobe recommendations?",
-      "Perfect! Let me show you some color palettes. Tap the ones that catch your eye!",
-      "Beautiful selections! Now, what's your budget range? No judgment - style is for everyone!",
-      "Almost there! Tell me about your lifestyle so I can curate the perfect pieces for you.",
-      "Last step! What occasions do you dress for most often?"
+      "Hi! I'm Luna, your personal AI stylist. Let's discover your perfect style together! Select all styles that resonate with you - the more you choose, the better I can understand your taste!",
+      "Great choices! Now, which gender preferences should I focus on? You can select multiple!",
+      "Perfect! Let me show you some color palettes. Tap all the ones that catch your eye!",
+      "Beautiful selections! What's your budget range? You can select multiple ranges if your budget varies!",
+      "Almost there! Tell me about your lifestyle - select all that apply!",
+      "Last step! What occasions do you dress for most often? Select all that apply!"
     ];
     setAiMessage(messages[currentStep - 1] || messages[0]);
   };
@@ -78,11 +88,11 @@ const Survey = () => {
           .from("style_preferences")
           .upsert({
             user_id: user.id,
-            style_type: formData.styleType,
+            style_type: formData.styleType.join(", "),
             color_preferences: formData.colorPreferences,
-            budget_range: formData.budgetRange,
-            body_type: formData.gender,
-            lifestyle: formData.lifestyle,
+            budget_range: formData.budgetRange.join(", "),
+            body_type: formData.gender.join(", "),
+            lifestyle: formData.lifestyle.join(", "),
             occasions: formData.occasions,
             favorite_brands: [],
           });
@@ -152,11 +162,14 @@ const Survey = () => {
               <div
                 key={style}
                 className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
-                  formData.styleType === style 
-                    ? 'border-primary shadow-lg scale-105' 
+                  formData.styleType.includes(style)
+                    ? 'border-primary shadow-lg' 
                     : 'border-border hover:border-primary/50'
                 }`}
-                onClick={() => setFormData({...formData, styleType: style})}
+                onClick={() => setFormData({
+                  ...formData,
+                  styleType: toggleArrayItem(formData.styleType, style)
+                })}
               >
                 <div className="aspect-[4/5] relative">
                   <img src={imageUrl} alt={style} className="w-full h-full object-cover" />
@@ -164,7 +177,7 @@ const Survey = () => {
                   <div className="absolute bottom-0 left-0 right-0 p-3">
                     <p className="text-white font-light text-lg">{style}</p>
                   </div>
-                  {formData.styleType === style && (
+                  {formData.styleType.includes(style) && (
                     <div className="absolute top-2 right-2 w-8 h-8 bg-primary rounded-full flex items-center justify-center">
                       <Heart className="w-5 h-5 text-white fill-white" />
                     </div>
@@ -182,15 +195,18 @@ const Survey = () => {
               <Card
                 key={gender}
                 className={`cursor-pointer transition-all ${
-                  formData.gender === gender
+                  formData.gender.includes(gender)
                     ? 'border-primary bg-primary/5 shadow-lg'
                     : 'hover:border-primary/50'
                 }`}
-                onClick={() => setFormData({...formData, gender})}
+                onClick={() => setFormData({
+                  ...formData,
+                  gender: toggleArrayItem(formData.gender, gender)
+                })}
               >
                 <CardContent className="p-6 flex items-center justify-between">
                   <span className="text-lg font-light">{gender}</span>
-                  {formData.gender === gender && (
+                  {formData.gender.includes(gender) && (
                     <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
                       <Heart className="w-4 h-4 text-white fill-white" />
                     </div>
@@ -241,15 +257,18 @@ const Survey = () => {
               <Card
                 key={budget}
                 className={`cursor-pointer transition-all ${
-                  formData.budgetRange === budget
+                  formData.budgetRange.includes(budget)
                     ? 'border-primary bg-primary/5 shadow-lg'
                     : 'hover:border-primary/50'
                 }`}
-                onClick={() => setFormData({...formData, budgetRange: budget})}
+                onClick={() => setFormData({
+                  ...formData,
+                  budgetRange: toggleArrayItem(formData.budgetRange, budget)
+                })}
               >
                 <CardContent className="p-6 flex items-center justify-between">
                   <span className="text-lg font-light">{budget}</span>
-                  {formData.budgetRange === budget && (
+                  {formData.budgetRange.includes(budget) && (
                     <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
                       <Heart className="w-4 h-4 text-white fill-white" />
                     </div>
@@ -267,15 +286,18 @@ const Survey = () => {
               <Card
                 key={lifestyle}
                 className={`cursor-pointer transition-all ${
-                  formData.lifestyle === lifestyle
+                  formData.lifestyle.includes(lifestyle)
                     ? 'border-primary bg-primary/5 shadow-lg'
                     : 'hover:border-primary/50'
                 }`}
-                onClick={() => setFormData({...formData, lifestyle})}
+                onClick={() => setFormData({
+                  ...formData,
+                  lifestyle: toggleArrayItem(formData.lifestyle, lifestyle)
+                })}
               >
                 <CardContent className="p-6 flex items-center justify-between">
                   <span className="text-lg font-light">{lifestyle}</span>
-                  {formData.lifestyle === lifestyle && (
+                  {formData.lifestyle.includes(lifestyle) && (
                     <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
                       <Heart className="w-4 h-4 text-white fill-white" />
                     </div>
@@ -332,11 +354,11 @@ const Survey = () => {
               className="flex-1" 
               variant="luxury"
               disabled={
-                (step === 1 && !formData.styleType) ||
-                (step === 2 && !formData.gender) ||
+                (step === 1 && formData.styleType.length === 0) ||
+                (step === 2 && formData.gender.length === 0) ||
                 (step === 3 && formData.colorPreferences.length === 0) ||
-                (step === 4 && !formData.budgetRange) ||
-                (step === 5 && !formData.lifestyle)
+                (step === 4 && formData.budgetRange.length === 0) ||
+                (step === 5 && formData.lifestyle.length === 0)
               }
             >
               Continue <ArrowRight className="ml-2 h-4 w-4" />
