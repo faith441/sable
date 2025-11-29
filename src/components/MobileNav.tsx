@@ -17,10 +17,10 @@ const MobileNav = () => {
 
   const navItems = [
     { path: "/closet", icon: Shirt, label: "Closet", onClick: () => navigate("/closet") },
-    { path: "/ai-stylist", icon: MessageCircle, label: "Stylist", onClick: () => navigate("/ai-stylist") },
-    { path: "/wardrobe", icon: Sparkles, label: "Wardrobe", onClick: handleWardrobeClick },
-    { path: "/cart", icon: ShoppingBag, label: "Cart", onClick: () => navigate("/cart") },
     { path: "/outfit-planner", icon: Calendar, label: "Planner", onClick: () => navigate("/outfit-planner") },
+    { path: "/wardrobe", icon: Sparkles, label: "Wardrobe", onClick: handleWardrobeClick },
+    { path: "/ai-stylist", icon: MessageCircle, label: "Stylist", onClick: () => navigate("/ai-stylist") },
+    { path: "/cart", icon: ShoppingBag, label: "Cart", onClick: () => navigate("/cart") },
   ];
 
   return (
