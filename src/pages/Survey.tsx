@@ -321,7 +321,7 @@ const Survey = () => {
         {/* Step 6: Occasions */}
         {step === 6 && (
           <div className="space-y-3">
-            {["Work", "Casual Outings", "Date Night", "Events", "Travel", "Working Out"].map((occasion) => (
+            {["Work", "Casual Outings", "Date Night", "Events", "Travel", "Working Out", "Business Meetings", "Formal Events/Galas", "Weddings", "Networking Events", "Vacation/Resort", "Golf/Country Club", "Cocktail Parties", "Brunch/Lunch", "Weekend Getaways", "Red Carpet/VIP", "Charity Events", "Gallery Openings", "Private Dinners", "Yachting/Boating", "Outdoor Activities", "Sports Events", "Theater/Opera", "Beach/Pool", "Ski Resort", "Wine Tasting", "Fashion Shows"].map((occasion) => (
               <Card
                 key={occasion}
                 className={`cursor-pointer transition-all ${
