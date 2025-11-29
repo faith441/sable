@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { ArrowLeft, ShoppingBag, Loader2, Sparkles, Heart } from "lucide-react";
+import { ArrowLeft, ShoppingBag, Loader2, Sparkles, Heart, Package } from "lucide-react";
 import MobileNav from "@/components/MobileNav";
 
 interface Product {
@@ -12,6 +13,7 @@ interface Product {
   name: string;
   category: string;
   price: number;
+  colors: string[];
   image_url: string;
   product_url: string;
   brand: {
@@ -19,11 +21,20 @@ interface Product {
   };
 }
 
+interface Capsule {
+  name: string;
+  description: string;
+  total_pieces: number;
+  total_price: number;
+  outfit_count: number;
+  products: Product[];
+}
+
 const Wardrobe = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [capsules, setCapsules] = useState<Capsule[]>([]);
 
   useEffect(() => {
     loadWardrobe();
@@ -58,7 +69,7 @@ const Wardrobe = () => {
 
       if (error) throw error;
 
-      setProducts(data.products || []);
+      setCapsules(data.capsules || []);
     } catch (error: any) {
       console.error("Error generating wardrobe:", error);
       toast.error(error.message || "Failed to generate wardrobe");
@@ -97,13 +108,45 @@ const Wardrobe = () => {
     }
   };
 
+  const addCapsuleToCart = async (capsule: Capsule) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const sessionId = localStorage.getItem('guest_session_id') || crypto.randomUUID();
+      
+      if (!user) {
+        localStorage.setItem('guest_session_id', sessionId);
+      }
+
+      const cartItems = capsule.products.map(product => ({
+        user_id: user?.id,
+        session_id: !user ? sessionId : null,
+        product_id: product.id,
+        quantity: 1,
+      }));
+
+      const { error } = await supabase.from("cart_items").insert(cartItems);
+
+      if (error) throw error;
+
+      toast.success("Full capsule added to cart!", {
+        action: {
+          label: "View Cart",
+          onClick: () => navigate("/cart")
+        }
+      });
+    } catch (error: any) {
+      console.error("Error adding capsule to cart:", error);
+      toast.error("Failed to add capsule to cart");
+    }
+  };
+
   if (loading || generating) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <Loader2 className="w-12 h-12 animate-spin mx-auto text-primary" />
           <p className="text-lg font-light text-muted-foreground">
-            {generating ? "Curating your wardrobe..." : "Loading..."}
+            {generating ? "Curating your capsule wardrobes..." : "Loading..."}
           </p>
         </div>
       </div>
@@ -117,7 +160,7 @@ const Wardrobe = () => {
           <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-xl font-light">Your Wardrobe</h1>
+          <h1 className="text-xl font-light">Your Capsule Wardrobes</h1>
           <Button variant="ghost" size="sm" onClick={generateWardrobe} disabled={generating}>
             <Sparkles className="h-4 w-4" />
           </Button>
@@ -125,14 +168,14 @@ const Wardrobe = () => {
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-6">
-        {products.length === 0 ? (
+        {capsules.length === 0 ? (
           <Card className="mt-8">
             <CardContent className="flex flex-col items-center justify-center py-16 space-y-4">
-              <Sparkles className="w-16 h-16 text-muted-foreground" strokeWidth={1} />
+              <Package className="w-16 h-16 text-muted-foreground" strokeWidth={1} />
               <div className="text-center space-y-2">
-                <h3 className="text-lg font-light">No Recommendations Yet</h3>
+                <h3 className="text-lg font-light">No Capsules Yet</h3>
                 <p className="text-sm text-muted-foreground font-light">
-                  Complete the survey to get personalized recommendations
+                  Complete the survey to get personalized capsule wardrobes
                 </p>
               </div>
               <Button variant="luxury" onClick={() => navigate("/survey")}>
@@ -141,42 +184,103 @@ const Wardrobe = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
-            {products.map((product) => (
-              <Card key={product.id} className="overflow-hidden">
-                <CardContent className="p-0">
-                  <div className="flex gap-4">
-                    <div className="w-32 h-40 bg-secondary flex-shrink-0 relative">
-                      {product.image_url && (
-                        <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
-                      )}
-                      <button className="absolute top-2 right-2 w-8 h-8 bg-background/80 backdrop-blur-sm rounded-full flex items-center justify-center">
-                        <Heart className="w-4 h-4" />
-                      </button>
+          <Tabs defaultValue="0" className="space-y-6">
+            <TabsList className="w-full justify-start overflow-x-auto">
+              {capsules.map((capsule, index) => (
+                <TabsTrigger key={index} value={index.toString()} className="flex-shrink-0">
+                  {capsule.name}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+
+            {capsules.map((capsule, capsuleIndex) => (
+              <TabsContent key={capsuleIndex} value={capsuleIndex.toString()} className="space-y-6">
+                {/* Capsule Overview Card */}
+                <Card className="bg-gradient-to-br from-primary/5 to-accent/5">
+                  <CardContent className="p-6 space-y-4">
+                    <div>
+                      <h2 className="text-2xl font-light mb-2">{capsule.name}</h2>
+                      <p className="text-sm text-muted-foreground font-light">{capsule.description}</p>
                     </div>
-                    <div className="flex-1 py-4 pr-4 flex flex-col justify-between min-w-0">
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">{product.brand.name}</p>
-                        <h3 className="font-light mb-1 truncate">{product.name}</h3>
-                        <p className="text-sm text-muted-foreground mb-2">{product.category}</p>
+                    
+                    <div className="grid grid-cols-3 gap-4 py-4">
+                      <div className="text-center">
+                        <p className="text-2xl font-light">{capsule.total_pieces}</p>
+                        <p className="text-xs text-muted-foreground font-light">Pieces</p>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <p className="text-xl font-light">${product.price}</p>
-                        <Button 
-                          size="sm" 
-                          variant="luxury"
-                          onClick={() => addToCart(product)}
-                        >
-                          <ShoppingBag className="w-4 h-4 mr-2" />
-                          Add
-                        </Button>
+                      <div className="text-center">
+                        <p className="text-2xl font-light">${capsule.total_price}</p>
+                        <p className="text-xs text-muted-foreground font-light">Total</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-2xl font-light">{capsule.outfit_count}+</p>
+                        <p className="text-xs text-muted-foreground font-light">Outfits</p>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+
+                    <Button 
+                      variant="luxury" 
+                      className="w-full"
+                      onClick={() => addCapsuleToCart(capsule)}
+                    >
+                      <Package className="w-4 h-4 mr-2" />
+                      Add Full Capsule to Cart
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Products Grid */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-light px-2">Items in This Capsule</h3>
+                  
+                  {capsule.products.map((product) => (
+                    <Card key={product.id} className="overflow-hidden">
+                      <CardContent className="p-0">
+                        <div className="flex gap-4">
+                          <div className="w-32 h-40 bg-secondary flex-shrink-0 relative">
+                            {product.image_url && (
+                              <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+                            )}
+                            <button className="absolute top-2 right-2 w-8 h-8 bg-background/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-background transition-colors">
+                              <Heart className="w-4 h-4" />
+                            </button>
+                          </div>
+                          <div className="flex-1 py-4 pr-4 flex flex-col justify-between min-w-0">
+                            <div>
+                              <p className="text-xs text-muted-foreground mb-1">{product.brand.name}</p>
+                              <h4 className="font-light mb-1 truncate">{product.name}</h4>
+                              <p className="text-sm text-muted-foreground mb-2">{product.category}</p>
+                              <div className="flex gap-1 mb-2">
+                                {product.colors.map((color, i) => (
+                                  <div 
+                                    key={i} 
+                                    className="w-4 h-4 rounded-full border border-border"
+                                    style={{ backgroundColor: color.toLowerCase() }}
+                                    title={color}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <p className="text-xl font-light">${product.price}</p>
+                              <Button 
+                                size="sm" 
+                                variant="luxury"
+                                onClick={() => addToCart(product)}
+                              >
+                                <ShoppingBag className="w-4 h-4 mr-2" />
+                                Add
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </TabsContent>
             ))}
-          </div>
+          </Tabs>
         )}
       </div>
 
