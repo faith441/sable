@@ -54,15 +54,33 @@ serve(async (req) => {
         .eq("user_id", userId);
 
       if (cartItems && cartItems.length > 0) {
-        userContext += `\n\nUser's Current Cart:\n${cartItems.map(item => 
-          `- ${item.products.name} by ${item.products.brands.name} (${item.products.category}, ${item.products.colors.join(', ')}, $${item.products.price})`
-        ).join('\n')}`;
+        const cartItemsText = cartItems
+          .filter(item => item.products && item.products.name)
+          .map(item => {
+            const brandName = item.products.brands?.name || 'Unknown Brand';
+            const colors = item.products.colors?.join(', ') || 'No color specified';
+            return `- ${item.products.name} by ${brandName} (${item.products.category}, ${colors}, $${item.products.price})`;
+          })
+          .join('\n');
+        
+        if (cartItemsText) {
+          userContext += `\n\nUser's Current Cart:\n${cartItemsText}`;
+        }
       }
 
       if (wardrobeItems && wardrobeItems.length > 0) {
-        userContext += `\n\nUser's Past Purchases:\n${wardrobeItems.map(item => 
-          `- ${item.products.name} by ${item.products.brands.name} (${item.products.category}, ${item.products.colors.join(', ')})`
-        ).join('\n')}`;
+        const wardrobeItemsText = wardrobeItems
+          .filter(item => item.products && item.products.name)
+          .map(item => {
+            const brandName = item.products.brands?.name || 'Unknown Brand';
+            const colors = item.products.colors?.join(', ') || 'No color specified';
+            return `- ${item.products.name} by ${brandName} (${item.products.category}, ${colors})`;
+          })
+          .join('\n');
+        
+        if (wardrobeItemsText) {
+          userContext += `\n\nUser's Past Purchases:\n${wardrobeItemsText}`;
+        }
       }
     }
 
@@ -217,9 +235,14 @@ Guidelines:
         const { data: products } = await query;
 
         if (products && products.length > 0) {
-          toolResult = `Found ${products.length} products:\n${products.map(p => 
-            `- ${p.name} by ${p.brands.name} (${p.category}, ${p.colors.join(', ')}, $${p.price})`
-          ).join('\n')}`;
+          toolResult = `Found ${products.length} products:\n${products
+            .filter(p => p && p.name)
+            .map(p => {
+              const brandName = p.brands?.name || 'Unknown Brand';
+              const colors = p.colors?.join(', ') || 'No color specified';
+              return `- ${p.name} by ${brandName} (${p.category}, ${colors}, $${p.price})`;
+            })
+            .join('\n')}`;
         } else {
           toolResult = "No products found matching those criteria. Consider broadening the search.";
         }
