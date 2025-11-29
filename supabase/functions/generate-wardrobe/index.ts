@@ -57,7 +57,7 @@ serve(async (req) => {
     }
 
     // Generate 2-3 CAPSULE WARDROBES (not random products)
-    const prompt = `Based on these style preferences, generate 2-3 complete CAPSULE WARDROBES. Each capsule should be a cohesive collection that creates multiple outfit combinations.
+    const prompt = `Based on these style preferences, generate 2-3 complete CAPSULE WARDROBES. Each capsule should be a cohesive collection that creates multiple outfit combinations. Include clothing, fragrance, and hair care recommendations.
     
 User Preferences:
 ${JSON.stringify(preferences, null, 2)}
@@ -74,7 +74,7 @@ Return a JSON object with this EXACT structure:
       "products": [
         {
           "name": "Product name",
-          "category": "Category (tops/bottoms/outerwear/shoes/accessories)",
+          "category": "Category (tops/bottoms/outerwear/shoes/accessories/fragrance/shampoo/conditioner)",
           "price": number,
           "colors": ["color1"],
           "image_url": "https://images.unsplash.com/photo-relevant-fashion-item",
@@ -90,13 +90,17 @@ Return a JSON object with this EXACT structure:
 
 CRITICAL RULES:
 - Generate 2-3 complete capsule collections
-- Each capsule should have 8-12 pieces that work together
+- Each capsule should have 10-15 pieces that work together (clothing + 1 fragrance + 1 shampoo + 1 conditioner)
 - ALL pieces in a capsule must coordinate (colors, style, formality)
 - Calculate outfit_count realistically (e.g., 3 tops × 2 bottoms = 6 outfits minimum)
 - Match capsules to user's budget range and lifestyle
-- Use real Unsplash fashion URLs for image_url
+- ALWAYS include 1 signature fragrance recommendation per capsule based on user's fragrance preferences
+- ALWAYS include 1 shampoo and 1 conditioner recommendation per capsule based on user's hair type and concerns
+- Use real Unsplash URLs for image_url (fashion items, perfume bottles, hair care products)
 - Each capsule should have a clear purpose/occasion
-- Items should feel premium and intentional`;
+- Items should feel premium and intentional
+- Fragrance should complement the capsule's overall aesthetic and occasion
+- Hair care should match user's specific hair type, concerns, and product preferences`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
