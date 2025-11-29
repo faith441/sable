@@ -133,7 +133,7 @@ const Survey = () => {
       "Great! Now help me understand your body features so I can recommend pieces that will fit and flatter you perfectly!",
       "Optionally upload up to 4 clear selfie photos of your face without sunglasses. This helps me understand your unique features and provide even more personalized recommendations!",
       "Share up to 10 photos of yourself that you really like showing your entire body. This helps me understand your style and fit preferences even better!",
-      "Last optional step! Upload up to 10 photos of yourself in swimsuits or suits. This helps me provide perfect recommendations for swimwear and formal wear!"
+      "Last optional step! Upload up to 10 photos of yourself in swimsuits. This helps me provide perfect swimwear recommendations!"
     ];
     setAiMessage(messages[currentStep - 1] || messages[0]);
   };
@@ -178,7 +178,9 @@ const Survey = () => {
       : [...array, item];
   };
 
-  const progress = (step / 10) * 100;
+  const isWomensSelected = formData.gender.includes("Women's");
+  const maxStep = isWomensSelected ? 10 : 9;
+  const progress = (step / maxStep) * 100;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -192,7 +194,7 @@ const Survey = () => {
             />
           </div>
           <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>Step {step} of 10</span>
+            <span>Step {step} of {maxStep}</span>
             <span>{Math.round(progress)}%</span>
           </div>
         </div>
@@ -911,13 +913,13 @@ const Survey = () => {
           </div>
         )}
 
-        {/* Step 10: Swimsuit/Suit Photos */}
-        {step === 10 && (
+        {/* Step 10: Swimsuit Photos (Women's Only) */}
+        {step === 10 && isWomensSelected && (
           <div className="space-y-6">
             <div className="text-center space-y-2 mb-6">
-              <h3 className="text-lg font-normal">Upload Swimsuit/Suit Photos (Optional)</h3>
+              <h3 className="text-lg font-normal">Upload Swimsuit Photos (Optional)</h3>
               <p className="text-sm text-muted-foreground font-light">
-                Share up to 10 photos of yourself in swimsuits or suits for better recommendations
+                Share up to 10 photos of yourself in swimsuits for better swimwear recommendations
               </p>
             </div>
 
@@ -936,7 +938,7 @@ const Survey = () => {
                       <div className="relative w-full h-full">
                         <img
                           src={URL.createObjectURL(formData.swimsuitPhotos[index]!)}
-                          alt={`Swimsuit/suit photo ${index + 1}`}
+                          alt={`Swimsuit photo ${index + 1}`}
                           className="w-full h-full object-cover"
                         />
                         <button
@@ -986,10 +988,10 @@ const Survey = () => {
                 Photo Guidelines
               </h4>
               <ul className="text-xs text-muted-foreground font-light space-y-1 list-disc list-inside">
-                <li>Photos in swimsuits or formal suits</li>
+                <li>Photos in swimsuits</li>
                 <li>Clear, well-lit images</li>
                 <li>Full body visible works best</li>
-                <li>Helps with swimwear and formal wear recommendations</li>
+                <li>Helps with swimwear recommendations</li>
               </ul>
             </div>
           </div>
@@ -1006,7 +1008,7 @@ const Survey = () => {
               Back
             </Button>
           )}
-          {step < 10 ? (
+          {step < maxStep ? (
             <Button 
               onClick={() => setStep(step + 1)} 
               className="flex-1" 
