@@ -405,28 +405,65 @@ const OutfitPlanner = () => {
 
       const itemToReplace = outfit.items[itemIndex];
       
-      toast.info("Generating replacement item...");
+      toast.info("Finding replacement item...");
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const weatherData = locationEnabled && weather ? {
-        condition: weather.condition,
-        temp: weather.temp
-      } : null;
-
-      // Call edge function to regenerate just this item
-      const { data, error } = await supabase.functions.invoke("generate-weekly-outfits", {
-        body: { 
-          userId: user.id,
-          weather: weatherData,
-          dayOnly: day,
-          replaceItem: {
-            category: itemToReplace.category,
-            layer: itemToReplace.layer
-          }
+      // Get all wardrobe items
+      const availableItems = wardrobe.map(w => {
+        if (w.is_custom) {
+          return {
+            id: w.id,
+            name: w.custom_description || "Custom item",
+            category: w.custom_category || "Clothing",
+            brand: w.custom_brand,
+            size: w.custom_size,
+            image_url: w.custom_image_url,
+            isCustom: true
+          };
+        } else if (w.products) {
+          return {
+            id: w.products.id,
+            name: w.products.name,
+            category: w.products.category,
+            colors: w.products.colors,
+            image_url: w.products.image_url,
+            isCustom: false
+          };
         }
-      });
+        return null;
+      }).filter(Boolean);
+
+      // Filter items that match the same category but aren't already in the outfit
+      const currentItemIds = outfit.items.map((item: any) => item.id);
+      const matchingItems = availableItems.filter(
+        (item: any) => 
+          item.category === itemToReplace.category && 
+          !currentItemIds.includes(item.id)
+      );
+
+      if (matchingItems.length === 0) {
+        toast.error("No alternative items available in this category");
+        return;
+      }
+
+      // Pick a random replacement
+      const replacementItem = matchingItems[Math.floor(Math.random() * matchingItems.length)];
+      
+      // Update the outfit with the replacement item
+      const updatedItems = [...outfit.items];
+      updatedItems[itemIndex] = {
+        ...replacementItem,
+        layer: itemToReplace.layer // Keep the same layer designation
+      };
+
+      // Determine the correct structure for items based on whether we have recommended_additions
+      const itemsData = outfit.recommended_additions
+        ? { items: updatedItems, recommended_additions: outfit.recommended_additions }
+        : updatedItems;
+
+      const { error } = await supabase
+        .from("outfit_plans")
+        .update({ items: itemsData })
+        .eq("id", outfitId);
 
       if (error) throw error;
 
