@@ -29,6 +29,7 @@ const OutfitPlanner = () => {
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [weather, setWeather] = useState<any>(null);
   const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null);
+  const [weeklyForecast, setWeeklyForecast] = useState<any[]>([]);
 
   useEffect(() => {
     checkAuth();
@@ -108,9 +109,9 @@ const OutfitPlanner = () => {
 
   const fetchWeather = async (lat: number, lon: number) => {
     try {
-      // Using Open-Meteo free weather API (no key required)
+      // Using Open-Meteo free weather API with 7-day forecast
       const response = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&temperature_unit=fahrenheit&timezone=auto`
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&temperature_unit=fahrenheit&timezone=auto&forecast_days=7`
       );
       const data = await response.json();
       
@@ -118,13 +119,31 @@ const OutfitPlanner = () => {
       const temp = Math.round(data.current.temperature_2m);
       
       // Map weather codes to conditions
-      let condition = "clear";
-      if (weatherCode >= 61 && weatherCode <= 67) condition = "rain";
-      else if (weatherCode >= 71 && weatherCode <= 77) condition = "snow";
-      else if (weatherCode >= 51 && weatherCode <= 57) condition = "drizzle";
-      else if (weatherCode >= 2 && weatherCode <= 3) condition = "cloudy";
+      const getCondition = (code: number) => {
+        if (code >= 61 && code <= 67) return "rain";
+        if (code >= 71 && code <= 77) return "snow";
+        if (code >= 51 && code <= 57) return "drizzle";
+        if (code >= 2 && code <= 3) return "cloudy";
+        return "clear";
+      };
       
-      setWeather({ condition, temp, code: weatherCode });
+      const condition = getCondition(weatherCode);
+      
+      // Get today's high and low
+      const high = Math.round(data.daily.temperature_2m_max[0]);
+      const low = Math.round(data.daily.temperature_2m_min[0]);
+      
+      setWeather({ condition, temp, high, low, code: weatherCode });
+      
+      // Process 7-day forecast
+      const forecast = data.daily.temperature_2m_max.map((maxTemp: number, index: number) => ({
+        high: Math.round(maxTemp),
+        low: Math.round(data.daily.temperature_2m_min[index]),
+        condition: getCondition(data.daily.weather_code[index]),
+        date: data.daily.time[index]
+      }));
+      
+      setWeeklyForecast(forecast);
     } catch (error) {
       console.error("Error fetching weather:", error);
     }
@@ -136,6 +155,7 @@ const OutfitPlanner = () => {
     } else {
       setLocationEnabled(false);
       setWeather(null);
+      setWeeklyForecast([]);
       setLocation(null);
     }
   };
@@ -319,7 +339,8 @@ const OutfitPlanner = () => {
                       {getWeatherIcon()}
                       <span className="capitalize">{weather.condition}</span>
                       <span>·</span>
-                      <span>{weather.temp}°F</span>
+                      <span>H: {weather.high}°</span>
+                      <span>L: {weather.low}°</span>
                     </div>
                   )}
                 </CardContent>
@@ -328,11 +349,19 @@ const OutfitPlanner = () => {
 
             <Tabs defaultValue="Monday" className="w-full">
               <TabsList className="grid w-full grid-cols-7 mb-6">
-                {days.map(day => (
-                  <TabsTrigger key={day} value={day} className="text-xs px-1">
-                    {day.slice(0, 3)}
-                  </TabsTrigger>
-                ))}
+                {days.map((day, index) => {
+                  const dayForecast = weeklyForecast[index];
+                  return (
+                    <TabsTrigger key={day} value={day} className="text-xs px-1 flex flex-col gap-0.5">
+                      <span>{day.slice(0, 3)}</span>
+                      {locationEnabled && dayForecast && (
+                        <span className="text-[10px] text-muted-foreground font-normal">
+                          {dayForecast.high}°/{dayForecast.low}°
+                        </span>
+                      )}
+                    </TabsTrigger>
+                  );
+                })}
               </TabsList>
 
               {days.map(day => {
