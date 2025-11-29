@@ -29,26 +29,37 @@ const Index = () => {
     const container = scrollContainerRef.current;
     if (!container) return;
 
+    let timeoutId: number | undefined;
+
     const handleScroll = () => {
       const slideWidth = container.offsetWidth;
-      const newSlide = Math.round(container.scrollLeft / slideWidth);
+      const rawIndex = container.scrollLeft / slideWidth;
+      const newSlide = Math.round(rawIndex);
       setCurrentSlide(newSlide);
+
+      if (timeoutId) window.clearTimeout(timeoutId);
+      timeoutId = window.setTimeout(() => {
+        scrollToSlide(newSlide);
+      }, 120);
     };
 
-    container.addEventListener('scroll', handleScroll);
-    return () => container.removeEventListener('scroll', handleScroll);
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      if (timeoutId) window.clearTimeout(timeoutId);
+      container.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
-  const scrollToSlide = (index: number) => {
+  function scrollToSlide(index: number) {
     const container = scrollContainerRef.current;
     if (!container) return;
-    
+
     const slideWidth = container.offsetWidth;
     container.scrollTo({
       left: slideWidth * index,
-      behavior: 'smooth'
+      behavior: 'smooth',
     });
-  };
+  }
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -97,8 +108,7 @@ const Index = () => {
         style={{ 
           scrollbarWidth: 'none', 
           msOverflowStyle: 'none',
-          height: 'calc(100vh - 72px)',
-          WebkitOverflowScrolling: 'touch'
+          height: 'calc(100vh - 72px)'
         }}
       >
 
