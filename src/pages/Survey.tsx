@@ -36,7 +36,7 @@ const Survey = () => {
     legPreference: "",
     hairStyle: [] as string[],
     // Photos
-    photos: [] as File[],
+    photos: [null, null, null, null] as (File | null)[],
   });
 
   const styleImages = {
@@ -760,7 +760,7 @@ const Survey = () => {
                             e.preventDefault();
                             e.stopPropagation();
                             const newPhotos = [...formData.photos];
-                            newPhotos.splice(index, 1);
+                            newPhotos[index] = null;
                             setFormData({ ...formData, photos: newPhotos });
                           }}
                           className="absolute top-2 right-2 w-8 h-8 rounded-full bg-background/90 flex items-center justify-center hover:bg-background"
@@ -843,7 +843,7 @@ const Survey = () => {
               onClick={handleSubmit} 
               className="flex-1" 
               variant="luxury"
-              disabled={loading || formData.photos.length < 4}
+              disabled={loading || formData.photos.filter(p => p !== null).length < 4}
             >
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
               Generate My Wardrobe
