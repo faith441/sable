@@ -12,6 +12,7 @@ import AIStyleChat from "./pages/AIStyleChat";
 import VirtualTryOn from "./pages/VirtualTryOn";
 import OutfitPlanner from "./pages/OutfitPlanner";
 import Admin from "./pages/Admin";
+import Favorites from "./pages/Favorites";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,10 +28,12 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/survey" element={<Survey />} />
           <Route path="/wardrobe" element={<Wardrobe />} />
+          <Route path="/closet" element={<Wardrobe />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/ai-stylist" element={<AIStyleChat />} />
           <Route path="/virtual-tryon" element={<VirtualTryOn />} />
           <Route path="/outfit-planner" element={<OutfitPlanner />} />
+          <Route path="/favorites" element={<Favorites />} />
           <Route path="/admin" element={<Admin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

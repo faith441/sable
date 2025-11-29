@@ -1,4 +1,4 @@
-import { Menu, User, FileText, Package, History, Sparkles } from "lucide-react";
+import { Menu, User, FileText, Package, History, Sparkles, Heart } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +31,10 @@ const ProfileMenu = ({ onProfileClick, onRegenerateWardrobe }: ProfileMenuProps)
         <DropdownMenuItem onClick={onProfileClick} className="cursor-pointer">
           <User className="mr-2 h-4 w-4" />
           <span className="font-light">Profile</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate("/favorites")} className="cursor-pointer">
+          <Heart className="mr-2 h-4 w-4" />
+          <span className="font-light">Favorites</span>
         </DropdownMenuItem>
         <DropdownMenuItem className="cursor-pointer">
           <Package className="mr-2 h-4 w-4" />
