@@ -16,7 +16,7 @@ const Index = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        navigate("/home");
+        navigate("/wardrobe");
       } else {
         setUser(null);
       }
@@ -24,7 +24,7 @@ const Index = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        navigate("/home");
+        navigate("/wardrobe");
       } else {
         setUser(null);
       }
@@ -68,7 +68,7 @@ const Index = () => {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/50">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <h1 
-            onClick={() => navigate("/home")}
+            onClick={() => navigate(user ? "/wardrobe" : "/")}
             className="text-2xl font-light tracking-tight cursor-pointer hover:text-primary transition-colors"
           >
             StyleCapsule
