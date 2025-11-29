@@ -14,6 +14,9 @@ import VirtualTryOn from "./pages/VirtualTryOn";
 import OutfitPlanner from "./pages/OutfitPlanner";
 import Admin from "./pages/Admin";
 import Favorites from "./pages/Favorites";
+import Orders from "./pages/Orders";
+import PastOrders from "./pages/PastOrders";
+import TermsAndConditions from "./pages/TermsAndConditions";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +38,9 @@ const App = () => (
           <Route path="/virtual-tryon" element={<VirtualTryOn />} />
           <Route path="/outfit-planner" element={<OutfitPlanner />} />
           <Route path="/favorites" element={<Favorites />} />
+          <Route path="/orders" element={<Orders />} />
+          <Route path="/past-orders" element={<PastOrders />} />
+          <Route path="/terms" element={<TermsAndConditions />} />
           <Route path="/admin" element={<Admin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
