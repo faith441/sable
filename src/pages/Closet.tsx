@@ -217,7 +217,7 @@ const Closet = () => {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <h1 className="text-xl font-light">
-            StyleCapsule
+            Closet
           </h1>
           <ProfileMenu 
             onProfileClick={() => setProfileOpen(true)}
