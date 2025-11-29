@@ -49,41 +49,41 @@ const Survey = () => {
   });
 
   const womensStyleImages = {
-    Classic: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=400&h=500&fit=crop",
-    Minimalist: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&h=500&fit=crop",
-    Trendy: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400&h=500&fit=crop",
-    Bohemian: "https://images.unsplash.com/photo-1532453288672-3a27e9be9efd?w=400&h=500&fit=crop",
-    Edgy: "https://images.unsplash.com/photo-1558769132-cb1aea588c87?w=400&h=500&fit=crop",
-    Romantic: "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=400&h=500&fit=crop",
-    Vintage: "https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=400&h=500&fit=crop",
-    Military: "https://images.unsplash.com/photo-1578632292335-df3abbb0d586?w=400&h=500&fit=crop",
-    Streetwear: "https://images.unsplash.com/photo-1529374255404-311a2a4f1fd9?w=400&h=500&fit=crop",
-    Bold: "https://images.unsplash.com/photo-1525562723836-dca67a71d5f1?w=400&h=500&fit=crop",
-    Formal: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&h=500&fit=crop",
-    Chic: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&h=500&fit=crop",
-    Western: "https://images.unsplash.com/photo-1516762689617-e1cffcef479d?w=400&h=500&fit=crop",
-    Mountain: "https://images.unsplash.com/photo-1551232864-3f0890e580d9?w=400&h=500&fit=crop",
-    Beach: "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=400&h=500&fit=crop",
-    Sexy: "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&h=500&fit=crop"
+    Classic: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=400&h=500&fit=crop", // Timeless white button-down
+    Minimalist: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&h=500&fit=crop", // Clean lines, neutral tones
+    Trendy: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400&h=500&fit=crop", // Fashion-forward modern look
+    Bohemian: "https://images.unsplash.com/photo-1532453288672-3a27e9be9efd?w=400&h=500&fit=crop", // Flowy boho dress
+    Edgy: "https://images.unsplash.com/photo-1558769132-cb1aea588c87?w=400&h=500&fit=crop", // Leather jacket style
+    Romantic: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400&h=500&fit=crop", // Soft feminine dress
+    Vintage: "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=400&h=500&fit=crop", // Retro style clothing
+    Military: "https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=400&h=500&fit=crop", // Utility jacket, structured
+    Streetwear: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400&h=500&fit=crop", // Urban casual sneakers
+    Bold: "https://images.unsplash.com/photo-1596516109370-29001ec8ec36?w=400&h=500&fit=crop", // Bright colors, statement pieces
+    Formal: "https://images.unsplash.com/photo-1562184552-1026b76b1087?w=400&h=500&fit=crop", // Evening gown elegance
+    Chic: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&h=500&fit=crop", // Sophisticated tailored look
+    Western: "https://images.unsplash.com/photo-1598522325074-042db73aa4e6?w=400&h=500&fit=crop", // Cowboy boots, denim
+    Mountain: "https://images.unsplash.com/photo-1551232864-3f0890e580d9?w=400&h=500&fit=crop", // Outdoor hiking gear
+    Beach: "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=400&h=500&fit=crop", // Beachwear, resort style
+    Sexy: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&h=500&fit=crop" // Form-fitting, alluring
   };
 
   const mensStyleImages = {
-    Classic: "https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?w=400&h=500&fit=crop",
-    Minimalist: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=500&fit=crop",
-    Trendy: "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=400&h=500&fit=crop",
-    Bohemian: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=500&fit=crop",
-    Edgy: "https://images.unsplash.com/photo-1508341591423-4347099e1f19?w=400&h=500&fit=crop",
-    Romantic: "https://images.unsplash.com/photo-1519689373023-dd07c7988603?w=400&h=500&fit=crop",
-    Vintage: "https://images.unsplash.com/photo-1490367532201-b9bc1dc483f6?w=400&h=500&fit=crop",
-    Military: "https://images.unsplash.com/photo-1627225924765-552d49cf47ad?w=400&h=500&fit=crop",
-    Streetwear: "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=400&h=500&fit=crop",
-    Bold: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=500&fit=crop",
-    Formal: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&h=500&fit=crop",
-    Chic: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&h=500&fit=crop",
-    Western: "https://images.unsplash.com/photo-1608613304899-ea8098577e38?w=400&h=500&fit=crop",
-    Mountain: "https://images.unsplash.com/photo-1609137144813-7d9921338f24?w=400&h=500&fit=crop",
-    Beach: "https://images.unsplash.com/photo-1549388604-817d15aa0110?w=400&h=500&fit=crop",
-    Sexy: "https://images.unsplash.com/photo-1516257984-b1b4d707412e?w=400&h=500&fit=crop"
+    Classic: "https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?w=400&h=500&fit=crop", // Timeless suit style
+    Minimalist: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=500&fit=crop", // Clean simple outfit
+    Trendy: "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=400&h=500&fit=crop", // Modern fashion-forward
+    Bohemian: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=400&h=500&fit=crop", // Relaxed boho layers
+    Edgy: "https://images.unsplash.com/photo-1622445275463-afa2ab738c34?w=400&h=500&fit=crop", // Dark leather jacket
+    Romantic: "https://images.unsplash.com/photo-1519689373023-dd07c7988603?w=400&h=500&fit=crop", // Soft refined look
+    Vintage: "https://images.unsplash.com/photo-1490367532201-b9bc1dc483f6?w=400&h=500&fit=crop", // Retro classic pieces
+    Military: "https://images.unsplash.com/photo-1627225924765-552d49cf47ad?w=400&h=500&fit=crop", // Army jacket, cargo
+    Streetwear: "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=400&h=500&fit=crop", // Urban hoodie, sneakers
+    Bold: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400&h=500&fit=crop", // Vibrant statement outfit
+    Formal: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&h=500&fit=crop", // Tuxedo, black tie
+    Chic: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&h=500&fit=crop", // Sophisticated tailored
+    Western: "https://images.unsplash.com/photo-1608613304899-ea8098577e38?w=400&h=500&fit=crop", // Cowboy hat, boots
+    Mountain: "https://images.unsplash.com/photo-1609137144813-7d9921338f24?w=400&h=500&fit=crop", // Outdoor hiking gear
+    Beach: "https://images.unsplash.com/photo-1549388604-817d15aa0110?w=400&h=500&fit=crop", // Beachwear, shorts
+    Sexy: "https://images.unsplash.com/photo-1564859228273-274232fdb516?w=400&h=500&fit=crop" // Fitted, attractive style
   };
 
   const colorImages = {
