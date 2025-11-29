@@ -318,21 +318,6 @@ const Index = () => {
                 Start Style Survey <ArrowRight className="ml-2" />
               </Button>
             </div>
-            
-            <div className="grid grid-cols-3 gap-3 pt-6">
-              <button onClick={() => navigate("/ai-stylist")} className="p-3 rounded-lg border border-border bg-card hover:border-primary transition-all hover-scale">
-                <MessageCircle className="w-5 h-5 mx-auto mb-1 text-primary" strokeWidth={1.5} />
-                <p className="text-xs font-light">AI Stylist</p>
-              </button>
-              <button onClick={() => navigate("/virtual-tryon")} className="p-3 rounded-lg border border-border bg-card hover:border-primary transition-all hover-scale">
-                <Scan className="w-5 h-5 mx-auto mb-1 text-primary" strokeWidth={1.5} />
-                <p className="text-xs font-light">Try-On</p>
-              </button>
-              <button onClick={() => navigate(user ? "/outfit-planner" : "/auth")} className="p-3 rounded-lg border border-border bg-card hover:border-primary transition-all hover-scale">
-                <Sparkles className="w-5 h-5 mx-auto mb-1 text-primary" strokeWidth={1.5} />
-                <p className="text-xs font-light">Planner</p>
-              </button>
-            </div>
           </div>
         </section>
       </div>
