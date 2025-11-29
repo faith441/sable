@@ -1,6 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { Shirt, Sparkles, ShoppingBag, Calendar, MessageCircle } from "lucide-react";
-import { toast } from "sonner";
 
 const MobileNav = () => {
   const navigate = useNavigate();
@@ -8,17 +7,10 @@ const MobileNav = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const handleWardrobeClick = () => {
-    // Clear cached capsules to force regeneration
-    localStorage.removeItem('cached_capsules');
-    toast.success("Generating fresh wardrobe...");
-    navigate("/wardrobe");
-  };
-
   const navItems = [
     { path: "/closet", icon: Shirt, label: "Closet", onClick: () => navigate("/closet") },
     { path: "/outfit-planner", icon: Calendar, label: "Planner", onClick: () => navigate("/outfit-planner") },
-    { path: "/wardrobe", icon: Sparkles, label: "Wardrobe", onClick: handleWardrobeClick },
+    { path: "/wardrobe", icon: Sparkles, label: "Wardrobe", onClick: () => navigate("/wardrobe") },
     { path: "/ai-stylist", icon: MessageCircle, label: "Stylist", onClick: () => navigate("/ai-stylist") },
     { path: "/cart", icon: ShoppingBag, label: "Cart", onClick: () => navigate("/cart") },
   ];
