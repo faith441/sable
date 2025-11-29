@@ -103,7 +103,7 @@ const Index = () => {
       >
 
         {/* Slide 1: The Issue */}
-        <section className="relative min-w-full h-full flex-shrink-0 snap-center flex items-center justify-center overflow-hidden py-8">
+        <section className="relative min-w-full h-full flex-shrink-0 snap-start flex items-center justify-center overflow-hidden py-8">
           <div className="absolute inset-0 z-0">
             <img src={heroImage} alt="Curated wardrobe" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
@@ -131,7 +131,7 @@ const Index = () => {
         </section>
 
         {/* Slide 2: The Pattern */}
-        <section className="min-w-full h-full flex-shrink-0 snap-center flex items-center justify-center bg-gradient-to-b from-background to-secondary/20 px-6 py-8">
+        <section className="min-w-full h-full flex-shrink-0 snap-start flex items-center justify-center bg-gradient-to-b from-background to-secondary/20 px-6 py-8">
           <div className="max-w-lg mx-auto text-center space-y-8">
             <div className="space-y-4 animate-fade-in">
               <p className="text-xs uppercase tracking-widest text-muted-foreground font-light">So What Do You Do?</p>
@@ -152,7 +152,7 @@ const Index = () => {
         </section>
 
         {/* Slide 3: The Solution */}
-        <section className="min-w-full h-full flex-shrink-0 snap-center flex items-center justify-center bg-gradient-to-b from-secondary/20 to-background px-6 py-8">
+        <section className="min-w-full h-full flex-shrink-0 snap-start flex items-center justify-center bg-gradient-to-b from-secondary/20 to-background px-6 py-8">
           <div className="max-w-lg mx-auto text-center space-y-8">
             <div className="space-y-6 animate-fade-in">
               <p className="text-xs uppercase tracking-widest text-muted-foreground font-light">The Solution</p>
@@ -183,7 +183,7 @@ const Index = () => {
         </section>
 
         {/* Slide 4: Who It's For */}
-        <section className="min-w-full h-full flex-shrink-0 snap-center flex items-center justify-center px-6 py-8">
+        <section className="min-w-full h-full flex-shrink-0 snap-start flex items-center justify-center px-6 py-8">
           <div className="max-w-lg mx-auto space-y-8">
             <div className="space-y-4 text-center animate-fade-in">
               <p className="text-xs uppercase tracking-widest text-muted-foreground font-light">Who It's For</p>
@@ -221,7 +221,7 @@ const Index = () => {
         </section>
 
         {/* Slide 5: The Result */}
-        <section className="min-w-full h-full flex-shrink-0 snap-center flex items-center justify-center bg-gradient-to-b from-background to-secondary/20 px-6 py-8">
+        <section className="min-w-full h-full flex-shrink-0 snap-start flex items-center justify-center bg-gradient-to-b from-background to-secondary/20 px-6 py-8">
           <div className="max-w-lg mx-auto text-center space-y-8">
             <div className="space-y-4 animate-fade-in">
               <p className="text-xs uppercase tracking-widest text-muted-foreground font-light">The Result</p>
@@ -253,7 +253,7 @@ const Index = () => {
         </section>
 
         {/* Slide 6: How It Works */}
-        <section className="min-w-full h-full flex-shrink-0 snap-center flex items-center justify-center bg-gradient-to-b from-secondary/20 to-background px-6 py-8">
+        <section className="min-w-full h-full flex-shrink-0 snap-start flex items-center justify-center bg-gradient-to-b from-secondary/20 to-background px-6 py-8">
           <div className="max-w-lg mx-auto space-y-8">
             <div className="space-y-4 text-center animate-fade-in">
               <p className="text-xs uppercase tracking-widest text-muted-foreground font-light">How It Works</p>
@@ -295,7 +295,7 @@ const Index = () => {
         </section>
 
         {/* Slide 7: CTA */}
-        <section className="min-w-full h-full flex-shrink-0 snap-center flex items-center justify-center px-6 py-8">
+        <section className="min-w-full h-full flex-shrink-0 snap-start flex items-center justify-center px-6 py-8">
           <div className="max-w-lg mx-auto text-center space-y-8">
             <div className="space-y-6 animate-fade-in">
               <h2 className="text-4xl md:text-5xl font-light leading-tight">
