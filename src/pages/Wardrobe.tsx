@@ -75,6 +75,8 @@ const Wardrobe = () => {
   };
 
   const generateWardrobe = async () => {
+    // Clear cached capsules to force fresh generation
+    localStorage.removeItem('cached_capsules');
     setGenerating(true);
     try {
       const preferences = JSON.parse(localStorage.getItem('guest_preferences') || '{}');
@@ -90,6 +92,7 @@ const Wardrobe = () => {
       
       // Cache the generated capsules
       localStorage.setItem('cached_capsules', JSON.stringify(newCapsules));
+      toast.success("Wardrobe regenerated successfully!");
     } catch (error: any) {
       console.error("Error generating wardrobe:", error);
       toast.error(error.message || "Failed to generate wardrobe");
