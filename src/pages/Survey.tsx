@@ -35,6 +35,13 @@ const Survey = () => {
     buttPreference: "",
     legPreference: "",
     hairStyle: [] as string[],
+    // Fragrance & Hair Care
+    fragranceTypes: [] as string[],
+    fragranceIntensity: "",
+    scentPreferences: [] as string[],
+    hairType: [] as string[],
+    hairConcerns: [] as string[],
+    shampooPreferences: [] as string[],
     // Photos
     photos: [null, null, null, null] as (File | null)[],
     fullBodyPhotos: Array(10).fill(null) as (File | null)[],
@@ -98,6 +105,11 @@ const Survey = () => {
         hairColor: parsed.hairColor || [],
         eyeColor: parsed.eyeColor || [],
         hairStyle: parsed.hairStyle || [],
+        fragranceTypes: parsed.fragranceTypes || [],
+        scentPreferences: parsed.scentPreferences || [],
+        hairType: parsed.hairType || [],
+        hairConcerns: parsed.hairConcerns || [],
+        shampooPreferences: parsed.shampooPreferences || [],
         jeanSizes: parsed.jeanSizes || {},
         photos: parsed.photos && Array.isArray(parsed.photos)
           ? [
@@ -133,7 +145,9 @@ const Survey = () => {
       "Great! Now help me understand your body features so I can recommend pieces that will fit and flatter you perfectly!",
       "Optionally upload up to 4 clear selfie photos of your face without sunglasses. This helps me understand your unique features and provide even more personalized recommendations!",
       "Share up to 10 photos of yourself that you really like showing your entire body. This helps me understand your style and fit preferences even better!",
-      "Last optional step! Upload up to 10 photos of yourself in swimsuits. This helps me provide perfect swimwear recommendations!"
+      "Last optional photo step! Upload up to 10 photos of yourself in swimsuits. This helps me provide perfect swimwear recommendations!",
+      "Let's talk about fragrance! What scent profiles appeal to you? This helps me recommend the perfect signature scents!",
+      "Finally, tell me about your hair! This helps me recommend the perfect shampoo and conditioner for your hair type and goals!"
     ];
     setAiMessage(messages[currentStep - 1] || messages[0]);
   };
@@ -199,7 +213,7 @@ const Survey = () => {
   };
 
   const isWomensSelected = formData.gender.includes("Women's");
-  const maxStep = isWomensSelected ? 10 : 9;
+  const maxStep = isWomensSelected ? 12 : 11;
   const progress = (step / maxStep) * 100;
 
   return (
@@ -1017,6 +1031,176 @@ const Survey = () => {
           </div>
         )}
 
+        {/* Step 11: Fragrance Preferences */}
+        {step === 11 && (
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <h3 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">Fragrance Types You Love</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {["Floral", "Woody", "Fresh/Citrus", "Oriental/Spicy", "Fruity", "Aquatic", "Gourmand", "Musky"].map((type) => (
+                  <Card
+                    key={type}
+                    className={`cursor-pointer transition-all ${
+                      formData.fragranceTypes.includes(type)
+                        ? 'border-primary bg-primary/5'
+                        : 'hover:border-primary/50'
+                    }`}
+                    onClick={() => setFormData({
+                      ...formData,
+                      fragranceTypes: toggleArrayItem(formData.fragranceTypes, type)
+                    })}
+                  >
+                    <CardContent className="p-4 text-center">
+                      <span className="text-sm font-light">{type}</span>
+                      {formData.fragranceTypes.includes(type) && (
+                        <Heart className="w-4 h-4 mx-auto mt-1 text-primary fill-primary" />
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">Fragrance Intensity</h3>
+              <div className="grid grid-cols-3 gap-3">
+                {["Light/Subtle", "Moderate", "Strong/Bold"].map((intensity) => (
+                  <Card
+                    key={intensity}
+                    className={`cursor-pointer transition-all ${
+                      formData.fragranceIntensity === intensity
+                        ? 'border-primary bg-primary/5'
+                        : 'hover:border-primary/50'
+                    }`}
+                    onClick={() => setFormData({...formData, fragranceIntensity: intensity})}
+                  >
+                    <CardContent className="p-4 text-center">
+                      <span className="text-sm font-light">{intensity}</span>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">Scent Preferences</h3>
+              <div className="space-y-2">
+                {["Clean & Fresh", "Sweet & Warm", "Bold & Sensual", "Light & Airy", "Earthy & Natural", "Luxury/Designer"].map((pref) => (
+                  <Card
+                    key={pref}
+                    className={`cursor-pointer transition-all ${
+                      formData.scentPreferences.includes(pref)
+                        ? 'border-primary bg-primary/5 shadow-lg'
+                        : 'hover:border-primary/50'
+                    }`}
+                    onClick={() => setFormData({
+                      ...formData,
+                      scentPreferences: toggleArrayItem(formData.scentPreferences, pref)
+                    })}
+                  >
+                    <CardContent className="p-6 flex items-center justify-between">
+                      <span className="text-lg font-light">{pref}</span>
+                      {formData.scentPreferences.includes(pref) && (
+                        <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                          <Heart className="w-4 h-4 text-white fill-white" />
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 12: Hair Care Preferences */}
+        {step === 12 && (
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <h3 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">Hair Type</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {["Straight", "Wavy", "Curly", "Coily", "Fine/Thin", "Thick/Coarse", "Color-Treated", "Natural/Virgin"].map((type) => (
+                  <Card
+                    key={type}
+                    className={`cursor-pointer transition-all ${
+                      formData.hairType.includes(type)
+                        ? 'border-primary bg-primary/5'
+                        : 'hover:border-primary/50'
+                    }`}
+                    onClick={() => setFormData({
+                      ...formData,
+                      hairType: toggleArrayItem(formData.hairType, type)
+                    })}
+                  >
+                    <CardContent className="p-4 text-center">
+                      <span className="text-sm font-light">{type}</span>
+                      {formData.hairType.includes(type) && (
+                        <Heart className="w-4 h-4 mx-auto mt-1 text-primary fill-primary" />
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">Hair Concerns</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {["Dryness", "Frizz", "Damage/Breakage", "Oily Scalp", "Dandruff", "Lack of Volume", "Color Fading", "None"].map((concern) => (
+                  <Card
+                    key={concern}
+                    className={`cursor-pointer transition-all ${
+                      formData.hairConcerns.includes(concern)
+                        ? 'border-primary bg-primary/5'
+                        : 'hover:border-primary/50'
+                    }`}
+                    onClick={() => setFormData({
+                      ...formData,
+                      hairConcerns: toggleArrayItem(formData.hairConcerns, concern)
+                    })}
+                  >
+                    <CardContent className="p-4 text-center">
+                      <span className="text-sm font-light">{concern}</span>
+                      {formData.hairConcerns.includes(concern) && (
+                        <Heart className="w-4 h-4 mx-auto mt-1 text-primary fill-primary" />
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">Product Preferences</h3>
+              <div className="space-y-2">
+                {["Sulfate-Free", "Silicone-Free", "Paraben-Free", "Natural/Organic", "Professional/Salon", "Drugstore/Affordable", "Luxury/Premium"].map((pref) => (
+                  <Card
+                    key={pref}
+                    className={`cursor-pointer transition-all ${
+                      formData.shampooPreferences.includes(pref)
+                        ? 'border-primary bg-primary/5 shadow-lg'
+                        : 'hover:border-primary/50'
+                    }`}
+                    onClick={() => setFormData({
+                      ...formData,
+                      shampooPreferences: toggleArrayItem(formData.shampooPreferences, pref)
+                    })}
+                  >
+                    <CardContent className="p-6 flex items-center justify-between">
+                      <span className="text-lg font-light">{pref}</span>
+                      {formData.shampooPreferences.includes(pref) && (
+                        <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                          <Heart className="w-4 h-4 text-white fill-white" />
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Navigation Buttons */}
         <div className="flex gap-3 pt-4">
           {step > 1 && (
@@ -1040,7 +1224,9 @@ const Survey = () => {
                 (step === 4 && formData.budgetRange.length === 0) ||
                 (step === 5 && formData.lifestyle.length === 0) ||
                 (step === 6 && formData.occasions.length === 0) ||
-                (step === 7 && formData.bodyType.length === 0)
+                (step === 7 && formData.bodyType.length === 0) ||
+                (step === 11 && formData.fragranceTypes.length === 0) ||
+                (step === 12 && formData.hairType.length === 0)
               }
             >
               Continue <ArrowRight className="ml-2 h-4 w-4" />

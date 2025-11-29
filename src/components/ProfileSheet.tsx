@@ -27,6 +27,8 @@ const LIFESTYLES = ["Professional", "Casual", "Active", "Social", "Creative", "E
 const OCCASIONS = ["Work", "Casual Outings", "Date Night", "Events", "Travel", "Working Out", "Business Meetings", "Formal Events/Galas", "Weddings", "Networking Events", "Vacation/Resort", "Golf/Country Club", "Cocktail Parties", "Brunch/Lunch", "Weekend Getaways", "Red Carpet/VIP", "Charity Events", "Gallery Openings", "Private Dinners", "Yachting/Boating", "Outdoor Activities", "Sports Events", "Theater/Opera", "Beach/Pool", "Ski Resort", "Wine Tasting", "Fashion Shows"];
 const GENDERS = ["Women's", "Men's", "Unisex"];
 const BODY_TYPES = ["Athletic", "Slim", "Curvy", "Petite", "Plus Size", "Muscular"];
+const FRAGRANCE_TYPES = ["Floral", "Woody", "Fresh/Citrus", "Oriental/Spicy", "Fruity", "Aquatic", "Gourmand", "Musky"];
+const HAIR_TYPES = ["Straight", "Wavy", "Curly", "Coily", "Fine/Thin", "Thick/Coarse", "Color-Treated", "Natural/Virgin"];
 
 const ProfileSheet = ({ open, onOpenChange }: ProfileSheetProps) => {
   const [loading, setLoading] = useState(false);
@@ -38,6 +40,8 @@ const ProfileSheet = ({ open, onOpenChange }: ProfileSheetProps) => {
     lifestyle: [],
     occasions: [],
     bodyType: [],
+    fragranceTypes: [],
+    hairType: [],
   });
 
   useEffect(() => {
@@ -53,6 +57,8 @@ const ProfileSheet = ({ open, onOpenChange }: ProfileSheetProps) => {
           lifestyle: parsed.lifestyle || [],
           occasions: parsed.occasions || [],
           bodyType: parsed.bodyType || [],
+          fragranceTypes: parsed.fragranceTypes || [],
+          hairType: parsed.hairType || [],
         });
       }
     }
@@ -150,10 +156,11 @@ const ProfileSheet = ({ open, onOpenChange }: ProfileSheetProps) => {
         </SheetHeader>
         
         <Tabs defaultValue="style" className="flex-1 flex flex-col overflow-hidden">
-          <TabsList className="mx-6 mt-3 grid w-[calc(100%-3rem)] grid-cols-3">
+          <TabsList className="mx-6 mt-3 grid w-[calc(100%-3rem)] grid-cols-4">
             <TabsTrigger value="style" className="text-xs">Style</TabsTrigger>
             <TabsTrigger value="lifestyle" className="text-xs">Lifestyle</TabsTrigger>
             <TabsTrigger value="body" className="text-xs">Body</TabsTrigger>
+            <TabsTrigger value="care" className="text-xs">Care</TabsTrigger>
           </TabsList>
 
           <ScrollArea className="flex-1 px-6">
@@ -262,6 +269,38 @@ const ProfileSheet = ({ open, onOpenChange }: ProfileSheetProps) => {
                       item={type}
                       isSelected={formData.bodyType?.includes(type)}
                       onClick={() => toggleArrayItem('bodyType', type)}
+                    />
+                  ))}
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="care" className="mt-4 space-y-4 pb-4">
+              {/* Fragrance Types */}
+              <div className="space-y-2">
+                <Label className="font-medium text-sm">Fragrance Types</Label>
+                <div className="flex flex-wrap gap-1.5">
+                  {FRAGRANCE_TYPES.map((type) => (
+                    <BadgeOption
+                      key={type}
+                      item={type}
+                      isSelected={formData.fragranceTypes?.includes(type)}
+                      onClick={() => toggleArrayItem('fragranceTypes', type)}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Hair Type */}
+              <div className="space-y-2">
+                <Label className="font-medium text-sm">Hair Type</Label>
+                <div className="flex flex-wrap gap-1.5">
+                  {HAIR_TYPES.map((type) => (
+                    <BadgeOption
+                      key={type}
+                      item={type}
+                      isSelected={formData.hairType?.includes(type)}
+                      onClick={() => toggleArrayItem('hairType', type)}
                     />
                   ))}
                 </div>
