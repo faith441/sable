@@ -36,6 +36,8 @@ const OutfitPlanner = () => {
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
   const [locationInput, setLocationInput] = useState("");
   const [searchingLocation, setSearchingLocation] = useState(false);
+  const [locationSuggestions, setLocationSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -130,16 +132,70 @@ const OutfitPlanner = () => {
     }
   };
 
+  // Debounced search for location suggestions
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (!locationInput.trim() || locationInput.length < 2) {
+        setLocationSuggestions([]);
+        setShowSuggestions(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(locationInput.trim())}&count=5&language=en&format=json`
+        );
+        const data = await response.json();
+        
+        if (data.results && data.results.length > 0) {
+          setLocationSuggestions(data.results);
+          setShowSuggestions(true);
+        } else {
+          setLocationSuggestions([]);
+          setShowSuggestions(false);
+        }
+      } catch (error) {
+        console.error("Error fetching suggestions:", error);
+        setLocationSuggestions([]);
+      }
+    };
+
+    const timeoutId = setTimeout(fetchSuggestions, 300);
+    return () => clearTimeout(timeoutId);
+  }, [locationInput]);
+
+  const selectLocation = async (result: any) => {
+    const { latitude, longitude, name, admin1, country } = result;
+    const displayName = admin1 ? `${name}, ${admin1}, ${country}` : `${name}, ${country}`;
+    
+    setLocation({ lat: latitude, lon: longitude });
+    setLocationName(name);
+    setLocationInput(displayName);
+    setLocationEnabled(true);
+    setShowSuggestions(false);
+    
+    await fetchWeather(latitude, longitude);
+    
+    setLocationDialogOpen(false);
+    setLocationInput("");
+    toast.success(`Weather set to ${name}`);
+  };
+
   const searchLocation = async () => {
-    if (!locationInput.trim()) {
-      toast.error("Please enter a location");
+    if (!locationInput.trim() || locationInput.length < 2) {
+      toast.error("Please enter at least 2 characters");
+      return;
+    }
+
+    if (locationInput.trim().length > 100) {
+      toast.error("Location name is too long");
       return;
     }
 
     setSearchingLocation(true);
     try {
       const response = await fetch(
-        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(locationInput)}&count=1&language=en&format=json`
+        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(locationInput.trim())}&count=1&language=en&format=json`
       );
       const data = await response.json();
       
@@ -149,17 +205,7 @@ const OutfitPlanner = () => {
         return;
       }
 
-      const result = data.results[0];
-      const { latitude, longitude, name } = result;
-      
-      setLocation({ lat: latitude, lon: longitude });
-      setLocationName(name);
-      setLocationEnabled(true);
-      await fetchWeather(latitude, longitude);
-      
-      setLocationDialogOpen(false);
-      setLocationInput("");
-      toast.success(`Weather set to ${name}`);
+      await selectLocation(data.results[0]);
     } catch (error) {
       console.error("Error searching location:", error);
       toast.error("Failed to search location");
@@ -418,20 +464,46 @@ const OutfitPlanner = () => {
                               <DialogTitle>Change Location</DialogTitle>
                             </DialogHeader>
                             <div className="space-y-4">
-                              <div className="space-y-2">
+                              <div className="space-y-2 relative">
                                 <Label htmlFor="city">City Name</Label>
                                 <Input
                                   id="city"
-                                  placeholder="e.g., New York, London, Tokyo"
+                                  placeholder="e.g., Tampa, New York, London"
                                   value={locationInput}
-                                  onChange={(e) => setLocationInput(e.target.value)}
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+                                    if (value.length <= 100) {
+                                      setLocationInput(value);
+                                    }
+                                  }}
                                   onKeyDown={(e) => e.key === "Enter" && searchLocation()}
+                                  onFocus={() => locationSuggestions.length > 0 && setShowSuggestions(true)}
+                                  autoComplete="off"
                                 />
+                                {showSuggestions && locationSuggestions.length > 0 && (
+                                  <div className="absolute z-50 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-60 overflow-auto">
+                                    {locationSuggestions.map((suggestion, index) => (
+                                      <button
+                                        key={index}
+                                        onClick={() => selectLocation(suggestion)}
+                                        className="w-full px-4 py-3 text-left hover:bg-secondary/50 transition-colors flex flex-col gap-1 border-b border-border/50 last:border-0"
+                                      >
+                                        <span className="text-sm font-light">{suggestion.name}</span>
+                                        <span className="text-xs text-muted-foreground">
+                                          {suggestion.admin1 && `${suggestion.admin1}, `}{suggestion.country}
+                                        </span>
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                               <div className="flex gap-2">
                                 <Button
                                   variant="outline"
-                                  onClick={requestLocation}
+                                  onClick={() => {
+                                    requestLocation();
+                                    setShowSuggestions(false);
+                                  }}
                                   className="flex-1"
                                 >
                                   <MapPin className="w-4 h-4 mr-2" />
