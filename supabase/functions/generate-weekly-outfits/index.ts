@@ -144,10 +144,35 @@ Make sure outfits are cohesive, weather-appropriate, and ONLY use items that exi
     const aiData = await aiResponse.json();
     let content = aiData.choices[0].message.content;
     
+    console.log("AI Response content:", content);
+    
     // Remove markdown code blocks if present
     content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     
-    const outfits = JSON.parse(content);
+    let parsedContent;
+    try {
+      parsedContent = JSON.parse(content);
+    } catch (parseError) {
+      console.error("Failed to parse AI response:", content);
+      throw new Error("AI returned invalid JSON");
+    }
+    
+    // Ensure we have an array of outfits
+    let outfits;
+    if (Array.isArray(parsedContent)) {
+      outfits = parsedContent;
+    } else if (parsedContent.outfits && Array.isArray(parsedContent.outfits)) {
+      outfits = parsedContent.outfits;
+    } else {
+      console.error("Unexpected AI response structure:", parsedContent);
+      throw new Error("AI response is not in expected format");
+    }
+
+    if (outfits.length === 0) {
+      throw new Error("No outfits generated");
+    }
+
+    console.log("Generated outfits:", outfits);
 
     // Save outfits to database
     const outfitPlans = outfits.map((outfit: any) => ({
