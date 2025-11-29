@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { ArrowLeft, ShoppingBag, Loader2, Sparkles, Heart, Package } from "lucide-react";
 import MobileNav from "@/components/MobileNav";
+import VideoGuide from "@/components/VideoGuide";
 
 interface Product {
   id: string;
@@ -140,14 +141,17 @@ const Wardrobe = () => {
     }
   };
 
-  if (loading || generating) {
+  if (generating) {
+    const preferences = JSON.parse(localStorage.getItem('guest_preferences') || '{}');
+    return <VideoGuide gender={preferences.gender || []} />;
+  }
+
+  if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <Loader2 className="w-12 h-12 animate-spin mx-auto text-primary" />
-          <p className="text-lg font-light text-muted-foreground">
-            {generating ? "Curating your capsule wardrobes..." : "Loading..."}
-          </p>
+          <p className="text-lg font-light text-muted-foreground">Loading...</p>
         </div>
       </div>
     );
