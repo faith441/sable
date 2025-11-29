@@ -65,12 +65,12 @@ const VideoGuide = ({ gender }: VideoGuideProps) => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="max-w-2xl w-full space-y-6">
+      <div className="max-w-md w-full space-y-6">
         {/* Video Container */}
         <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-black">
           <video
             ref={videoRef}
-            className="w-full aspect-video object-cover"
+            className="w-full aspect-[9/16] object-cover"
             muted
             playsInline
             src={videoUrl}
