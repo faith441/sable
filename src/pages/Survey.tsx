@@ -173,6 +173,8 @@ const Survey = () => {
               legLength: formData.legLength || null,
               weight: formData.weight || null
             }
+          }, {
+            onConflict: 'user_id'
           });
 
         if (error) throw error;
