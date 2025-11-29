@@ -13,7 +13,7 @@ const Survey = () => {
   const [aiMessage, setAiMessage] = useState("");
   
   const [formData, setFormData] = useState({
-    gender: [] as string[],
+    gender: "" as string,
     styleType: [] as string[],
     likedImages: [] as string[],
     colorPreferences: [] as string[],
@@ -212,7 +212,7 @@ const Survey = () => {
       : [...array, item];
   };
 
-  const isWomensSelected = formData.gender.includes("Women's");
+  const isWomensSelected = formData.gender === "Women's";
   const maxStep = isWomensSelected ? 12 : 11;
   const progress = (step / maxStep) * 100;
 
@@ -293,18 +293,18 @@ const Survey = () => {
               <Card
                 key={gender}
                 className={`cursor-pointer transition-all ${
-                  formData.gender.includes(gender)
+                  formData.gender === gender
                     ? 'border-primary bg-primary/5 shadow-lg'
                     : 'hover:border-primary/50'
                 }`}
                 onClick={() => setFormData({
                   ...formData,
-                  gender: toggleArrayItem(formData.gender, gender)
+                  gender: gender
                 })}
               >
                 <CardContent className="p-6 flex items-center justify-between">
                   <span className="text-lg font-light">{gender}</span>
-                  {formData.gender.includes(gender) && (
+                  {formData.gender === gender && (
                     <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
                       <Heart className="w-4 h-4 text-white fill-white" />
                     </div>
@@ -611,14 +611,12 @@ const Survey = () => {
             </div>
 
             {/* Female-specific questions */}
-            {(formData.gender.includes("Women's") || formData.gender.length === 0) && (
+            {formData.gender === "Women's" && (
               <>
                 <div className="border-t border-border pt-6 mt-6">
                   <h3 className="text-base font-normal mb-4">
                     Additional Fit Details
-                    {formData.gender.includes("Women's") && (
-                      <span className="text-xs text-muted-foreground font-light ml-2">(Women's options)</span>
-                    )}
+                    <span className="text-xs text-muted-foreground font-light ml-2">(Women's options)</span>
                   </h3>
                   
                   {/* Jean Sizes */}
@@ -1219,7 +1217,7 @@ const Survey = () => {
               variant="luxury"
               disabled={
                 (step === 1 && formData.styleType.length === 0) ||
-                (step === 2 && formData.gender.length === 0) ||
+                (step === 2 && !formData.gender) ||
                 (step === 3 && formData.colorPreferences.length === 0) ||
                 (step === 4 && formData.budgetRange.length === 0) ||
                 (step === 5 && formData.lifestyle.length === 0) ||
