@@ -1,4 +1,4 @@
-import { Menu, User, FileText, Package, History } from "lucide-react";
+import { Menu, User, FileText, Package, History, Sparkles } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,9 +12,10 @@ import { useNavigate } from "react-router-dom";
 
 interface ProfileMenuProps {
   onProfileClick: () => void;
+  onRegenerateWardrobe?: () => void;
 }
 
-const ProfileMenu = ({ onProfileClick }: ProfileMenuProps) => {
+const ProfileMenu = ({ onProfileClick, onRegenerateWardrobe }: ProfileMenuProps) => {
   const navigate = useNavigate();
 
   return (
@@ -39,6 +40,15 @@ const ProfileMenu = ({ onProfileClick }: ProfileMenuProps) => {
           <History className="mr-2 h-4 w-4" />
           <span className="font-light">Past Orders</span>
         </DropdownMenuItem>
+        {onRegenerateWardrobe && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={onRegenerateWardrobe} className="cursor-pointer">
+              <Sparkles className="mr-2 h-4 w-4" />
+              <span className="font-light">Regenerate Wardrobe</span>
+            </DropdownMenuItem>
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem className="cursor-pointer">
           <FileText className="mr-2 h-4 w-4" />

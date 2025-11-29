@@ -56,6 +56,15 @@ const Wardrobe = () => {
         return;
       }
 
+      // Check if we have cached capsules
+      const cachedCapsules = localStorage.getItem('cached_capsules');
+      if (cachedCapsules) {
+        setCapsules(JSON.parse(cachedCapsules));
+        setLoading(false);
+        return;
+      }
+
+      // If no cached capsules, generate new ones
       await generateWardrobe();
     } catch (error) {
       console.error("Error loading wardrobe:", error);
@@ -76,7 +85,11 @@ const Wardrobe = () => {
 
       if (error) throw error;
 
-      setCapsules(data.capsules || []);
+      const newCapsules = data.capsules || [];
+      setCapsules(newCapsules);
+      
+      // Cache the generated capsules
+      localStorage.setItem('cached_capsules', JSON.stringify(newCapsules));
     } catch (error: any) {
       console.error("Error generating wardrobe:", error);
       toast.error(error.message || "Failed to generate wardrobe");
@@ -169,7 +182,10 @@ const Wardrobe = () => {
         <div className="flex items-center justify-between max-w-lg mx-auto">
           <div className="w-9" /> {/* Spacer for alignment */}
           <h1 className="text-xl font-light">Your Capsule Wardrobes</h1>
-          <ProfileMenu onProfileClick={() => setProfileOpen(true)} />
+          <ProfileMenu 
+            onProfileClick={() => setProfileOpen(true)}
+            onRegenerateWardrobe={generateWardrobe}
+          />
         </div>
       </div>
 

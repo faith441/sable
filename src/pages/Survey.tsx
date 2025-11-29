@@ -163,6 +163,8 @@ const Survey = () => {
       }
 
       toast.success("Perfect! Generating your personalized wardrobe...");
+      // Clear cached capsules so wardrobe page generates fresh ones
+      localStorage.removeItem('cached_capsules');
       navigate("/wardrobe");
     } catch (error) {
       console.error("Error saving preferences:", error);
