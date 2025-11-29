@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { userId } = await req.json();
+    const { userId, weather, dayOnly } = await req.json();
     
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -20,36 +20,89 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get user's wardrobe
+    // Get user's wardrobe - both purchased products and custom items
     const { data: wardrobe } = await supabase
       .from("user_wardrobe")
-      .select(`
-        products (
-          id,
-          name,
-          category,
-          colors
-        )
-      `)
+      .select("*")
       .eq("user_id", userId);
 
     if (!wardrobe || wardrobe.length === 0) {
       throw new Error("No items in wardrobe");
     }
 
-    const items = wardrobe.map(w => w.products);
+    // Fetch product details for non-custom items
+    const productIds = wardrobe
+      .filter(w => !w.is_custom && w.product_id)
+      .map(w => w.product_id);
+    
+    const { data: products } = productIds.length > 0 
+      ? await supabase.from("products").select("*").in("id", productIds)
+      : { data: [] };
 
-    // Generate outfits using AI
-    const prompt = `Create 7 outfit combinations (one for each day of the week) using these wardrobe items:
+    // Combine purchased products and custom items
+    const items = wardrobe.map(w => {
+      if (w.is_custom) {
+        return {
+          id: w.id,
+          name: w.custom_description || "Custom item",
+          category: w.custom_category || "Clothing",
+          brand: w.custom_brand,
+          size: w.custom_size,
+          image_url: w.custom_image_url,
+          isCustom: true
+        };
+      } else {
+        const product = products?.find(p => p.id === w.product_id);
+        return product ? {
+          id: product.id,
+          name: product.name,
+          category: product.category,
+          colors: product.colors,
+          image_url: product.image_url,
+          isCustom: false
+        } : null;
+      }
+    }).filter(Boolean);
+
+    const weatherContext = weather 
+      ? `Weather: ${weather.condition}, Temperature: ${weather.temp}°F. Consider appropriate layering and weather protection.`
+      : "";
+
+    const daysToGenerate = dayOnly ? [dayOnly] : [
+      "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
+    ];
+
+    // Generate outfits using AI with detailed layering
+    const prompt = `Create ${daysToGenerate.length} complete outfit combination(s) for ${dayOnly ? dayOnly : "the week"} using these wardrobe items:
 ${JSON.stringify(items, null, 2)}
 
-Return a JSON array of 7 outfit objects with:
+${weatherContext}
+
+For each outfit, create a COMPLETE look including ALL appropriate layers:
+- Base layer (underwear/undershirt if needed)
+- Mid layer (shirt, blouse, dress, pants, skirt, etc.)
+- Outer layer (jacket, coat, cardigan, sweater if appropriate)
+- Footwear (shoes, boots, sneakers)
+- Accessories (jewelry, bags, scarves, hats, belts if appropriate and available)
+
+Return a JSON array of outfit objects for days: ${daysToGenerate.join(", ")}
+
+Each outfit object should have:
 {
   "day": "Monday/Tuesday/etc",
   "name": "Creative outfit name",
-  "items": [list of item IDs used],
-  "description": "Brief styling note"
-}`;
+  "items": [
+    {
+      "id": "item_id",
+      "name": "item name",
+      "category": "item category",
+      "layer": "base/mid/outer/footwear/accessory"
+    }
+  ],
+  "description": "Brief styling note about the complete look"
+}
+
+Make sure outfits are cohesive, weather-appropriate, and use a variety of items from the wardrobe.`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -77,7 +130,12 @@ Return a JSON array of 7 outfit objects with:
     }
 
     const aiData = await aiResponse.json();
-    const outfits = JSON.parse(aiData.choices[0].message.content);
+    let content = aiData.choices[0].message.content;
+    
+    // Remove markdown code blocks if present
+    content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    
+    const outfits = JSON.parse(content);
 
     // Save outfits to database
     const outfitPlans = outfits.map((outfit: any) => ({
@@ -87,11 +145,19 @@ Return a JSON array of 7 outfit objects with:
       items: outfit.items,
     }));
 
-    // Delete existing plans
-    await supabase
-      .from("outfit_plans")
-      .delete()
-      .eq("user_id", userId);
+    // Delete existing plans for the days being generated
+    if (dayOnly) {
+      await supabase
+        .from("outfit_plans")
+        .delete()
+        .eq("user_id", userId)
+        .eq("day_of_week", dayOnly);
+    } else {
+      await supabase
+        .from("outfit_plans")
+        .delete()
+        .eq("user_id", userId);
+    }
 
     // Insert new plans
     const { error } = await supabase
