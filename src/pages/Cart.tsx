@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { ArrowLeft, Trash2, ShoppingBag, Loader2 } from "lucide-react";
+import { ArrowLeft, Trash2, ShoppingBag, Loader2, Plus, Minus } from "lucide-react";
 
 interface CartItem {
   id: string;
@@ -76,6 +76,29 @@ const Cart = () => {
       toast.error("Failed to load cart");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const updateQuantity = async (itemId: string, newQuantity: number) => {
+    if (newQuantity < 1) {
+      await removeItem(itemId);
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("cart_items")
+        .update({ quantity: newQuantity })
+        .eq("id", itemId);
+
+      if (error) throw error;
+
+      setItems(items.map(item => 
+        item.id === itemId ? { ...item, quantity: newQuantity } : item
+      ));
+    } catch (error) {
+      console.error("Error updating quantity:", error);
+      toast.error("Failed to update quantity");
     }
   };
 
@@ -159,20 +182,42 @@ const Cart = () => {
                           <img src={item.product.image_url} alt={item.product.name} className="w-full h-full object-cover" />
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-muted-foreground mb-1">{item.product.brand.name}</p>
-                        <h3 className="font-light mb-2 truncate">{item.product.name}</h3>
-                        {item.size && <p className="text-sm text-muted-foreground mb-2">Size: {item.size}</p>}
-                        <p className="text-lg font-light">${item.product.price}</p>
+                      <div className="flex-1 min-w-0 flex flex-col justify-between">
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">{item.product.brand.name}</p>
+                          <h3 className="font-light mb-2 truncate">{item.product.name}</h3>
+                          {item.size && <p className="text-sm text-muted-foreground mb-2">Size: {item.size}</p>}
+                          <p className="text-lg font-light">${item.product.price}</p>
+                        </div>
+                        <div className="flex items-center justify-between mt-3">
+                          <div className="flex items-center gap-2 border border-border rounded-lg">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Minus className="h-3 w-3" />
+                            </Button>
+                            <span className="text-sm font-light min-w-[20px] text-center">{item.quantity}</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeItem(item.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeItem(item.id)}
-                        className="self-start"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
                     </div>
                   </CardContent>
                 </Card>
