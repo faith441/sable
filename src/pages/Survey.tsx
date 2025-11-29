@@ -136,8 +136,8 @@ const Survey = () => {
 
   const updateAiMessage = (currentStep: number) => {
     const messages = [
-      "Hi! I'm Luna, your personal AI stylist. Let's discover your perfect style together! Select all styles that resonate with you - the more you choose, the better I can understand your taste!",
-      "Great choices! Now, which gender preferences should I focus on? You can select multiple!",
+      "Hi! I'm Luna, your personal AI stylist. Let's start by understanding which gender preferences I should focus on!",
+      "Great choice! Now let's discover your perfect style together! Select all styles that resonate with you - the more you choose, the better I can understand your taste!",
       "Perfect! Let me show you some color palettes. Tap all the ones that catch your eye!",
       "Beautiful selections! What's the maximum you'd be willing to spend on a capsule wardrobe (typically 10 pieces)? Select all ranges that work for you!",
       "Almost there! Tell me about your lifestyle - select all that apply!",
@@ -253,8 +253,37 @@ const Survey = () => {
           </CardContent>
         </Card>
 
-        {/* Step 1: Style Type with Images */}
+        {/* Step 1: Gender Preference */}
         {step === 1 && (
+          <div className="space-y-3">
+            {genderOptions.map((gender) => (
+              <Card
+                key={gender}
+                className={`cursor-pointer transition-all ${
+                  formData.gender === gender
+                    ? 'border-primary bg-primary/5 shadow-lg'
+                    : 'hover:border-primary/50'
+                }`}
+                onClick={() => setFormData({
+                  ...formData,
+                  gender: gender
+                })}
+              >
+                <CardContent className="p-6 flex items-center justify-between">
+                  <span className="text-lg font-light">{gender}</span>
+                  {formData.gender === gender && (
+                    <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                      <Heart className="w-4 h-4 text-white fill-white" />
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Step 2: Style Type with Images */}
+        {step === 2 && (
           <div className="grid grid-cols-2 gap-3">
             {Object.entries(styleImages).map(([style, imageUrl]) => (
               <div
@@ -282,35 +311,6 @@ const Survey = () => {
                   )}
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-
-        {/* Step 2: Gender Preference */}
-        {step === 2 && (
-          <div className="space-y-3">
-            {genderOptions.map((gender) => (
-              <Card
-                key={gender}
-                className={`cursor-pointer transition-all ${
-                  formData.gender === gender
-                    ? 'border-primary bg-primary/5 shadow-lg'
-                    : 'hover:border-primary/50'
-                }`}
-                onClick={() => setFormData({
-                  ...formData,
-                  gender: gender
-                })}
-              >
-                <CardContent className="p-6 flex items-center justify-between">
-                  <span className="text-lg font-light">{gender}</span>
-                  {formData.gender === gender && (
-                    <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                      <Heart className="w-4 h-4 text-white fill-white" />
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
             ))}
           </div>
         )}
