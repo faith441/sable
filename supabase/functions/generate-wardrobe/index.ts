@@ -64,39 +64,36 @@ serve(async (req) => {
     if (Array.isArray(preferences.styleType)) {
       styleTypes = preferences.styleType;
     } else if (typeof preferences.styleType === 'string') {
-      styleTypes = preferences.styleType.split(',').map((s: string) => s.trim());
+      // Check if it's a comma-separated list or just a single value
+      if (preferences.styleType.includes(',')) {
+        styleTypes = preferences.styleType.split(',').map((s: string) => s.trim());
+      } else {
+        styleTypes = [preferences.styleType.trim()];
+      }
     }
 
     if (Array.isArray(preferences.lifestyle)) {
       lifestyles = preferences.lifestyle;
     } else if (typeof preferences.lifestyle === 'string') {
-      lifestyles = preferences.lifestyle.split(',').map((s: string) => s.trim());
+      // Check if it's a comma-separated list or just a single value
+      if (preferences.lifestyle.includes(',')) {
+        lifestyles = preferences.lifestyle.split(',').map((s: string) => s.trim());
+      } else {
+        lifestyles = [preferences.lifestyle.trim()];
+      }
     }
 
     console.log("Style types:", styleTypes);
     console.log("Lifestyles:", lifestyles);
 
-    // Generate capsules for each style type + primary lifestyle combination
-    // Limit to reasonable number of capsules (max 10)
-    const capsuleCombinations = [];
-    
-    // Create combinations: each style type gets paired with primary lifestyles
-    for (const style of styleTypes.slice(0, 10)) {
-      const primaryLifestyle = lifestyles[0] || "Versatile";
-      capsuleCombinations.push({
-        style,
-        lifestyle: primaryLifestyle,
-        name: `${style} ${primaryLifestyle}`
-      });
-    }
+    // Get gender preference for filtering
+    const gender = preferences.gender || 'unisex';
+    console.log("Gender preference:", gender);
 
-    console.log("Generating capsules for:", capsuleCombinations);
+    // Generate 3 comprehensive capsules that work across ALL styles and lifestyles
+    const prompt = `Based on these style preferences, generate 3 complete CAPSULE WARDROBES that work across ALL the user's selected styles and lifestyles. Each capsule should be versatile and incorporate elements from multiple style types and lifestyle needs.
 
-    // Generate wardrobes for each combination
-    const prompt = `Based on these style preferences, generate ${capsuleCombinations.length} complete CAPSULE WARDROBES. Each capsule should be a cohesive collection that creates multiple outfit combinations. Include clothing, fragrance, and hair care recommendations.
-
-REQUIRED CAPSULES TO GENERATE (one for each):
-${capsuleCombinations.map(c => `- ${c.name}: A ${c.style} style capsule for ${c.lifestyle} lifestyle`).join('\n')}
+IMPORTANT: Generate ${gender === 'male' ? 'MENS' : gender === 'female' ? 'WOMENS' : 'UNISEX'} clothing only.
     
 User Preferences:
 ${JSON.stringify(preferences, null, 2)}
@@ -128,21 +125,22 @@ Return a JSON object with this EXACT structure:
 }
 
 CRITICAL RULES:
-- Generate EXACTLY ${capsuleCombinations.length} capsule collections (one for each style/lifestyle combination listed above)
-- Each capsule MUST match the specific style type and lifestyle assigned to it
-- Each capsule name should clearly reflect its style + lifestyle (e.g., "Minimalist Professional", "Vintage Casual", "Chic Executive")
+- Generate EXACTLY 3 capsule collections
+- Each capsule should blend multiple style types from: ${styleTypes.join(', ')}
+- Each capsule should work across multiple lifestyles from: ${lifestyles.join(', ')}
+- Name capsules descriptively based on their primary focus (e.g., "Professional Essentials", "Weekend Versatile", "Evening Elevated")
 - Each capsule should have 10-15 pieces that work together (clothing + 1 fragrance + 1 shampoo + 1 conditioner)
-- ALL pieces in a capsule must coordinate (colors, style, formality) and match the specific style type
+- ALL pieces in a capsule must coordinate (colors, style, formality) and be versatile across multiple occasions
 - Calculate outfit_count realistically (e.g., 3 tops × 2 bottoms = 6 outfits minimum)
 - Match capsules to user's budget range
-- ALWAYS include 1 signature fragrance recommendation per capsule based on user's fragrance preferences and the capsule's style
+- GENERATE ${gender === 'male' ? 'MENS' : gender === 'female' ? 'WOMENS' : 'UNISEX'} CLOTHING ONLY - absolutely critical
+- ALWAYS include 1 signature fragrance recommendation per capsule based on user's fragrance preferences
 - ALWAYS include 1 shampoo and 1 conditioner recommendation per capsule based on user's hair type and concerns
 - Use real Unsplash URLs for image_url (fashion items, perfume bottles, hair care products)
-- Each capsule should have a clear purpose/occasion matching its lifestyle
+- Each capsule should be versatile enough to work across multiple user lifestyles and occasions
 - Items should feel premium and intentional
-- Fragrance should complement the capsule's overall aesthetic and occasion
-- Hair care should match user's specific hair type, concerns, and product preferences
-- DO NOT generate generic capsules - each must be distinctly ${capsuleCombinations.map(c => c.style).join(', ')}`;
+- Fragrance should complement the capsule's overall aesthetic
+- Hair care should match user's specific hair type, concerns, and product preferences`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
