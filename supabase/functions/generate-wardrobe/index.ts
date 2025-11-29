@@ -91,11 +91,30 @@ serve(async (req) => {
     console.log("Gender preference:", gender);
 
     // Generate 3 comprehensive capsules that work across ALL styles and lifestyles
-    const prompt = `Based on these style preferences, generate 3 complete CAPSULE WARDROBES that work across ALL the user's selected styles and lifestyles. Each capsule should be versatile and incorporate elements from multiple style types and lifestyle needs.
+    const prompt = `Based on these comprehensive style preferences, generate 3 complete CAPSULE WARDROBES that work across ALL the user's selected styles and lifestyles. Each capsule should be versatile and incorporate elements from multiple style types and lifestyle needs.
 
 IMPORTANT: Generate ${gender === 'male' ? 'MENS' : gender === 'female' ? 'WOMENS' : 'UNISEX'} clothing only.
-    
-User Preferences:
+
+USER'S COMPLETE STYLE PROFILE:
+- Gender: ${gender}
+- Style Types: ${styleTypes.join(', ')}
+- Lifestyles: ${lifestyles.join(', ')}
+- Color Preferences: ${Array.isArray(preferences.colorPreferences) ? preferences.colorPreferences.join(', ') : preferences.colorPreferences}
+- Budget Range: ${preferences.budgetRange}
+- Occasions: ${Array.isArray(preferences.occasions) ? preferences.occasions.join(', ') : preferences.occasions || 'Not specified'}
+- Body Type: ${preferences.bodyType || 'Not specified'}
+- Fragrance Preferences: ${JSON.stringify({
+  types: preferences.fragranceTypes,
+  intensity: preferences.fragranceIntensity,
+  scents: preferences.scentPreferences
+}) || 'Not specified'}
+- Hair Care Needs: ${JSON.stringify({
+  hairType: preferences.hairType,
+  concerns: preferences.hairConcerns,
+  preferences: preferences.shampooPreferences
+}) || 'Not specified'}
+
+Full Preferences Data:
 ${JSON.stringify(preferences, null, 2)}
 
 Return a JSON object with this EXACT structure:
@@ -124,23 +143,25 @@ Return a JSON object with this EXACT structure:
   ]
 }
 
-CRITICAL RULES:
+CRITICAL RULES - USE ALL USER PREFERENCES:
 - Generate EXACTLY 3 capsule collections
 - Each capsule should blend multiple style types from: ${styleTypes.join(', ')}
 - Each capsule should work across multiple lifestyles from: ${lifestyles.join(', ')}
 - Name capsules descriptively based on their primary focus (e.g., "Professional Essentials", "Weekend Versatile", "Evening Elevated")
 - Each capsule should have 10-15 pieces that work together (clothing + 1 fragrance + 1 shampoo + 1 conditioner)
+- STRICTLY match user's COLOR PREFERENCES: ${Array.isArray(preferences.colorPreferences) ? preferences.colorPreferences.join(', ') : preferences.colorPreferences}
+- ALL pieces must use ONLY colors from user's preferred palette
+- Consider user's OCCASIONS when selecting pieces: ${Array.isArray(preferences.occasions) ? preferences.occasions.join(', ') : preferences.occasions || 'versatile'}
 - ALL pieces in a capsule must coordinate (colors, style, formality) and be versatile across multiple occasions
 - Calculate outfit_count realistically (e.g., 3 tops × 2 bottoms = 6 outfits minimum)
-- Match capsules to user's budget range
+- Match capsules STRICTLY to user's BUDGET RANGE: ${preferences.budgetRange}
 - GENERATE ${gender === 'male' ? 'MENS' : gender === 'female' ? 'WOMENS' : 'UNISEX'} CLOTHING ONLY - absolutely critical
-- ALWAYS include 1 signature fragrance recommendation per capsule based on user's fragrance preferences
-- ALWAYS include 1 shampoo and 1 conditioner recommendation per capsule based on user's hair type and concerns
+- Consider body type ${preferences.bodyType || 'standard'} when selecting fits and silhouettes
+- FRAGRANCE: Select based on user's fragrance type preferences (${preferences.fragranceTypes || 'any'}), intensity (${preferences.fragranceIntensity || 'moderate'}), and scent preferences (${preferences.scentPreferences || 'versatile'})
+- HAIR CARE: Select shampoo and conditioner based on hair type (${preferences.hairType || 'normal'}), hair concerns (${preferences.hairConcerns || 'general care'}), and product preferences (${preferences.shampooPreferences || 'standard'})
 - Use real Unsplash URLs for image_url (fashion items, perfume bottles, hair care products)
 - Each capsule should be versatile enough to work across multiple user lifestyles and occasions
-- Items should feel premium and intentional
-- Fragrance should complement the capsule's overall aesthetic
-- Hair care should match user's specific hair type, concerns, and product preferences`;
+- Items should feel premium and intentional within the specified budget range`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
