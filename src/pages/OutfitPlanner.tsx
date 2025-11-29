@@ -4,12 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { ArrowLeft, Sparkles, Loader2, Plus, MapPin, Cloud, CloudRain, CloudSnow, Sun, CloudDrizzle, Trash2, RotateCw, Edit2 } from "lucide-react";
+import { ArrowLeft, Sparkles, Loader2, Plus, MapPin, Cloud, CloudRain, CloudSnow, Sun, CloudDrizzle, Trash2, RotateCw, Edit2, Check } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface OutfitPlan {
   id: string;
@@ -43,6 +44,9 @@ const OutfitPlanner = () => {
   const [searchingLocation, setSearchingLocation] = useState(false);
   const [locationSuggestions, setLocationSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [itemDialogOpen, setItemDialogOpen] = useState(false);
+  const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     checkAuth();
@@ -380,6 +384,38 @@ const OutfitPlanner = () => {
     }
   };
 
+  const getWeatherIconForDay = (condition: string) => {
+    switch (condition) {
+      case "rain":
+        return <CloudRain className="w-4 h-4" />;
+      case "snow":
+        return <CloudSnow className="w-4 h-4" />;
+      case "drizzle":
+        return <CloudDrizzle className="w-4 h-4" />;
+      case "cloudy":
+        return <Cloud className="w-4 h-4" />;
+      default:
+        return <Sun className="w-4 h-4" />;
+    }
+  };
+
+  const toggleItemCheck = (itemId: string) => {
+    setCheckedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+      } else {
+        newSet.add(itemId);
+      }
+      return newSet;
+    });
+  };
+
+  const openItemDetails = (item: any) => {
+    setSelectedItem(item);
+    setItemDialogOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -553,12 +589,17 @@ const OutfitPlanner = () => {
                 {days.map((day, index) => {
                   const dayForecast = weeklyForecast[index];
                   return (
-                    <TabsTrigger key={day} value={day} className="text-xs px-1 flex flex-col gap-0.5">
+                    <TabsTrigger key={day} value={day} className="text-xs px-1 flex flex-col gap-1 py-3">
                       <span>{day.slice(0, 3)}</span>
                       {locationEnabled && dayForecast && (
-                        <span className="text-[10px] text-muted-foreground font-normal">
-                          {dayForecast.high}°/{dayForecast.low}°
-                        </span>
+                        <>
+                          <span className="text-[10px] text-muted-foreground font-normal">
+                            {dayForecast.high}°/{dayForecast.low}°
+                          </span>
+                          <div className="flex items-center justify-center mt-0.5">
+                            {getWeatherIconForDay(dayForecast.condition)}
+                          </div>
+                        </>
                       )}
                     </TabsTrigger>
                   );
@@ -604,13 +645,27 @@ const OutfitPlanner = () => {
                           )}
                           <div className="space-y-2">
                             {outfit.items.map((item: any, idx: number) => (
-                              <div key={idx} className="flex items-center gap-3 p-3 bg-secondary/20 rounded-lg">
-                                <div className="w-12 h-16 bg-background rounded overflow-hidden flex-shrink-0">
+                              <div 
+                                key={idx} 
+                                className="flex items-center gap-3 p-3 bg-secondary/20 rounded-lg hover:bg-secondary/30 transition-colors group"
+                              >
+                                <Checkbox
+                                  checked={checkedItems.has(`${outfit.id}-${item.id || idx}`)}
+                                  onCheckedChange={() => toggleItemCheck(`${outfit.id}-${item.id || idx}`)}
+                                  className="flex-shrink-0"
+                                />
+                                <div 
+                                  className="w-12 h-16 bg-background rounded overflow-hidden flex-shrink-0 cursor-pointer"
+                                  onClick={() => openItemDetails(item)}
+                                >
                                   {item.image_url && (
                                     <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
                                   )}
                                 </div>
-                                <div className="flex-1">
+                                <div 
+                                  className="flex-1 cursor-pointer"
+                                  onClick={() => openItemDetails(item)}
+                                >
                                   <p className="text-sm font-light">{item.name}</p>
                                   <p className="text-xs text-muted-foreground">{item.category}</p>
                                   {item.layer && (
@@ -671,6 +726,66 @@ const OutfitPlanner = () => {
           </>
         )}
       </div>
+
+      {/* Item Details Dialog */}
+      <Dialog open={itemDialogOpen} onOpenChange={setItemDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{selectedItem?.name}</DialogTitle>
+          </DialogHeader>
+          {selectedItem && (
+            <div className="space-y-4">
+              {selectedItem.image_url && (
+                <div className="aspect-[3/4] rounded-lg overflow-hidden bg-secondary/20">
+                  <img 
+                    src={selectedItem.image_url} 
+                    alt={selectedItem.name} 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              <div className="space-y-2">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Category</p>
+                    <p className="font-light">{selectedItem.category}</p>
+                  </div>
+                  {selectedItem.layer && (
+                    <div className="text-right">
+                      <p className="text-sm text-muted-foreground">Layer</p>
+                      <p className="font-light capitalize">{selectedItem.layer}</p>
+                    </div>
+                  )}
+                </div>
+                {selectedItem.brand && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Brand</p>
+                    <p className="font-light">{selectedItem.brand}</p>
+                  </div>
+                )}
+                {selectedItem.size && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Size</p>
+                    <p className="font-light">{selectedItem.size}</p>
+                  </div>
+                )}
+                {selectedItem.colors && selectedItem.colors.length > 0 && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Colors</p>
+                    <div className="flex gap-2 mt-1">
+                      {selectedItem.colors.map((color: string, idx: number) => (
+                        <span key={idx} className="text-xs px-2 py-1 bg-secondary/50 rounded">
+                          {color}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
