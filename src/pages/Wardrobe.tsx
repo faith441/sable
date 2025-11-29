@@ -114,21 +114,46 @@ const Wardrobe = () => {
         localStorage.setItem('guest_session_id', sessionId);
       }
 
-      const { error } = await supabase.from("cart_items").insert({
-        user_id: user?.id || null,
-        session_id: user ? null : sessionId,
-        product_id: product.id,
-        quantity: 1,
-        product_data: {
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          image_url: product.image_url,
-          brand: product.brand,
-        },
-      });
+      // Check if item already exists in cart
+      const query = supabase
+        .from("cart_items")
+        .select("id, quantity")
+        .eq("product_id", product.id);
 
-      if (error) throw error;
+      if (user) {
+        query.eq("user_id", user.id);
+      } else {
+        query.eq("session_id", sessionId);
+      }
+
+      const { data: existing } = await query.maybeSingle();
+
+      if (existing) {
+        // Update quantity if item exists
+        const { error } = await supabase
+          .from("cart_items")
+          .update({ quantity: existing.quantity + 1 })
+          .eq("id", existing.id);
+
+        if (error) throw error;
+      } else {
+        // Insert new item
+        const { error } = await supabase.from("cart_items").insert({
+          user_id: user?.id || null,
+          session_id: user ? null : sessionId,
+          product_id: product.id,
+          quantity: 1,
+          product_data: {
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            image_url: product.image_url,
+            brand: product.brand,
+          },
+        });
+
+        if (error) throw error;
+      }
 
       toast.success("Added to cart!", {
         action: {
