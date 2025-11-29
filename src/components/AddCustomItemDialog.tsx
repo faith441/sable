@@ -94,12 +94,13 @@ const AddCustomItemDialog = ({ open, onOpenChange, onSubmit }: AddCustomItemDial
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
+      <DialogContent className="max-w-md max-h-[90vh] flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
           <DialogTitle className="text-2xl font-light">Add Item to Closet</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          <div className="overflow-y-auto px-6 py-4 space-y-4 flex-1">
           {/* Image Upload */}
           <div className="space-y-2">
             <Label>Photo</Label>
@@ -177,8 +178,10 @@ const AddCustomItemDialog = ({ open, onOpenChange, onSubmit }: AddCustomItemDial
               rows={3}
             />
           </div>
+          </div>
 
-          <div className="flex gap-2">
+          {/* Fixed Footer with Buttons */}
+          <div className="flex gap-2 px-6 py-4 border-t border-border bg-background">
             <Button
               type="button"
               variant="outline"
