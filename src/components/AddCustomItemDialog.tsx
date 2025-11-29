@@ -41,6 +41,12 @@ const CATEGORIES = [
   "Hat",
   "Scarf",
   "Bag",
+  "Necklace",
+  "Watch",
+  "Earrings",
+  "Bracelet",
+  "Ring",
+  "Sunglasses",
 ];
 
 export { CATEGORIES };
