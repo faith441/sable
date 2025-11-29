@@ -17,6 +17,11 @@ interface OutfitPlan {
   day_of_week: string;
   items: any[];
   image_url?: string;
+  recommended_additions?: Array<{
+    type: string;
+    description: string;
+    reason?: string;
+  }>;
 }
 
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -78,13 +83,25 @@ const OutfitPlanner = () => {
         .eq("user_id", user.id)
         .order("day_of_week");
 
-      setOutfits((outfitsData || []).map(outfit => ({
-        id: outfit.id,
-        name: outfit.name,
-        day_of_week: outfit.day_of_week || '',
-        items: Array.isArray(outfit.items) ? outfit.items : [],
-        image_url: outfit.image_url || undefined
-      })));
+      setOutfits((outfitsData || []).map(outfit => {
+        // Handle both old format (items array) and new format (items object with recommended_additions)
+        const outfitItems = Array.isArray(outfit.items) 
+          ? outfit.items 
+          : (outfit.items as any)?.items || [];
+        
+        const recommendedAdditions = !Array.isArray(outfit.items) 
+          ? (outfit.items as any)?.recommended_additions 
+          : undefined;
+
+        return {
+          id: outfit.id,
+          name: outfit.name,
+          day_of_week: outfit.day_of_week || '',
+          items: outfitItems,
+          image_url: outfit.image_url || undefined,
+          recommended_additions: recommendedAdditions
+        };
+      }));
     } catch (error) {
       console.error("Error loading data:", error);
       toast.error("Failed to load outfit planner");
@@ -602,6 +619,23 @@ const OutfitPlanner = () => {
                                 </div>
                               </div>
                             ))}
+                            
+                            {outfit.recommended_additions && outfit.recommended_additions.length > 0 && (
+                              <div className="mt-4 pt-4 border-t border-border/50">
+                                <p className="text-xs text-muted-foreground font-light mb-2">Suggested additions:</p>
+                                {outfit.recommended_additions.map((addition: any, idx: number) => (
+                                  <div key={idx} className="flex items-start gap-2 p-2 bg-secondary/10 rounded-lg mb-2">
+                                    <Plus className="w-3 h-3 text-muted-foreground mt-0.5 flex-shrink-0" />
+                                    <div className="flex-1">
+                                      <p className="text-xs font-light">{addition.description}</p>
+                                      {addition.reason && (
+                                        <p className="text-xs text-muted-foreground/70 mt-0.5">{addition.reason}</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         </CardContent>
                       </Card>

@@ -73,17 +73,22 @@ serve(async (req) => {
     ];
 
     // Generate outfits using AI with detailed layering
-    const prompt = `Create ${daysToGenerate.length} complete outfit combination(s) for ${dayOnly ? dayOnly : "the week"} using these wardrobe items:
+    const prompt = `Create ${daysToGenerate.length} complete outfit combination(s) for ${dayOnly ? dayOnly : "the week"} using ONLY items from this wardrobe:
 ${JSON.stringify(items, null, 2)}
 
 ${weatherContext}
 
-For each outfit, create a COMPLETE look including ALL appropriate layers:
-- Base layer (underwear/undershirt if needed)
-- Mid layer (shirt, blouse, dress, pants, skirt, etc.)
-- Outer layer (jacket, coat, cardigan, sweater if appropriate)
-- Footwear (shoes, boots, sneakers)
-- Accessories (jewelry, bags, scarves, hats, belts if appropriate and available)
+CRITICAL RULES:
+1. ONLY use items that exist in the wardrobe above (match by id)
+2. If an outfit needs additional items NOT in the wardrobe (belts, jewelry, bags, etc.), you can suggest them as "recommended_additions" but DO NOT include them as actual outfit items
+3. Each outfit MUST be buildable from the existing wardrobe
+
+For each outfit, create a complete look including available layers:
+- Base layer (if available)
+- Mid layer (shirts, blouses, dresses, pants, skirts from wardrobe)
+- Outer layer (jackets, coats from wardrobe if available)
+- Footwear (from wardrobe if available)
+- Accessories (from wardrobe if available)
 
 Return a JSON array of outfit objects for days: ${daysToGenerate.join(", ")}
 
@@ -93,16 +98,23 @@ Each outfit object should have:
   "name": "Creative outfit name",
   "items": [
     {
-      "id": "item_id",
-      "name": "item name",
+      "id": "item_id_from_wardrobe",
+      "name": "item name from wardrobe",
       "category": "item category",
       "layer": "base/mid/outer/footwear/accessory"
+    }
+  ],
+  "recommended_additions": [
+    {
+      "type": "generic item type",
+      "description": "e.g., 'Brown leather belt' or 'Gold hoop earrings'",
+      "reason": "why this would complete the look"
     }
   ],
   "description": "Brief styling note about the complete look"
 }
 
-Make sure outfits are cohesive, weather-appropriate, and use a variety of items from the wardrobe.`;
+Make sure outfits are cohesive, weather-appropriate, and ONLY use items that exist in the provided wardrobe.`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -143,6 +155,13 @@ Make sure outfits are cohesive, weather-appropriate, and use a variety of items 
       name: outfit.name,
       day_of_week: outfit.day,
       items: outfit.items,
+      ...(outfit.recommended_additions && { 
+        // Store recommended_additions in items jsonb for now
+        items: {
+          items: outfit.items,
+          recommended_additions: outfit.recommended_additions
+        }
+      })
     }));
 
     // Delete existing plans for the days being generated
