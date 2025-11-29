@@ -529,10 +529,15 @@ const Survey = () => {
             </div>
 
             {/* Female-specific questions */}
-            {formData.gender.includes("Women's") && (
+            {(formData.gender.includes("Women's") || formData.gender.length === 0) && (
               <>
                 <div className="border-t border-border pt-6 mt-6">
-                  <h3 className="text-base font-normal mb-4">Additional Fit Details</h3>
+                  <h3 className="text-base font-normal mb-4">
+                    Additional Fit Details
+                    {formData.gender.includes("Women's") && (
+                      <span className="text-xs text-muted-foreground font-light ml-2">(Women's options)</span>
+                    )}
+                  </h3>
                   
                   {/* Jean Sizes */}
                   <div className="space-y-3 mb-6">
