@@ -92,7 +92,7 @@ const Contact = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/wardrobe")}
             className="hover:bg-sage/10"
           >
             <ArrowLeft className="w-5 h-5" />
