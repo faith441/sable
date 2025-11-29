@@ -367,6 +367,77 @@ const OutfitPlanner = () => {
     }
   };
 
+  const deleteItemFromOutfit = async (outfitId: string, itemIndex: number, day: string) => {
+    try {
+      const outfit = outfits.find(o => o.id === outfitId);
+      if (!outfit) return;
+
+      const updatedItems = outfit.items.filter((_: any, idx: number) => idx !== itemIndex);
+      
+      if (updatedItems.length === 0) {
+        toast.error("Cannot remove all items. Delete the entire outfit instead.");
+        return;
+      }
+
+      const { error } = await supabase
+        .from("outfit_plans")
+        .update({ 
+          items: Array.isArray(outfit.items) 
+            ? updatedItems 
+            : { items: updatedItems, recommended_additions: outfit.recommended_additions }
+        })
+        .eq("id", outfitId);
+
+      if (error) throw error;
+
+      toast.success("Item removed from outfit");
+      loadData();
+    } catch (error: any) {
+      console.error("Error deleting item:", error);
+      toast.error("Failed to remove item");
+    }
+  };
+
+  const regenerateItemInOutfit = async (outfitId: string, itemIndex: number, day: string) => {
+    try {
+      const outfit = outfits.find(o => o.id === outfitId);
+      if (!outfit) return;
+
+      const itemToReplace = outfit.items[itemIndex];
+      
+      toast.info("Generating replacement item...");
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const weatherData = locationEnabled && weather ? {
+        condition: weather.condition,
+        temp: weather.temp
+      } : null;
+
+      // Call edge function to regenerate just this item
+      const { data, error } = await supabase.functions.invoke("generate-weekly-outfits", {
+        body: { 
+          userId: user.id,
+          weather: weatherData,
+          dayOnly: day,
+          replaceItem: {
+            category: itemToReplace.category,
+            layer: itemToReplace.layer
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success("Item replaced!");
+      loadData();
+    } catch (error: any) {
+      console.error("Error regenerating item:", error);
+      toast.error("Failed to regenerate item");
+    }
+  };
+
   const getWeatherIcon = () => {
     if (!weather) return <Cloud className="w-4 h-4" />;
     
@@ -675,8 +746,7 @@ const OutfitPlanner = () => {
                                           className="h-7 w-7 flex-1"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            // TODO: Implement regenerate single item
-                                            toast("Feature coming soon: Regenerate this item");
+                                            regenerateItemInOutfit(outfit.id, idx, day);
                                           }}
                                         >
                                           <RotateCw className="w-3 h-3" />
@@ -687,8 +757,7 @@ const OutfitPlanner = () => {
                                           className="h-7 w-7 flex-1"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            // TODO: Implement delete single item
-                                            toast("Feature coming soon: Remove this item");
+                                            deleteItemFromOutfit(outfit.id, idx, day);
                                           }}
                                         >
                                           <Trash2 className="w-3 h-3" />
