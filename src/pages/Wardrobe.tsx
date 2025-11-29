@@ -180,7 +180,9 @@ const Wardrobe = () => {
     <div className="min-h-screen bg-background pb-24">
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border/50 px-4 py-4">
         <div className="flex items-center justify-between max-w-lg mx-auto">
-          <div className="w-9" /> {/* Spacer for alignment */}
+          <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
+            <Package className="h-4 w-4" />
+          </Button>
           <h1 className="text-xl font-light">Your Capsule Wardrobes</h1>
           <ProfileMenu 
             onProfileClick={() => setProfileOpen(true)}
@@ -274,10 +276,24 @@ const Wardrobe = () => {
                               className="absolute top-2 right-2 w-8 h-8 bg-background/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-background transition-colors"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // Handle favorite
+                                const favorites = JSON.parse(localStorage.getItem('favorite_products') || '[]');
+                                const isFavorited = favorites.some((f: Product) => f.id === product.id);
+                                
+                                if (isFavorited) {
+                                  const updated = favorites.filter((f: Product) => f.id !== product.id);
+                                  localStorage.setItem('favorite_products', JSON.stringify(updated));
+                                  toast.success("Removed from favorites");
+                                } else {
+                                  favorites.push(product);
+                                  localStorage.setItem('favorite_products', JSON.stringify(favorites));
+                                  toast.success("Added to favorites");
+                                }
                               }}
                             >
-                              <Heart className="w-4 h-4" />
+                              <Heart 
+                                className="w-4 h-4" 
+                                fill={JSON.parse(localStorage.getItem('favorite_products') || '[]').some((f: Product) => f.id === product.id) ? "currentColor" : "none"}
+                              />
                             </button>
                           </div>
                           <div className="flex-1 py-4 pr-4 flex flex-col justify-between min-w-0">
