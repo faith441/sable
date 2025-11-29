@@ -146,17 +146,33 @@ const Survey = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
+        // Ensure all arrays are properly formatted with fallbacks
+        const styleTypeArray = Array.isArray(formData.styleType) ? formData.styleType : [];
+        const colorPrefsArray = Array.isArray(formData.colorPreferences) ? formData.colorPreferences : [];
+        const budgetArray = Array.isArray(formData.budgetRange) ? formData.budgetRange : [];
+        const genderArray = Array.isArray(formData.gender) ? formData.gender : [];
+        const lifestyleArray = Array.isArray(formData.lifestyle) ? formData.lifestyle : [];
+        const occasionsArray = Array.isArray(formData.occasions) ? formData.occasions : [];
+
         const { error } = await supabase
           .from("style_preferences")
           .upsert({
             user_id: user.id,
-            style_type: formData.styleType.join(", "),
-            color_preferences: formData.colorPreferences,
-            budget_range: formData.budgetRange.join(", "),
-            body_type: formData.gender.join(", "),
-            lifestyle: formData.lifestyle.join(", "),
-            occasions: formData.occasions,
+            style_type: styleTypeArray.length > 0 ? styleTypeArray.join(", ") : "Not specified",
+            color_preferences: colorPrefsArray,
+            budget_range: budgetArray.length > 0 ? budgetArray.join(", ") : "Not specified",
+            body_type: genderArray.length > 0 ? genderArray.join(", ") : null,
+            lifestyle: lifestyleArray.length > 0 ? lifestyleArray.join(", ") : "Not specified",
+            occasions: occasionsArray,
             favorite_brands: [],
+            sizes: {
+              jeanSizes: formData.jeanSizes || {},
+              braSize: formData.braSize || null,
+              bodyType: Array.isArray(formData.bodyType) ? formData.bodyType : [],
+              torsoLength: formData.torsoLength || null,
+              legLength: formData.legLength || null,
+              weight: formData.weight || null
+            }
           });
 
         if (error) throw error;
@@ -166,9 +182,9 @@ const Survey = () => {
       // Clear cached capsules so wardrobe page generates fresh ones
       localStorage.removeItem('cached_capsules');
       navigate("/wardrobe");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving preferences:", error);
-      toast.error("Failed to save preferences");
+      toast.error(error?.message || "Failed to save preferences");
     } finally {
       setLoading(false);
     }
