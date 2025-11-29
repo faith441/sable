@@ -8,7 +8,7 @@ const MobileNav = () => {
   const isActive = (path: string) => location.pathname === path;
 
   const navItems = [
-    { path: "/", icon: Home, label: "Home" },
+    { path: "/wardrobe", icon: Home, label: "Home" },
     { path: "/ai-stylist", icon: MessageCircle, label: "Stylist" },
     { path: "/wardrobe", icon: Sparkles, label: "Wardrobe" },
     { path: "/cart", icon: ShoppingBag, label: "Cart" },
