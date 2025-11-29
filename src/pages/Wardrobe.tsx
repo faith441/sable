@@ -300,11 +300,11 @@ const Wardrobe = () => {
                         <p className="text-2xl font-light text-sage">{capsule.total_pieces}</p>
                         <p className="text-xs text-muted-foreground font-light">Pieces</p>
                       </div>
-                      <div className="text-center">
+                      <div className="text-center py-3">
                         <p className="text-2xl font-light text-primary">${capsule.total_price}</p>
                         <p className="text-xs text-muted-foreground font-light">Total</p>
                       </div>
-                      <div className="text-center">
+                      <div className="text-center py-3">
                         <p className="text-2xl font-light text-accent">{capsule.outfit_count}+</p>
                         <p className="text-xs text-muted-foreground font-light">Outfits</p>
                       </div>
