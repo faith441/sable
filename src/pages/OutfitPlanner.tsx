@@ -112,7 +112,7 @@ const OutfitPlanner = () => {
     <div className="min-h-screen bg-background pb-20">
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border/50 px-4 py-4">
         <div className="flex items-center justify-between max-w-lg mx-auto">
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/wardrobe")}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <h1 className="text-xl font-light">Outfit Planner</h1>
