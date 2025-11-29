@@ -56,31 +56,47 @@ serve(async (req) => {
       console.error("Error fetching products:", productsError);
     }
 
-    // Generate AI wardrobe recommendations
-    const prompt = `You are a professional fashion stylist. Based on the following user preferences, suggest a capsule wardrobe of 8-12 essential pieces.
-
+    // Generate 2-3 CAPSULE WARDROBES (not random products)
+    const prompt = `Based on these style preferences, generate 2-3 complete CAPSULE WARDROBES. Each capsule should be a cohesive collection that creates multiple outfit combinations.
+    
 User Preferences:
-- Style: ${preferences.styleType}
-- Colors: ${preferences.colorPreferences?.join(", ")}
-- Budget: ${preferences.budgetRange}
-- Lifestyle: ${preferences.lifestyle}
-- Occasions: ${preferences.occasions?.join(", ")}
+${JSON.stringify(preferences, null, 2)}
 
-Return a JSON object with the following structure:
+Return a JSON object with this EXACT structure:
 {
-  "wardrobe_name": "A creative name for the wardrobe",
-  "description": "A brief description",
-  "season": "Current season this works for",
-  "items": [
+  "capsules": [
     {
-      "category": "Category (e.g., Tops, Bottoms, Outerwear, Shoes, Accessories)",
-      "item_name": "Specific item name",
-      "description": "Why this piece is essential",
-      "color": "Suggested color",
-      "price_range": "Estimated price in the user's budget"
+      "name": "Capsule name (e.g., 'Essential Minimalist', 'Weekend Casual')",
+      "description": "Brief description of the capsule's vibe and occasion",
+      "total_pieces": number,
+      "total_price": number,
+      "outfit_count": number (how many outfits can be created),
+      "products": [
+        {
+          "name": "Product name",
+          "category": "Category (tops/bottoms/outerwear/shoes/accessories)",
+          "price": number,
+          "colors": ["color1"],
+          "image_url": "https://images.unsplash.com/photo-relevant-fashion-item",
+          "product_url": "https://example.com/product",
+          "brand": {
+            "name": "Premium Brand Name"
+          }
+        }
+      ]
     }
   ]
-}`;
+}
+
+CRITICAL RULES:
+- Generate 2-3 complete capsule collections
+- Each capsule should have 8-12 pieces that work together
+- ALL pieces in a capsule must coordinate (colors, style, formality)
+- Calculate outfit_count realistically (e.g., 3 tops × 2 bottoms = 6 outfits minimum)
+- Match capsules to user's budget range and lifestyle
+- Use real Unsplash fashion URLs for image_url
+- Each capsule should have a clear purpose/occasion
+- Items should feel premium and intentional`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -125,41 +141,40 @@ Return a JSON object with the following structure:
       throw new Error("Failed to parse wardrobe data");
     }
 
-    // Create wardrobe if userId provided
-    if (userId) {
-      const { data: wardrobe, error: wardrobeError } = await supabase
-        .from("capsule_wardrobes")
-        .insert({
-          user_id: userId,
-          name: wardrobeData.wardrobe_name,
-          description: wardrobeData.description,
-          season: wardrobeData.season,
-          total_pieces: wardrobeData.items.length,
-        })
-        .select()
-        .single();
+    // Add unique IDs to all products in all capsules
+    if (wardrobeData.capsules) {
+      wardrobeData.capsules = wardrobeData.capsules.map((capsule: any) => ({
+        ...capsule,
+        products: capsule.products.map((product: any) => ({
+          ...product,
+          id: crypto.randomUUID(),
+        })),
+      }));
+    }
 
-      if (wardrobeError) {
-        console.error("Wardrobe error:", wardrobeError);
+    // Create wardrobe if userId provided
+    if (userId && wardrobeData.capsules) {
+      // Save each capsule to the database
+      for (const capsule of wardrobeData.capsules) {
+        const { error: wardrobeError } = await supabase
+          .from("capsule_wardrobes")
+          .insert({
+            user_id: userId,
+            name: capsule.name,
+            description: capsule.description,
+            total_pieces: capsule.total_pieces,
+          });
+
+        if (wardrobeError) {
+          console.error("Wardrobe error:", wardrobeError);
+        }
       }
     }
 
-    // For now, we'll create mock products
-    const mockProducts = wardrobeData.items.map((item: any, index: number) => ({
-      id: crypto.randomUUID(),
-      name: item.item_name,
-      category: item.category,
-      price: parseFloat(item.price_range.replace(/[^0-9.]/g, "")) || 50,
-      description: item.description,
-      image_url: null,
-      product_url: "#",
-      brand: { name: "Sample Brand" },
-    }));
-
     return new Response(
       JSON.stringify({ 
-        products: mockProducts,
-        message: "Wardrobe generated successfully",
+        capsules: wardrobeData.capsules,
+        message: "Capsule wardrobes generated successfully",
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
