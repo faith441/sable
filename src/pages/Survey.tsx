@@ -567,34 +567,31 @@ const Survey = () => {
                   {/* Bra Size */}
                   <div className="space-y-3 mb-6">
                     <h4 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">Bra Size</h4>
-                    <div className="mb-3">
-                      <Card
-                        className={`cursor-pointer transition-all ${
-                          formData.braSize === "No bra"
-                            ? 'border-primary bg-primary/5'
-                            : 'hover:border-primary/50'
-                        }`}
-                        onClick={() => setFormData({...formData, braSize: "No bra"})}
-                      >
-                        <CardContent className="p-4 flex items-center justify-between">
-                          <span className="text-sm font-light">No bra / I don't wear a bra</span>
-                          {formData.braSize === "No bra" && (
-                            <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                              <Heart className="w-4 h-4 text-white fill-white" />
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    </div>
-                    {formData.braSize !== "No bra" && (
-                      <input
-                        type="text"
-                        placeholder="e.g., 34C, 36D"
-                        className="w-full px-4 py-3 rounded-lg border border-border bg-background"
-                        value={formData.braSize === "No bra" ? "" : formData.braSize}
-                        onChange={(e) => setFormData({...formData, braSize: e.target.value})}
-                      />
-                    )}
+                    <input
+                      type="text"
+                      placeholder="e.g., 34C, 36D"
+                      className="w-full px-4 py-3 rounded-lg border border-border bg-background"
+                      value={formData.braSize === "No bra" ? "" : formData.braSize}
+                      onChange={(e) => setFormData({...formData, braSize: e.target.value})}
+                      disabled={formData.braSize === "No bra"}
+                    />
+                    <Card
+                      className={`cursor-pointer transition-all ${
+                        formData.braSize === "No bra"
+                          ? 'border-primary bg-primary/5'
+                          : 'hover:border-primary/50'
+                      }`}
+                      onClick={() => setFormData({...formData, braSize: formData.braSize === "No bra" ? "" : "No bra"})}
+                    >
+                      <CardContent className="p-4 flex items-center justify-between">
+                        <span className="text-sm font-light">I don't wear a bra</span>
+                        {formData.braSize === "No bra" && (
+                          <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                            <Heart className="w-4 h-4 text-white fill-white" />
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
                   </div>
 
                   {/* Cleavage Preference */}
