@@ -86,7 +86,7 @@ const Survey = () => {
     "Blush & Rose": "https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?w=400&h=300&fit=crop"
   };
 
-  const genderOptions = ["Women's", "Men's", "Unisex"];
+  const genderOptions = ["Women's", "Men's"];
 
   useEffect(() => {
     const saved = localStorage.getItem('guest_preferences');
