@@ -1,4 +1,4 @@
-import { Menu, User, FileText, Package, History, Heart } from "lucide-react";
+import { Menu, User, FileText, Package, History, Heart, HelpCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,6 +44,10 @@ const ProfileMenu = ({ onProfileClick }: ProfileMenuProps) => {
           <span className="font-light">Past Orders</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => navigate("/contact")} className="cursor-pointer">
+          <HelpCircle className="mr-2 h-4 w-4" />
+          <span className="font-light">Contact Support</span>
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => navigate("/terms")} className="cursor-pointer">
           <FileText className="mr-2 h-4 w-4" />
           <span className="font-light">Terms & Conditions</span>
