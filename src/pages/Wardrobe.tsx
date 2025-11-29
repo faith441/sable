@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { ShoppingBag, Loader2, Heart, Package } from "lucide-react";
+import { ShoppingBag, Loader2, Heart, Package, Home } from "lucide-react";
 import MobileNav from "@/components/MobileNav";
 import VideoGuide from "@/components/VideoGuide";
 import ProfileMenu from "@/components/ProfileMenu";
@@ -181,7 +181,7 @@ const Wardrobe = () => {
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border/50 px-4 py-4">
         <div className="flex items-center justify-between max-w-lg mx-auto">
           <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
-            <Package className="h-4 w-4" />
+            <Home className="h-4 w-4" />
           </Button>
           <h1 className="text-xl font-light">Your Capsule Wardrobes</h1>
           <ProfileMenu 
