@@ -250,7 +250,6 @@ const Wardrobe = () => {
           </h1>
           <ProfileMenu 
             onProfileClick={() => setProfileOpen(true)}
-            onRegenerateWardrobe={generateWardrobe}
           />
         </div>
       </div>

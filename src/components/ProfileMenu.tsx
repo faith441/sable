@@ -1,4 +1,4 @@
-import { Menu, User, FileText, Package, History, Sparkles, Heart } from "lucide-react";
+import { Menu, User, FileText, Package, History, Heart } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,10 +12,9 @@ import { useNavigate } from "react-router-dom";
 
 interface ProfileMenuProps {
   onProfileClick: () => void;
-  onRegenerateWardrobe?: () => void;
 }
 
-const ProfileMenu = ({ onProfileClick, onRegenerateWardrobe }: ProfileMenuProps) => {
+const ProfileMenu = ({ onProfileClick }: ProfileMenuProps) => {
   const navigate = useNavigate();
 
   return (
@@ -25,7 +24,7 @@ const ProfileMenu = ({ onProfileClick, onRegenerateWardrobe }: ProfileMenuProps)
           <Menu className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent align="end" className="w-56 bg-background z-50">
         <DropdownMenuLabel className="font-light">Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onProfileClick} className="cursor-pointer">
@@ -36,25 +35,16 @@ const ProfileMenu = ({ onProfileClick, onRegenerateWardrobe }: ProfileMenuProps)
           <Heart className="mr-2 h-4 w-4" />
           <span className="font-light">Favorites</span>
         </DropdownMenuItem>
-        <DropdownMenuItem className="cursor-pointer">
+        <DropdownMenuItem onClick={() => navigate("/orders")} className="cursor-pointer">
           <Package className="mr-2 h-4 w-4" />
           <span className="font-light">Orders</span>
         </DropdownMenuItem>
-        <DropdownMenuItem className="cursor-pointer">
+        <DropdownMenuItem onClick={() => navigate("/past-orders")} className="cursor-pointer">
           <History className="mr-2 h-4 w-4" />
           <span className="font-light">Past Orders</span>
         </DropdownMenuItem>
-        {onRegenerateWardrobe && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onRegenerateWardrobe} className="cursor-pointer">
-              <Sparkles className="mr-2 h-4 w-4" />
-              <span className="font-light">Regenerate Wardrobe</span>
-            </DropdownMenuItem>
-          </>
-        )}
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="cursor-pointer">
+        <DropdownMenuItem onClick={() => navigate("/terms")} className="cursor-pointer">
           <FileText className="mr-2 h-4 w-4" />
           <span className="font-light">Terms & Conditions</span>
         </DropdownMenuItem>
