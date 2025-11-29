@@ -24,6 +24,7 @@ const AIStyleChat = () => {
   useEffect(() => {
     checkUser();
     loadMessages();
+    showWelcomeMessage();
   }, []);
 
   useEffect(() => {
@@ -73,6 +74,28 @@ const AIStyleChat = () => {
     }
   };
 
+  const showWelcomeMessage = () => {
+    const preferences = localStorage.getItem('guest_preferences');
+    if (!preferences) return;
+
+    const userPrefs = JSON.parse(preferences);
+    const welcomeText = `Hello! How can I help you today? Whether you're looking for a quick style tip, advice on building a versatile wardrobe, or a fresh outfit idea, I'm here to assist. Just tell me what you're looking for! 😊`;
+
+    // Only show if no messages exist
+    setTimeout(() => {
+      setMessages(prev => {
+        if (prev.length === 0) {
+          return [{
+            id: crypto.randomUUID(),
+            role: 'assistant',
+            content: welcomeText
+          }];
+        }
+        return prev;
+      });
+    }, 500);
+  };
+
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
 
@@ -98,9 +121,18 @@ const AIStyleChat = () => {
         content: userMessage.content
       });
 
-      // Call AI stylist edge function
+      // Get user preferences from localStorage
+      const preferences = localStorage.getItem('guest_preferences');
+      const userPreferences = preferences ? JSON.parse(preferences) : null;
+
+      // Call AI stylist edge function with user context
       const { data, error } = await supabase.functions.invoke("ai-stylist-chat", {
-        body: { message: userMessage.content, userId: user?.id, sessionId }
+        body: { 
+          message: userMessage.content, 
+          userId: user?.id, 
+          sessionId,
+          userPreferences
+        }
       });
 
       if (error) throw error;
