@@ -15,15 +15,23 @@ const Index = () => {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+      if (session?.user) {
+        navigate("/home");
+      } else {
+        setUser(null);
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      if (session?.user) {
+        navigate("/home");
+      } else {
+        setUser(null);
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     const container = scrollContainerRef.current;
@@ -59,7 +67,12 @@ const Index = () => {
       {/* Header */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/50">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-light tracking-tight">StyleCapsule</h1>
+          <h1 
+            onClick={() => navigate("/home")}
+            className="text-2xl font-light tracking-tight cursor-pointer hover:text-primary transition-colors"
+          >
+            StyleCapsule
+          </h1>
           <div className="flex gap-2 items-center">
             {user ? (
               <Button variant="ghost" size="sm" onClick={handleLogout} className="font-light text-xs">
