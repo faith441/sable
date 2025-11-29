@@ -54,8 +54,8 @@ const Favorites = () => {
       }
 
       const { error } = await supabase.from("cart_items").insert({
-        user_id: user?.id,
-        session_id: !user ? sessionId : null,
+        user_id: user?.id || null,
+        session_id: user ? null : sessionId,
         product_id: product.id,
         quantity: 1,
       });
@@ -70,7 +70,7 @@ const Favorites = () => {
       });
     } catch (error: any) {
       console.error("Error adding to cart:", error);
-      toast.error("Failed to add to cart");
+      toast.error(error?.message || "Failed to add to cart");
     }
   };
 
