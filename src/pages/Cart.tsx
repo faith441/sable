@@ -151,8 +151,11 @@ const Cart = () => {
             <CardContent className="flex flex-col items-center justify-center py-16 space-y-4">
               <ShoppingBag className="w-16 h-16 text-muted-foreground" strokeWidth={1} />
               <p className="text-lg font-light text-muted-foreground">Your bag is empty</p>
-              <Button variant="luxury" onClick={() => navigate("/survey")}>
-                Discover Your Style
+              <Button 
+                variant="luxury" 
+                onClick={() => navigate(user ? "/wardrobe" : "/survey")}
+              >
+                {user ? "Browse Products" : "Discover Your Style"}
               </Button>
             </CardContent>
           </Card>
