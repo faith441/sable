@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, userId, sessionId, userPreferences } = await req.json();
+    const { message, userId, sessionId, userPreferences, images } = await req.json();
     
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -85,7 +85,19 @@ serve(async (req) => {
     }
 
     // Build comprehensive system prompt with user preferences
+    const hasImages = images && images.length > 0;
     const systemPrompt = `You are an expert personal fashion stylist and luxury shopping consultant for StyleCapsule, a premium fashion platform.
+
+${hasImages ? `TASK: The user has uploaded ${images.length} outfit photo(s). Provide specific, actionable styling feedback on what you see. Focus on:
+- Overall outfit composition and balance
+- Color coordination and palette
+- Fit and proportions
+- Styling suggestions and improvements
+- What's working well
+- How to elevate the look
+- Pieces that could be added or swapped
+- Occasion appropriateness
+Keep your feedback constructive, specific, and enthusiastic.` : ''}
 
 ${userPreferences ? `USER PROFILE:
 Gender: ${userPreferences.gender?.join(', ') || 'Not specified'}
@@ -99,7 +111,7 @@ ${userPreferences.measurements ? `Measurements: Torso ${userPreferences.measurem
 ${userContext}` : ''}
 
 Your capabilities:
-1. Provide personalized styling advice based on the user's profile
+1. ${hasImages ? 'Analyze outfit photos and provide styling feedback' : 'Provide personalized styling advice based on the user\'s profile'}
 2. Search for current fashion trends relevant to their style
 3. Recommend products from our inventory that match their preferences
 4. Help build cohesive capsule wardrobes
@@ -111,7 +123,8 @@ Guidelines:
 - Keep responses conversational, helpful, and under 200 words
 - When recommending products, consider what they already own to build cohesive looks
 - Stay current with fashion trends but filter through their personal style
-- Be enthusiastic but authentic - you're building a long-term styling relationship`;
+- Be enthusiastic but authentic - you're building a long-term styling relationship
+${hasImages ? '- When analyzing outfit photos, be specific about what you see and provide concrete suggestions' : ''}`;
 
     // Define tools for the AI
     const tools = [
@@ -164,6 +177,17 @@ Guidelines:
       }
     ];
 
+    // Build messages array with images if present
+    const userMessageContent = hasImages 
+      ? [
+          { type: "text", text: message },
+          ...images.map((img: string) => ({
+            type: "image_url",
+            image_url: { url: img }
+          }))
+        ]
+      : message;
+
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -179,7 +203,7 @@ Guidelines:
           },
           {
             role: "user",
-            content: message,
+            content: userMessageContent,
           },
         ],
         tools,
@@ -264,7 +288,7 @@ Guidelines:
             },
             {
               role: "user",
-              content: message,
+              content: userMessageContent,
             },
             responseMessage,
             {
