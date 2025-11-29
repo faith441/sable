@@ -14,9 +14,126 @@ export type Database = {
   }
   public: {
     Tables: {
+      brand_api_logs: {
+        Row: {
+          brand_id: string | null
+          created_at: string | null
+          endpoint: string
+          error_message: string | null
+          id: string
+          ip_address: string | null
+          method: string
+          request_body: Json | null
+          response_body: Json | null
+          status_code: number | null
+        }
+        Insert: {
+          brand_id?: string | null
+          created_at?: string | null
+          endpoint: string
+          error_message?: string | null
+          id?: string
+          ip_address?: string | null
+          method: string
+          request_body?: Json | null
+          response_body?: Json | null
+          status_code?: number | null
+        }
+        Update: {
+          brand_id?: string | null
+          created_at?: string | null
+          endpoint?: string
+          error_message?: string | null
+          id?: string
+          ip_address?: string | null
+          method?: string
+          request_body?: Json | null
+          response_body?: Json | null
+          status_code?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_api_logs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_orders: {
+        Row: {
+          brand_id: string | null
+          brand_order_id: string
+          created_at: string | null
+          fulfillment_status: string | null
+          id: string
+          items: Json
+          metadata: Json | null
+          order_status: string
+          payment_status: string | null
+          shipping_address: Json | null
+          total_amount: number | null
+          tracking_number: string | null
+          tracking_url: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          brand_id?: string | null
+          brand_order_id: string
+          created_at?: string | null
+          fulfillment_status?: string | null
+          id?: string
+          items: Json
+          metadata?: Json | null
+          order_status: string
+          payment_status?: string | null
+          shipping_address?: Json | null
+          total_amount?: number | null
+          tracking_number?: string | null
+          tracking_url?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          brand_id?: string | null
+          brand_order_id?: string
+          created_at?: string | null
+          fulfillment_status?: string | null
+          id?: string
+          items?: Json
+          metadata?: Json | null
+          order_status?: string
+          payment_status?: string | null
+          shipping_address?: Json | null
+          total_amount?: number | null
+          tracking_number?: string | null
+          tracking_url?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_orders_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_orders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brands: {
         Row: {
           api_endpoint: string | null
+          api_key: string | null
           api_key_hash: string | null
           created_at: string
           description: string | null
@@ -24,11 +141,15 @@ export type Database = {
           is_active: boolean | null
           logo_url: string | null
           name: string
+          order_tracking_enabled: boolean | null
+          payment_provider: string | null
           updated_at: string
+          webhook_url: string | null
           website_url: string | null
         }
         Insert: {
           api_endpoint?: string | null
+          api_key?: string | null
           api_key_hash?: string | null
           created_at?: string
           description?: string | null
@@ -36,11 +157,15 @@ export type Database = {
           is_active?: boolean | null
           logo_url?: string | null
           name: string
+          order_tracking_enabled?: boolean | null
+          payment_provider?: string | null
           updated_at?: string
+          webhook_url?: string | null
           website_url?: string | null
         }
         Update: {
           api_endpoint?: string | null
+          api_key?: string | null
           api_key_hash?: string | null
           created_at?: string
           description?: string | null
@@ -48,7 +173,10 @@ export type Database = {
           is_active?: boolean | null
           logo_url?: string | null
           name?: string
+          order_tracking_enabled?: boolean | null
+          payment_provider?: string | null
           updated_at?: string
+          webhook_url?: string | null
           website_url?: string | null
         }
         Relationships: []
@@ -149,6 +277,83 @@ export type Database = {
         }
         Relationships: []
       }
+      garment_metadata: {
+        Row: {
+          care_instructions: string[] | null
+          closure_type: string | null
+          created_at: string | null
+          fabric_composition: Json | null
+          fit_type: string | null
+          formality_level: string | null
+          id: string
+          layering_position: string | null
+          leg_opening: string | null
+          neckline: string | null
+          occasion: string[] | null
+          pattern: string | null
+          product_id: string | null
+          rise: string | null
+          season: string[] | null
+          silhouette: string | null
+          sleeve_length: string | null
+          style_tags: string[] | null
+          updated_at: string | null
+          versatility_score: number | null
+        }
+        Insert: {
+          care_instructions?: string[] | null
+          closure_type?: string | null
+          created_at?: string | null
+          fabric_composition?: Json | null
+          fit_type?: string | null
+          formality_level?: string | null
+          id?: string
+          layering_position?: string | null
+          leg_opening?: string | null
+          neckline?: string | null
+          occasion?: string[] | null
+          pattern?: string | null
+          product_id?: string | null
+          rise?: string | null
+          season?: string[] | null
+          silhouette?: string | null
+          sleeve_length?: string | null
+          style_tags?: string[] | null
+          updated_at?: string | null
+          versatility_score?: number | null
+        }
+        Update: {
+          care_instructions?: string[] | null
+          closure_type?: string | null
+          created_at?: string | null
+          fabric_composition?: Json | null
+          fit_type?: string | null
+          formality_level?: string | null
+          id?: string
+          layering_position?: string | null
+          leg_opening?: string | null
+          neckline?: string | null
+          occasion?: string[] | null
+          pattern?: string | null
+          product_id?: string | null
+          rise?: string | null
+          season?: string[] | null
+          silhouette?: string | null
+          sleeve_length?: string | null
+          style_tags?: string[] | null
+          updated_at?: string | null
+          versatility_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "garment_metadata_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: true
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       outfit_plans: {
         Row: {
           created_at: string
@@ -181,6 +386,51 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      product_compatibility: {
+        Row: {
+          compatibility_reasons: Json | null
+          compatibility_score: number | null
+          compatible_with: string | null
+          created_at: string | null
+          id: string
+          product_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          compatibility_reasons?: Json | null
+          compatibility_score?: number | null
+          compatible_with?: string | null
+          created_at?: string | null
+          id?: string
+          product_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          compatibility_reasons?: Json | null
+          compatibility_score?: number | null
+          compatible_with?: string | null
+          created_at?: string | null
+          id?: string
+          product_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_compatibility_compatible_with_fkey"
+            columns: ["compatible_with"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_compatibility_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {
