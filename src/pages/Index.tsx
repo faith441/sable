@@ -29,25 +29,14 @@ const Index = () => {
     const container = scrollContainerRef.current;
     if (!container) return;
 
-    let timeoutId: number | undefined;
-
     const handleScroll = () => {
       const slideWidth = container.offsetWidth;
-      const rawIndex = container.scrollLeft / slideWidth;
-      const newSlide = Math.round(rawIndex);
+      const newSlide = Math.round(container.scrollLeft / slideWidth);
       setCurrentSlide(newSlide);
-
-      if (timeoutId) window.clearTimeout(timeoutId);
-      timeoutId = window.setTimeout(() => {
-        scrollToSlide(newSlide);
-      }, 120);
     };
 
     container.addEventListener("scroll", handleScroll, { passive: true });
-    return () => {
-      if (timeoutId) window.clearTimeout(timeoutId);
-      container.removeEventListener("scroll", handleScroll);
-    };
+    return () => container.removeEventListener("scroll", handleScroll);
   }, []);
 
   function scrollToSlide(index: number) {
@@ -104,34 +93,33 @@ const Index = () => {
       {/* Horizontal Scroll Container */}
       <div 
         ref={scrollContainerRef}
-        className="flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory hide-scrollbar"
+        className="flex h-full overflow-x-scroll overflow-y-hidden snap-x snap-mandatory hide-scrollbar pt-24"
         style={{ 
           scrollbarWidth: 'none', 
-          msOverflowStyle: 'none',
-          height: 'calc(100vh - 72px)'
+          msOverflowStyle: 'none'
         }}
       >
 
         {/* Slide 1: The Issue */}
-        <section className="relative min-w-full h-full flex-shrink-0 snap-start flex items-center justify-center overflow-hidden py-8">
+        <section className="relative min-w-full h-full flex-shrink-0 snap-start flex items-center justify-center overflow-y-auto px-6 py-6">
           <div className="absolute inset-0 z-0">
             <img src={heroImage} alt="Curated wardrobe" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
           </div>
           
-          <div className="relative z-10 max-w-lg mx-auto px-6 text-center space-y-8">
-            <div className="space-y-4 animate-fade-in">
+          <div className="relative z-10 w-full max-w-md mx-auto text-center space-y-6">
+            <div className="space-y-3 animate-fade-in">
               <p className="text-xs uppercase tracking-widest text-muted-foreground font-light">The Issue</p>
-              <h1 className="text-4xl md:text-5xl font-light leading-tight">
+              <h1 className="text-3xl font-light leading-tight">
                 Most people don't need<br />
                 <span className="italic font-normal">more clothes.</span>
               </h1>
-              <h2 className="text-3xl md:text-4xl font-normal gradient-text">
+              <h2 className="text-2xl font-normal gradient-text">
                 They need a cohesive<br />personal brand.
               </h2>
             </div>
             
-            <div className="space-y-4 text-base text-muted-foreground font-light leading-relaxed max-w-md mx-auto">
+            <div className="space-y-3 text-sm text-muted-foreground font-light leading-relaxed">
               <p>You buy random pieces that don't match.</p>
               <p>You guess on colors.</p>
               <p>Your closet is full…<br />but you still feel like you have <em>nothing to wear</em>.</p>
@@ -141,121 +129,119 @@ const Index = () => {
         </section>
 
         {/* Slide 2: The Pattern */}
-        <section className="min-w-full h-full flex-shrink-0 snap-start flex items-center justify-center bg-gradient-to-b from-background to-secondary/20 px-6 py-8">
-          <div className="max-w-lg mx-auto text-center space-y-8">
-            <div className="space-y-4 animate-fade-in">
+        <section className="min-w-full h-full flex-shrink-0 snap-start flex items-center justify-center bg-gradient-to-b from-background to-secondary/20 px-6 py-6 overflow-y-auto">
+          <div className="w-full max-w-md mx-auto text-center space-y-6">
+            <div className="space-y-3 animate-fade-in">
               <p className="text-xs uppercase tracking-widest text-muted-foreground font-light">So What Do You Do?</p>
-              <h2 className="text-3xl md:text-4xl font-light leading-tight">
+              <h2 className="text-2xl font-light leading-tight">
                 Do you keep <span className="italic">wasting money?</span><br />
                 Do you hire 5 different "experts"?<br />
                 Do you keep <span className="italic">guessing</span> every morning?
               </h2>
             </div>
             
-            <div className="space-y-4 text-base text-muted-foreground font-light leading-relaxed">
+            <div className="space-y-3 text-sm text-muted-foreground font-light leading-relaxed">
               <p>Standing there, hoping the outfit works…<br />
               hoping today you'll finally feel like <em>"you."</em></p>
-              <p className="text-foreground font-normal text-lg pt-4">Your style shouldn't be a question.<br />
-              <span className="gradient-text text-xl">It should be a statement.</span></p>
+              <p className="text-foreground font-normal pt-3">Your style shouldn't be a question.<br />
+              <span className="gradient-text text-lg">It should be a statement.</span></p>
             </div>
           </div>
         </section>
 
         {/* Slide 3: The Solution */}
-        <section className="min-w-full h-full flex-shrink-0 snap-start flex items-center justify-center bg-gradient-to-b from-secondary/20 to-background px-6 py-8">
-          <div className="max-w-lg mx-auto text-center space-y-8">
-            <div className="space-y-6 animate-fade-in">
+        <section className="min-w-full h-full flex-shrink-0 snap-start flex items-center justify-center bg-gradient-to-b from-secondary/20 to-background px-6 py-6 overflow-y-auto">
+          <div className="w-full max-w-md mx-auto text-center space-y-6">
+            <div className="space-y-4 animate-fade-in">
               <p className="text-xs uppercase tracking-widest text-muted-foreground font-light">The Solution</p>
-              <h2 className="text-2xl md:text-3xl font-normal leading-snug">
+              <h2 className="text-xl font-normal leading-snug">
                 ONE ADVISOR. ONE APP.<br />ONE CAPSULE SYSTEM.
               </h2>
-              <h3 className="text-3xl md:text-4xl font-light leading-tight">
-                Meet <span className="gradient-text font-normal text-4xl md:text-5xl">StyleCapsule</span>
+              <h3 className="text-2xl font-light leading-tight">
+                Meet <span className="gradient-text font-normal text-3xl">StyleCapsule</span>
               </h3>
             </div>
             
-            <div className="space-y-3 text-base text-muted-foreground font-light leading-relaxed">
-              <p>Your interactive style survey,<br />
-              your AI stylist,<br />
-              your virtual try-on tool,<br />
-              and your shoppable capsule wardrobes<br />
-              <span className="text-foreground">— all built uniquely for you.</span></p>
+            <div className="space-y-3 text-sm text-muted-foreground font-light leading-relaxed">
+              <p>Your interactive style survey, your AI stylist,<br />
+              your virtual try-on tool, and your shoppable<br />
+              capsule wardrobes — all built uniquely for you.</p>
               
-              <p className="text-foreground font-normal text-lg pt-4">
+              <p className="text-foreground font-normal pt-3">
                 A single platform that aligns your identity,<br />lifestyle, and aesthetic into one clear direction.
               </p>
             </div>
             
-            <Button variant="luxury" size="lg" onClick={() => navigate("/survey")} className="w-full max-w-xs mx-auto">
+            <Button variant="luxury" size="lg" onClick={() => navigate("/survey")} className="w-full max-w-xs mx-auto mt-4">
               Start Style Survey <ArrowRight className="ml-2" />
             </Button>
           </div>
         </section>
 
         {/* Slide 4: Who It's For */}
-        <section className="min-w-full h-full flex-shrink-0 snap-start flex items-center justify-center px-6 py-8">
-          <div className="max-w-lg mx-auto space-y-8">
-            <div className="space-y-4 text-center animate-fade-in">
+        <section className="min-w-full h-full flex-shrink-0 snap-start flex items-center justify-center px-6 py-6 overflow-y-auto">
+          <div className="w-full max-w-md mx-auto space-y-6">
+            <div className="space-y-3 text-center animate-fade-in">
               <p className="text-xs uppercase tracking-widest text-muted-foreground font-light">Who It's For</p>
-              <h2 className="text-3xl md:text-4xl font-light leading-tight">
+              <h2 className="text-2xl font-light leading-tight">
                 For busy people who need<br />
                 <span className="gradient-text font-normal">an infrastructure of confidence.</span>
               </h2>
             </div>
             
-            <div className="space-y-4 text-base text-muted-foreground font-light leading-relaxed">
+            <div className="space-y-3 text-sm text-muted-foreground font-light leading-relaxed">
               <p className="text-center">Your life is full.<br />
               Your time is limited.<br />
               <span className="text-foreground font-normal">Your image should work for you.</span></p>
             </div>
             
-            <div className="grid grid-cols-2 gap-4 pt-4">
-              <div className="p-6 rounded-lg border border-border bg-card text-center hover-scale">
-                <h4 className="font-normal text-lg mb-1">Fit</h4>
-                <p className="text-sm text-muted-foreground font-light">Tailored to you</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-4 rounded-lg border border-border bg-card text-center hover-scale">
+                <h4 className="font-normal mb-1">Fit</h4>
+                <p className="text-xs text-muted-foreground font-light">Tailored to you</p>
               </div>
-              <div className="p-6 rounded-lg border border-border bg-card text-center hover-scale">
-                <h4 className="font-normal text-lg mb-1">Color</h4>
-                <p className="text-sm text-muted-foreground font-light">Perfect palette</p>
+              <div className="p-4 rounded-lg border border-border bg-card text-center hover-scale">
+                <h4 className="font-normal mb-1">Color</h4>
+                <p className="text-xs text-muted-foreground font-light">Perfect palette</p>
               </div>
-              <div className="p-6 rounded-lg border border-border bg-card text-center hover-scale">
-                <h4 className="font-normal text-lg mb-1">Lifestyle</h4>
-                <p className="text-sm text-muted-foreground font-light">Built for your life</p>
+              <div className="p-4 rounded-lg border border-border bg-card text-center hover-scale">
+                <h4 className="font-normal mb-1">Lifestyle</h4>
+                <p className="text-xs text-muted-foreground font-light">Built for your life</p>
               </div>
-              <div className="p-6 rounded-lg border border-border bg-card text-center hover-scale">
-                <h4 className="font-normal text-lg mb-1">Consistency</h4>
-                <p className="text-sm text-muted-foreground font-light">Every single day</p>
+              <div className="p-4 rounded-lg border border-border bg-card text-center hover-scale">
+                <h4 className="font-normal mb-1">Consistency</h4>
+                <p className="text-xs text-muted-foreground font-light">Every single day</p>
               </div>
             </div>
           </div>
         </section>
 
         {/* Slide 5: The Result */}
-        <section className="min-w-full h-full flex-shrink-0 snap-start flex items-center justify-center bg-gradient-to-b from-background to-secondary/20 px-6 py-8">
-          <div className="max-w-lg mx-auto text-center space-y-8">
-            <div className="space-y-4 animate-fade-in">
+        <section className="min-w-full h-full flex-shrink-0 snap-start flex items-center justify-center bg-gradient-to-b from-background to-secondary/20 px-6 py-6 overflow-y-auto">
+          <div className="w-full max-w-md mx-auto text-center space-y-6">
+            <div className="space-y-3 animate-fade-in">
               <p className="text-xs uppercase tracking-widest text-muted-foreground font-light">The Result</p>
-              <h2 className="text-3xl md:text-4xl font-light leading-tight">
+              <h2 className="text-2xl font-light leading-tight">
                 You become the person<br />who looks <span className="gradient-text font-normal italic">dialed-in</span><br />every day.
               </h2>
             </div>
             
-            <div className="grid gap-4 text-left">
-              <div className="p-6 rounded-lg border border-border bg-card hover-scale">
-                <h4 className="font-normal mb-2">✓ Capsule wardrobe you can actually buy</h4>
-                <p className="text-sm text-muted-foreground font-light">Cohesive pieces that work together</p>
+            <div className="grid gap-3 text-left">
+              <div className="p-4 rounded-lg border border-border bg-card hover-scale">
+                <h4 className="font-normal text-sm mb-1">✓ Capsule wardrobe you can actually buy</h4>
+                <p className="text-xs text-muted-foreground font-light">Cohesive pieces that work together</p>
               </div>
-              <div className="p-6 rounded-lg border border-border bg-card hover-scale">
-                <h4 className="font-normal mb-2">✓ Outfits auto-planned for the week</h4>
-                <p className="text-sm text-muted-foreground font-light">No more morning guesswork</p>
+              <div className="p-4 rounded-lg border border-border bg-card hover-scale">
+                <h4 className="font-normal text-sm mb-1">✓ Outfits auto-planned for the week</h4>
+                <p className="text-xs text-muted-foreground font-light">No more morning guesswork</p>
               </div>
-              <div className="p-6 rounded-lg border border-border bg-card hover-scale">
-                <h4 className="font-normal mb-2">✓ AI stylist in your pocket</h4>
-                <p className="text-sm text-muted-foreground font-light">Expert advice, anytime</p>
+              <div className="p-4 rounded-lg border border-border bg-card hover-scale">
+                <h4 className="font-normal text-sm mb-1">✓ AI stylist in your pocket</h4>
+                <p className="text-xs text-muted-foreground font-light">Expert advice, anytime</p>
               </div>
             </div>
             
-            <p className="text-base text-foreground font-light leading-relaxed pt-4">
+            <p className="text-sm text-foreground font-light leading-relaxed pt-3">
               Your wardrobe becomes a <span className="font-normal">curated system</span> —<br />
               working on purpose, not on accident.
             </p>
@@ -263,64 +249,64 @@ const Index = () => {
         </section>
 
         {/* Slide 6: How It Works */}
-        <section className="min-w-full h-full flex-shrink-0 snap-start flex items-center justify-center bg-gradient-to-b from-secondary/20 to-background px-6 py-8">
-          <div className="max-w-lg mx-auto space-y-8">
-            <div className="space-y-4 text-center animate-fade-in">
+        <section className="min-w-full h-full flex-shrink-0 snap-start flex items-center justify-center bg-gradient-to-b from-secondary/20 to-background px-6 py-6 overflow-y-auto">
+          <div className="w-full max-w-md mx-auto space-y-6">
+            <div className="space-y-3 text-center animate-fade-in">
               <p className="text-xs uppercase tracking-widest text-muted-foreground font-light">How It Works</p>
-              <h2 className="text-3xl md:text-4xl font-light leading-tight">
+              <h2 className="text-2xl font-light leading-tight">
                 Simple, Clear Steps
               </h2>
             </div>
             
-            <div className="space-y-4">
-              <div className="flex gap-4 p-6 rounded-lg border border-border bg-card hover-scale">
-                <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center flex-shrink-0 font-light">1</div>
+            <div className="space-y-3">
+              <div className="flex gap-3 p-4 rounded-lg border border-border bg-card hover-scale">
+                <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center flex-shrink-0 font-light text-sm">1</div>
                 <div>
-                  <h4 className="font-normal mb-1">Take the visual style survey</h4>
-                  <p className="text-sm text-muted-foreground font-light">Interactive, image-based, fast</p>
+                  <h4 className="font-normal text-sm mb-1">Take the visual style survey</h4>
+                  <p className="text-xs text-muted-foreground font-light">Interactive, image-based, fast</p>
                 </div>
               </div>
               
-              <div className="flex gap-4 p-6 rounded-lg border border-border bg-card hover-scale">
-                <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center flex-shrink-0 font-light">2</div>
+              <div className="flex gap-3 p-4 rounded-lg border border-border bg-card hover-scale">
+                <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center flex-shrink-0 font-light text-sm">2</div>
                 <div>
-                  <h4 className="font-normal mb-1">Get your shoppable capsule wardrobes</h4>
-                  <p className="text-sm text-muted-foreground font-light">Tailored to your budget, lifestyle & identity</p>
+                  <h4 className="font-normal text-sm mb-1">Get your shoppable capsule wardrobes</h4>
+                  <p className="text-xs text-muted-foreground font-light">Tailored to your budget, lifestyle & identity</p>
                 </div>
               </div>
               
-              <div className="flex gap-4 p-6 rounded-lg border border-border bg-card hover-scale">
-                <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center flex-shrink-0 font-light">3</div>
+              <div className="flex gap-3 p-4 rounded-lg border border-border bg-card hover-scale">
+                <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center flex-shrink-0 font-light text-sm">3</div>
                 <div>
-                  <h4 className="font-normal mb-1">Save outfits & check out in minutes</h4>
-                  <p className="text-sm text-muted-foreground font-light">No overwhelming browsing. No guesswork. No stylist fees.</p>
+                  <h4 className="font-normal text-sm mb-1">Save outfits & check out in minutes</h4>
+                  <p className="text-xs text-muted-foreground font-light">No overwhelming browsing. No guesswork. No stylist fees.</p>
                 </div>
               </div>
             </div>
             
-            <p className="text-center text-foreground font-normal text-lg pt-4">
+            <p className="text-center text-foreground font-normal pt-3">
               Your personal brand, streamlined.
             </p>
           </div>
         </section>
 
         {/* Slide 7: CTA */}
-        <section className="min-w-full h-full flex-shrink-0 snap-start flex items-center justify-center px-6 py-8">
-          <div className="max-w-lg mx-auto text-center space-y-8">
-            <div className="space-y-6 animate-fade-in">
-              <h2 className="text-4xl md:text-5xl font-light leading-tight">
+        <section className="min-w-full h-full flex-shrink-0 snap-start flex items-center justify-center px-6 py-6 overflow-y-auto">
+          <div className="w-full max-w-md mx-auto text-center space-y-6">
+            <div className="space-y-4 animate-fade-in">
+              <h2 className="text-3xl font-light leading-tight">
                 Ready to Elevate<br />Your <span className="gradient-text font-normal italic">Personal Brand?</span>
               </h2>
               
-              <div className="space-y-2 text-base text-muted-foreground font-light">
+              <div className="space-y-2 text-sm text-muted-foreground font-light">
                 <p>No account required.</p>
                 <p>No commitment.</p>
-                <p className="text-foreground font-normal text-lg">Just clarity.</p>
+                <p className="text-foreground font-normal">Just clarity.</p>
               </div>
             </div>
             
-            <div className="space-y-4 pt-4">
-              <p className="text-sm text-muted-foreground font-light max-w-md mx-auto">
+            <div className="space-y-4">
+              <p className="text-xs text-muted-foreground font-light">
                 Start your style audit.<br />
                 And see what a curated wardrobe<br />
                 — built around you —<br />
@@ -331,23 +317,23 @@ const Index = () => {
                 variant="luxury" 
                 size="lg" 
                 onClick={() => navigate("/survey")}
-                className="w-full max-w-sm mx-auto text-lg py-6 hover-scale"
+                className="w-full max-w-xs mx-auto hover-scale"
               >
                 Start Style Survey <ArrowRight className="ml-2" />
               </Button>
             </div>
             
-            <div className="grid grid-cols-3 gap-4 pt-8">
-              <button onClick={() => navigate("/ai-stylist")} className="p-4 rounded-lg border border-border bg-card hover:border-primary transition-all hover-scale">
-                <MessageCircle className="w-6 h-6 mx-auto mb-2 text-primary" strokeWidth={1.5} />
+            <div className="grid grid-cols-3 gap-3 pt-6">
+              <button onClick={() => navigate("/ai-stylist")} className="p-3 rounded-lg border border-border bg-card hover:border-primary transition-all hover-scale">
+                <MessageCircle className="w-5 h-5 mx-auto mb-1 text-primary" strokeWidth={1.5} />
                 <p className="text-xs font-light">AI Stylist</p>
               </button>
-              <button onClick={() => navigate("/virtual-tryon")} className="p-4 rounded-lg border border-border bg-card hover:border-primary transition-all hover-scale">
-                <Scan className="w-6 h-6 mx-auto mb-2 text-primary" strokeWidth={1.5} />
+              <button onClick={() => navigate("/virtual-tryon")} className="p-3 rounded-lg border border-border bg-card hover:border-primary transition-all hover-scale">
+                <Scan className="w-5 h-5 mx-auto mb-1 text-primary" strokeWidth={1.5} />
                 <p className="text-xs font-light">Try-On</p>
               </button>
-              <button onClick={() => navigate(user ? "/outfit-planner" : "/auth")} className="p-4 rounded-lg border border-border bg-card hover:border-primary transition-all hover-scale">
-                <Sparkles className="w-6 h-6 mx-auto mb-2 text-primary" strokeWidth={1.5} />
+              <button onClick={() => navigate(user ? "/outfit-planner" : "/auth")} className="p-3 rounded-lg border border-border bg-card hover:border-primary transition-all hover-scale">
+                <Sparkles className="w-5 h-5 mx-auto mb-1 text-primary" strokeWidth={1.5} />
                 <p className="text-xs font-light">Planner</p>
               </button>
             </div>
