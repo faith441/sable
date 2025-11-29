@@ -36,6 +36,10 @@ All colors MUST be HSL. Inspired by natural materials: clay, sand, stone, bronze
     --accent: 28 35% 72%;
     --accent-foreground: 25 20% 18%;
 
+    /* Sage: Earthy green accent for color variation */
+    --sage: 80 20% 55%;
+    --sage-foreground: 25 20% 18%;
+
     /* Destructive: Warm red-clay */
     --destructive: 8 70% 50%;
     --destructive-foreground: 35 35% 96%;
@@ -52,6 +56,8 @@ All colors MUST be HSL. Inspired by natural materials: clay, sand, stone, bronze
     --gradient-subtle: linear-gradient(180deg, hsl(35 35% 96%), hsl(32 30% 92%));
     --gradient-bronze: linear-gradient(135deg, hsl(28 45% 55%), hsl(32 50% 65%));
     --gradient-clay: linear-gradient(180deg, hsl(18 45% 38%), hsl(15 50% 30%));
+    --gradient-sage: linear-gradient(135deg, hsl(80 20% 55%), hsl(75 25% 45%));
+    --gradient-earth: linear-gradient(90deg, hsl(18 45% 38%), hsl(80 20% 55%), hsl(28 45% 55%));
     --gradient-overlay: linear-gradient(90deg, hsl(25 20% 18% / 0.95) 0%, hsl(25 20% 18% / 0.75) 50%, transparent 100%);
     --gradient-shimmer: linear-gradient(120deg, transparent 0%, hsl(28 45% 65% / 0.15) 50%, transparent 100%);
     
@@ -103,6 +109,10 @@ All colors MUST be HSL. Inspired by natural materials: clay, sand, stone, bronze
     --accent: 28 40% 45%;
     --accent-foreground: 35 30% 92%;
 
+    /* Sage: Deep olive in dark mode */
+    --sage: 80 18% 40%;
+    --sage-foreground: 35 30% 92%;
+
     --destructive: 8 70% 50%;
     --destructive-foreground: 35 30% 92%;
 
@@ -114,6 +124,8 @@ All colors MUST be HSL. Inspired by natural materials: clay, sand, stone, bronze
     --gradient-hero: linear-gradient(135deg, hsl(22 20% 16%), hsl(25 18% 20%));
     --gradient-subtle: linear-gradient(180deg, hsl(20 18% 12%), hsl(22 20% 16%));
     --gradient-bronze: linear-gradient(135deg, hsl(28 40% 35%), hsl(32 45% 45%));
+    --gradient-sage: linear-gradient(135deg, hsl(80 18% 35%), hsl(75 20% 30%));
+    --gradient-earth: linear-gradient(90deg, hsl(18 45% 28%), hsl(80 18% 35%), hsl(28 40% 35%));
     --gradient-overlay: linear-gradient(90deg, hsl(20 18% 12% / 0.95) 0%, hsl(20 18% 12% / 0.75) 50%, transparent 100%);
     --shadow-elegant: 0 20px 60px -15px hsl(0 0% 0% / 0.5);
     --shadow-soft: 0 4px 20px hsl(0 0% 0% / 0.3);
@@ -171,6 +183,14 @@ All colors MUST be HSL. Inspired by natural materials: clay, sand, stone, bronze
   
   .gradient-clay {
     background: var(--gradient-clay);
+  }
+  
+  .gradient-sage {
+    background: var(--gradient-sage);
+  }
+  
+  .gradient-earth {
+    background: var(--gradient-earth);
   }
   
   /* Luxury shimmer effect with bronze tones */
