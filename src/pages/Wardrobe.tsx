@@ -296,7 +296,7 @@ const Wardrobe = () => {
                     </div>
                     
                     <div className="grid grid-cols-3 gap-4 py-4">
-                      <div className="text-center bg-cream/50 rounded-lg py-3 border border-sage/10">
+                      <div className="text-center py-3">
                         <p className="text-2xl font-light text-sage">{capsule.total_pieces}</p>
                         <p className="text-xs text-muted-foreground font-light">Pieces</p>
                       </div>
