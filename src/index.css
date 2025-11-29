@@ -174,4 +174,12 @@ All colors MUST be HSL.
       transform: translateY(0);
     }
   }
+  
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .hover-scale {
+    @apply transition-transform duration-200 hover:scale-105;
+  }
 }
