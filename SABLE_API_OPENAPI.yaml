@@ -1,0 +1,282 @@
+openapi: 3.0.0
+info:
+  title: Sable AI Style API
+  description: AI-powered fashion and style consultation API for integration with LLMs and chatbots
+  version: 1.0.0
+  contact:
+    name: Sable API Support
+    email: api@sable.com
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://lfsfzgkcygdzsgobgxwi.supabase.co/functions/v1
+    description: Production server
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /external-api-style-consultation:
+    post:
+      summary: Get personalized style consultation
+      description: Receive AI-powered fashion advice based on user preferences, occasion, and budget
+      operationId: getStyleConsultation
+      tags:
+        - Style Consultation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - user_preferences
+                - question
+              properties:
+                user_preferences:
+                  type: object
+                  required:
+                    - style_type
+                  properties:
+                    style_type:
+                      type: string
+                      example: "Minimalist"
+                      description: "User's preferred style aesthetic"
+                    body_type:
+                      type: string
+                      example: "Athletic"
+                      description: "User's body type"
+                    color_preferences:
+                      type: array
+                      items:
+                        type: string
+                      example: ["Navy", "White", "Black"]
+                      description: "Preferred color palette"
+                    sizes:
+                      type: object
+                      properties:
+                        top:
+                          type: string
+                          example: "M"
+                        bottom:
+                          type: string
+                          example: "32x30"
+                        shoe:
+                          type: string
+                          example: "10"
+                occasion:
+                  type: string
+                  example: "Business Casual"
+                  description: "The occasion or context for styling advice"
+                budget:
+                  type: string
+                  example: "$500-$1000"
+                  description: "Budget range for the outfit or pieces"
+                question:
+                  type: string
+                  example: "What should I wear for a client presentation?"
+                  description: "The user's specific style question or request"
+      responses:
+        '200':
+          description: Successful style consultation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  advice:
+                    type: string
+                    description: "Detailed fashion advice from Sable's AI stylist"
+                  metadata:
+                    type: object
+                    properties:
+                      occasion:
+                        type: string
+                      budget:
+                        type: string
+                      response_time_ms:
+                        type: integer
+        '400':
+          description: Bad request - missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /external-api-wardrobe-recommendations:
+    post:
+      summary: Get curated wardrobe recommendations
+      description: Receive AI-curated capsule wardrobe recommendations from Sable's product catalog
+      operationId: getWardrobeRecommendations
+      tags:
+        - Wardrobe Recommendations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - style_type
+                - budget_range
+              properties:
+                style_type:
+                  type: string
+                  example: "Classic"
+                  description: "Desired style aesthetic for the wardrobe"
+                budget_range:
+                  type: string
+                  example: "$1000-$2000"
+                  description: "Total budget for the capsule wardrobe"
+                lifestyle:
+                  type: string
+                  example: "Professional"
+                  description: "User's lifestyle category"
+                occasions:
+                  type: array
+                  items:
+                    type: string
+                  example: ["Work", "Weekend", "Formal"]
+                  description: "Types of occasions the wardrobe should cover"
+                num_items:
+                  type: integer
+                  minimum: 1
+                  maximum: 50
+                  default: 10
+                  example: 15
+                  description: "Number of items to include in recommendation"
+      responses:
+        '200':
+          description: Successful wardrobe recommendations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  wardrobe:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Product'
+                      total_items:
+                        type: integer
+                      curation_notes:
+                        type: string
+                        description: "AI explanation of how the pieces work together"
+                      style_type:
+                        type: string
+                      budget_range:
+                        type: string
+                  metadata:
+                    type: object
+                    properties:
+                      response_time_ms:
+                        type: integer
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-sable-api-key
+      description: "API key for authentication. Obtain from Sable admin panel."
+
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        brand:
+          type: string
+        price:
+          type: number
+          format: float
+        category:
+          type: string
+        image_url:
+          type: string
+          format: uri
+        product_url:
+          type: string
+          format: uri
+        sizes:
+          type: array
+          items:
+            type: string
+        colors:
+          type: array
+          items:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: "Error message describing what went wrong"
+
+    RateLimitError:
+      type: object
+      properties:
+        error:
+          type: string
+          description: "Rate limit error message"
+        retry_after:
+          type: integer
+          description: "Seconds until rate limit resets"
+        current_tier:
+          type: string
+          description: "Current API tier"
+        upgrade_url:
+          type: string
+          format: uri
+          description: "URL to upgrade API tier"

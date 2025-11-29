@@ -11,3 +11,21 @@ verify_jwt = false
 
 [functions.generate-weekly-outfits]
 verify_jwt = true
+
+[functions.brand-api-products]
+verify_jwt = false
+
+[functions.brand-api-garment-metadata]
+verify_jwt = false
+
+[functions.brand-api-orders]
+verify_jwt = false
+
+[functions.brand-api-webhooks]
+verify_jwt = false
+
+[functions.external-api-style-consultation]
+verify_jwt = false
+
+[functions.external-api-wardrobe-recommendations]
+verify_jwt = false

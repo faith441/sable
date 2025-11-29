@@ -11,6 +11,7 @@ import UsersManager from "@/components/admin/UsersManager";
 import ProductsManager from "@/components/admin/ProductsManager";
 import UserPhotos from "@/components/admin/UserPhotos";
 import DataAnalytics from "@/components/admin/DataAnalytics";
+import ExternalAPIManager from "@/components/admin/ExternalAPIManager";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -107,6 +108,10 @@ const Admin = () => {
               <BarChart3 className="mr-2 h-4 w-4" />
               Analytics
             </TabsTrigger>
+            <TabsTrigger value="api">
+              <Package className="mr-2 h-4 w-4" />
+              External API
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="brands">
@@ -127,6 +132,10 @@ const Admin = () => {
 
           <TabsContent value="analytics">
             <DataAnalytics />
+          </TabsContent>
+
+          <TabsContent value="api">
+            <ExternalAPIManager />
           </TabsContent>
         </Tabs>
       </main>
