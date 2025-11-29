@@ -4,12 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, Plus, Package } from "lucide-react";
+import { Loader2, Plus, Package, Filter } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MobileNav from "@/components/MobileNav";
 import ProfileMenu from "@/components/ProfileMenu";
 import ProfileSheet from "@/components/ProfileSheet";
-import AddCustomItemDialog from "@/components/AddCustomItemDialog";
+import AddCustomItemDialog, { CATEGORIES } from "@/components/AddCustomItemDialog";
 import ClosetItemDialog from "@/components/ClosetItemDialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface PurchasedItem {
   id: string;
@@ -44,6 +46,9 @@ const Closet = () => {
   const [addItemOpen, setAddItemOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<PurchasedItem | null>(null);
   const [itemDetailOpen, setItemDetailOpen] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<string>("All");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<PurchasedItem | null>(null);
 
   useEffect(() => {
     loadCloset();
@@ -148,6 +153,46 @@ const Closet = () => {
     }
   };
 
+  const handleEdit = (item: PurchasedItem) => {
+    toast("Edit functionality coming soon!", {
+      description: "You'll be able to edit item details in the next update."
+    });
+  };
+
+  const handleDeleteClick = (item: PurchasedItem) => {
+    setItemToDelete(item);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!itemToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from("user_wardrobe")
+        .delete()
+        .eq("id", itemToDelete.id);
+
+      if (error) throw error;
+
+      toast.success("Item removed from closet");
+      await loadCloset();
+    } catch (error: any) {
+      console.error("Error deleting item:", error);
+      toast.error("Failed to delete item");
+    } finally {
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
+    }
+  };
+
+  const filteredItems = categoryFilter === "All" 
+    ? items 
+    : items.filter(item => {
+        const category = item.is_custom ? item.custom_category : item.product?.category;
+        return category === categoryFilter;
+      });
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -186,21 +231,55 @@ const Closet = () => {
           Add Item to Closet
         </Button>
 
-        {items.length === 0 ? (
-          <Card className="mt-8">
-            <CardContent className="flex flex-col items-center justify-center py-16 space-y-4">
-              <Package className="w-16 h-16 text-muted-foreground" strokeWidth={1} />
-              <div className="text-center space-y-2">
-                <h3 className="text-lg font-light">Your Closet is Empty</h3>
-                <p className="text-sm text-muted-foreground font-light">
-                  Add items you've purchased or upload photos of clothing you already own
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Category Filter */}
+        {items.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Filter by Category</span>
+            </div>
+            <Tabs value={categoryFilter} onValueChange={setCategoryFilter} className="w-full">
+              <TabsList className="w-full justify-start overflow-x-auto flex-nowrap h-auto p-1">
+                <TabsTrigger value="All" className="flex-shrink-0">All</TabsTrigger>
+                {CATEGORIES.map((cat) => (
+                  <TabsTrigger key={cat} value={cat} className="flex-shrink-0">
+                    {cat}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+          </div>
+        )}
+
+        {filteredItems.length === 0 ? (
+          categoryFilter === "All" ? (
+            <Card className="mt-8">
+              <CardContent className="flex flex-col items-center justify-center py-16 space-y-4">
+                <Package className="w-16 h-16 text-muted-foreground" strokeWidth={1} />
+                <div className="text-center space-y-2">
+                  <h3 className="text-lg font-light">Your Closet is Empty</h3>
+                  <p className="text-sm text-muted-foreground font-light">
+                    Add items you've purchased or upload photos of clothing you already own
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="mt-8">
+              <CardContent className="flex flex-col items-center justify-center py-16 space-y-4">
+                <Package className="w-16 h-16 text-muted-foreground" strokeWidth={1} />
+                <div className="text-center space-y-2">
+                  <h3 className="text-lg font-light">No {categoryFilter} Items</h3>
+                  <p className="text-sm text-muted-foreground font-light">
+                    You don't have any {categoryFilter.toLowerCase()} items in your closet yet
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )
         ) : (
           <div className="grid grid-cols-2 gap-4">
-            {items.map((item) => (
+            {filteredItems.map((item) => (
               <Card 
                 key={item.id}
                 className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
@@ -260,7 +339,26 @@ const Closet = () => {
         item={selectedItem}
         open={itemDetailOpen}
         onOpenChange={setItemDetailOpen}
+        onEdit={handleEdit}
+        onDelete={handleDeleteClick}
       />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Item?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove this item from your closet? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <MobileNav />
     </div>

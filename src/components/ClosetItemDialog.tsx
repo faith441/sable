@@ -1,16 +1,28 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Pencil, Trash2 } from "lucide-react";
 
 interface ClosetItemDialogProps {
   item: any;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onEdit?: (item: any) => void;
+  onDelete?: (item: any) => void;
 }
 
-const ClosetItemDialog = ({ item, open, onOpenChange }: ClosetItemDialogProps) => {
+const ClosetItemDialog = ({ item, open, onOpenChange, onEdit, onDelete }: ClosetItemDialogProps) => {
   if (!item) return null;
+
+  const handleEdit = () => {
+    onEdit?.(item);
+    onOpenChange(false);
+  };
+
+  const handleDelete = () => {
+    onDelete?.(item);
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -130,6 +142,26 @@ const ClosetItemDialog = ({ item, open, onOpenChange }: ClosetItemDialogProps) =
                 year: 'numeric'
               })}
             </p>
+          </div>
+
+          {/* Edit and Delete Buttons */}
+          <div className="flex gap-2 pt-4">
+            <Button 
+              variant="outline" 
+              className="flex-1"
+              onClick={handleEdit}
+            >
+              <Pencil className="w-4 h-4 mr-2" />
+              Edit
+            </Button>
+            <Button 
+              variant="destructive" 
+              className="flex-1"
+              onClick={handleDelete}
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete
+            </Button>
           </div>
         </div>
       </DialogContent>

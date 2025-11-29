@@ -43,6 +43,8 @@ const CATEGORIES = [
   "Bag",
 ];
 
+export { CATEGORIES };
+
 const AddCustomItemDialog = ({ open, onOpenChange, onSubmit }: AddCustomItemDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [image, setImage] = useState<File | null>(null);
