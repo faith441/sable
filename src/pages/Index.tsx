@@ -171,10 +171,6 @@ const Index = () => {
                 A single platform that aligns your identity,<br />lifestyle, and aesthetic into one clear direction.
               </p>
             </div>
-            
-            <Button variant="luxury" size="lg" onClick={() => navigate("/survey")} className="w-full max-w-xs mx-auto mt-4">
-              Start Style Survey <ArrowRight className="ml-2" />
-            </Button>
           </div>
         </section>
 
