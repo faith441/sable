@@ -38,6 +38,7 @@ const Survey = () => {
     // Photos
     photos: [null, null, null, null] as (File | null)[],
     fullBodyPhotos: Array(10).fill(null) as (File | null)[],
+    swimsuitPhotos: Array(10).fill(null) as (File | null)[],
   });
 
   const styleImages = {
@@ -109,6 +110,9 @@ const Survey = () => {
         fullBodyPhotos: parsed.fullBodyPhotos && Array.isArray(parsed.fullBodyPhotos)
           ? Array(10).fill(null).map((_, i) => parsed.fullBodyPhotos[i] ?? null)
           : Array(10).fill(null),
+        swimsuitPhotos: parsed.swimsuitPhotos && Array.isArray(parsed.swimsuitPhotos)
+          ? Array(10).fill(null).map((_, i) => parsed.swimsuitPhotos[i] ?? null)
+          : Array(10).fill(null),
       });
     }
     updateAiMessage(1);
@@ -128,7 +132,8 @@ const Survey = () => {
       "Now, let's talk about the occasions you dress for. Select all that apply!",
       "Great! Now help me understand your body features so I can recommend pieces that will fit and flatter you perfectly!",
       "Optionally upload up to 4 clear selfie photos of your face without sunglasses. This helps me understand your unique features and provide even more personalized recommendations!",
-      "Last step! Share up to 10 photos of yourself that you really like showing your entire body. This helps me understand your style and fit preferences even better!"
+      "Share up to 10 photos of yourself that you really like showing your entire body. This helps me understand your style and fit preferences even better!",
+      "Last optional step! Upload up to 10 photos of yourself in swimsuits or suits. This helps me provide perfect recommendations for swimwear and formal wear!"
     ];
     setAiMessage(messages[currentStep - 1] || messages[0]);
   };
@@ -173,7 +178,7 @@ const Survey = () => {
       : [...array, item];
   };
 
-  const progress = (step / 9) * 100;
+  const progress = (step / 10) * 100;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -187,7 +192,7 @@ const Survey = () => {
             />
           </div>
           <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>Step {step} of 9</span>
+            <span>Step {step} of 10</span>
             <span>{Math.round(progress)}%</span>
           </div>
         </div>
@@ -906,6 +911,90 @@ const Survey = () => {
           </div>
         )}
 
+        {/* Step 10: Swimsuit/Suit Photos */}
+        {step === 10 && (
+          <div className="space-y-6">
+            <div className="text-center space-y-2 mb-6">
+              <h3 className="text-lg font-normal">Upload Swimsuit/Suit Photos (Optional)</h3>
+              <p className="text-sm text-muted-foreground font-light">
+                Share up to 10 photos of yourself in swimsuits or suits for better recommendations
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((index) => (
+                <div key={index} className="space-y-2">
+                  <label
+                    htmlFor={`swimsuit-photo-${index}`}
+                    className={`relative block aspect-[3/4] rounded-lg border-2 border-dashed cursor-pointer transition-all overflow-hidden ${
+                      formData.swimsuitPhotos[index]
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/50 bg-secondary/20'
+                    }`}
+                  >
+                    {formData.swimsuitPhotos[index] ? (
+                      <div className="relative w-full h-full">
+                        <img
+                          src={URL.createObjectURL(formData.swimsuitPhotos[index]!)}
+                          alt={`Swimsuit/suit photo ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const newPhotos = [...formData.swimsuitPhotos];
+                            newPhotos[index] = null;
+                            setFormData({ ...formData, swimsuitPhotos: newPhotos });
+                          }}
+                          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-background/90 flex items-center justify-center hover:bg-background"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-4">
+                        <Sparkles className="w-8 h-8 text-muted-foreground" />
+                        <span className="text-xs text-center font-light text-muted-foreground">
+                          Photo {index + 1}
+                        </span>
+                      </div>
+                    )}
+                    <input
+                      id={`swimsuit-photo-${index}`}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const newPhotos = [...formData.swimsuitPhotos];
+                          newPhotos[index] = file;
+                          setFormData({ ...formData, swimsuitPhotos: newPhotos });
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-secondary/30 rounded-lg p-4 space-y-2">
+              <h4 className="text-sm font-normal flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-primary" />
+                Photo Guidelines
+              </h4>
+              <ul className="text-xs text-muted-foreground font-light space-y-1 list-disc list-inside">
+                <li>Photos in swimsuits or formal suits</li>
+                <li>Clear, well-lit images</li>
+                <li>Full body visible works best</li>
+                <li>Helps with swimwear and formal wear recommendations</li>
+              </ul>
+            </div>
+          </div>
+        )}
+
         {/* Navigation Buttons */}
         <div className="flex gap-3 pt-4">
           {step > 1 && (
@@ -917,7 +1006,7 @@ const Survey = () => {
               Back
             </Button>
           )}
-          {step < 9 ? (
+          {step < 10 ? (
             <Button 
               onClick={() => setStep(step + 1)} 
               className="flex-1" 
