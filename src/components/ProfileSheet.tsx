@@ -25,8 +25,10 @@ const COLORS = ["Neutral", "Black", "White", "Earth Tones", "Pastels", "Bold Col
 const BUDGETS = ["$1,000 - $2,000", "$2,000 - $3,500", "$3,500 - $5,000", "$5,000 - $7,500", "$7,500 - $10,000", "$10,000+"];
 const LIFESTYLES = ["Professional", "Casual", "Active", "Social", "Creative", "Entrepreneurial", "Remote Worker", "Student", "Parent", "Traveler", "Outdoor/Adventure", "Fitness Enthusiast", "Nightlife", "Minimalist", "Luxury", "Executive", "High Society", "Jet Set", "Philanthropist", "Country Club", "Yacht Club", "Equestrian", "Art Collector", "Fine Dining", "Opera & Theater", "Private Aviation", "Estate Living", "Concierge Lifestyle"];
 const OCCASIONS = ["Work", "Casual Outings", "Date Night", "Events", "Travel", "Working Out", "Business Meetings", "Formal Events/Galas", "Weddings", "Networking Events", "Vacation/Resort", "Golf/Country Club", "Cocktail Parties", "Brunch/Lunch", "Weekend Getaways", "Red Carpet/VIP", "Charity Events", "Gallery Openings", "Private Dinners", "Yachting/Boating", "Outdoor Activities", "Sports Events", "Theater/Opera", "Beach/Pool", "Ski Resort", "Wine Tasting", "Fashion Shows"];
-const GENDERS = ["Women's", "Men's", "Unisex"];
+const GENDERS = ["Women's", "Men's"];
 const BODY_TYPES = ["Athletic", "Slim", "Curvy", "Petite", "Plus Size", "Muscular"];
+const EXPOSURE_PREFERENCES = ["None", "A Little", "A Lot"];
+const JEAN_BRANDS = ["Levi's", "AG", "J Brand", "Paige", "Good American", "Mother", "Citizens of Humanity", "Frame"];
 const FRAGRANCE_TYPES = ["Floral", "Woody", "Fresh/Citrus", "Oriental/Spicy", "Fruity", "Aquatic", "Gourmand", "Musky"];
 const HAIR_TYPES = ["Straight", "Wavy", "Curly", "Coily", "Fine/Thin", "Thick/Coarse", "Color-Treated", "Natural/Virgin"];
 
@@ -42,6 +44,12 @@ const ProfileSheet = ({ open, onOpenChange }: ProfileSheetProps) => {
     bodyType: [],
     fragranceTypes: [],
     hairType: [],
+    // Women-specific
+    jeanSizes: {} as Record<string, string>,
+    braSize: "",
+    cleavagePreference: "",
+    buttPreference: "",
+    legPreference: "",
   });
 
   useEffect(() => {
@@ -59,6 +67,11 @@ const ProfileSheet = ({ open, onOpenChange }: ProfileSheetProps) => {
           bodyType: parsed.bodyType || [],
           fragranceTypes: parsed.fragranceTypes || [],
           hairType: parsed.hairType || [],
+          jeanSizes: parsed.jeanSizes || {},
+          braSize: parsed.braSize || "",
+          cleavagePreference: parsed.cleavagePreference || "",
+          buttPreference: parsed.buttPreference || "",
+          legPreference: parsed.legPreference || "",
         });
       }
     }
@@ -273,6 +286,119 @@ const ProfileSheet = ({ open, onOpenChange }: ProfileSheetProps) => {
                   ))}
                 </div>
               </div>
+
+              {/* Women-specific sections */}
+              {formData.gender?.includes("Women's") && (
+                <>
+                  {/* Jean Sizes */}
+                  <div className="space-y-2">
+                    <Label className="font-medium text-sm">Jean Sizes by Brand (Optional)</Label>
+                    <div className="space-y-2">
+                      {JEAN_BRANDS.map((brand) => (
+                        <div key={brand} className="flex items-center gap-2">
+                          <span className="text-sm w-32 text-muted-foreground">{brand}</span>
+                          <input
+                            type="text"
+                            placeholder="e.g., 27, 28"
+                            className="flex-1 px-3 py-2 rounded-md border border-border bg-background text-sm"
+                            value={formData.jeanSizes?.[brand] || ""}
+                            onChange={(e) => setFormData((prev: any) => ({
+                              ...prev,
+                              jeanSizes: { ...prev.jeanSizes, [brand]: e.target.value }
+                            }))}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Bra Size */}
+                  <div className="space-y-2">
+                    <Label className="font-medium text-sm">Bra Size (Optional)</Label>
+                    <input
+                      type="text"
+                      placeholder="e.g., 34C, 36D"
+                      className="w-full px-3 py-2 rounded-md border border-border bg-background"
+                      value={formData.braSize === "No bra" ? "" : formData.braSize}
+                      onChange={(e) => setFormData((prev: any) => ({ ...prev, braSize: e.target.value }))}
+                      disabled={formData.braSize === "No bra"}
+                    />
+                    <div
+                      className={`cursor-pointer p-3 rounded-md border transition-all ${
+                        formData.braSize === "No bra"
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                      onClick={() => setFormData((prev: any) => ({ 
+                        ...prev, 
+                        braSize: prev.braSize === "No bra" ? "" : "No bra" 
+                      }))}
+                    >
+                      <span className="text-sm">I don't wear a bra</span>
+                    </div>
+                  </div>
+
+                  {/* Exposure Preferences */}
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label className="font-medium text-sm">Cleavage Showing</Label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {EXPOSURE_PREFERENCES.map((pref) => (
+                          <div
+                            key={pref}
+                            className={`cursor-pointer p-3 rounded-md border text-center transition-all ${
+                              formData.cleavagePreference === pref
+                                ? 'border-primary bg-primary/5'
+                                : 'border-border hover:border-primary/50'
+                            }`}
+                            onClick={() => setFormData((prev: any) => ({ ...prev, cleavagePreference: pref }))}
+                          >
+                            <span className="text-sm">{pref}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="font-medium text-sm">Butt Showing</Label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {EXPOSURE_PREFERENCES.map((pref) => (
+                          <div
+                            key={pref}
+                            className={`cursor-pointer p-3 rounded-md border text-center transition-all ${
+                              formData.buttPreference === pref
+                                ? 'border-primary bg-primary/5'
+                                : 'border-border hover:border-primary/50'
+                            }`}
+                            onClick={() => setFormData((prev: any) => ({ ...prev, buttPreference: pref }))}
+                          >
+                            <span className="text-sm">{pref}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="font-medium text-sm">Legs Showing</Label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {EXPOSURE_PREFERENCES.map((pref) => (
+                          <div
+                            key={pref}
+                            className={`cursor-pointer p-3 rounded-md border text-center transition-all ${
+                              formData.legPreference === pref
+                                ? 'border-primary bg-primary/5'
+                                : 'border-border hover:border-primary/50'
+                            }`}
+                            onClick={() => setFormData((prev: any) => ({ ...prev, legPreference: pref }))}
+                          >
+                            <span className="text-sm">{pref}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </TabsContent>
 
             <TabsContent value="care" className="mt-4 space-y-4 pb-4">
