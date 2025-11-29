@@ -4,10 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { ArrowLeft, Sparkles, Loader2, Plus, MapPin, Cloud, CloudRain, CloudSnow, Sun, CloudDrizzle, Trash2, RotateCw } from "lucide-react";
+import { ArrowLeft, Sparkles, Loader2, Plus, MapPin, Cloud, CloudRain, CloudSnow, Sun, CloudDrizzle, Trash2, RotateCw, Edit2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 interface OutfitPlan {
   id: string;
@@ -30,6 +32,10 @@ const OutfitPlanner = () => {
   const [weather, setWeather] = useState<any>(null);
   const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null);
   const [weeklyForecast, setWeeklyForecast] = useState<any[]>([]);
+  const [locationName, setLocationName] = useState<string>("");
+  const [locationDialogOpen, setLocationDialogOpen] = useState(false);
+  const [locationInput, setLocationInput] = useState("");
+  const [searchingLocation, setSearchingLocation] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -97,6 +103,7 @@ const OutfitPlanner = () => {
         setLocation({ lat: latitude, lon: longitude });
         setLocationEnabled(true);
         await fetchWeather(latitude, longitude);
+        await getLocationName(latitude, longitude);
         toast.success("Location enabled");
       },
       (error) => {
@@ -105,6 +112,60 @@ const OutfitPlanner = () => {
         setLocationEnabled(false);
       }
     );
+  };
+
+  const getLocationName = async (lat: number, lon: number) => {
+    try {
+      const response = await fetch(
+        `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}`
+      );
+      const data = await response.json();
+      if (data.results && data.results.length > 0) {
+        const result = data.results[0];
+        const name = result.name || result.admin1 || "Unknown";
+        setLocationName(name);
+      }
+    } catch (error) {
+      console.error("Error getting location name:", error);
+    }
+  };
+
+  const searchLocation = async () => {
+    if (!locationInput.trim()) {
+      toast.error("Please enter a location");
+      return;
+    }
+
+    setSearchingLocation(true);
+    try {
+      const response = await fetch(
+        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(locationInput)}&count=1&language=en&format=json`
+      );
+      const data = await response.json();
+      
+      if (!data.results || data.results.length === 0) {
+        toast.error("Location not found. Try a different city name.");
+        setSearchingLocation(false);
+        return;
+      }
+
+      const result = data.results[0];
+      const { latitude, longitude, name } = result;
+      
+      setLocation({ lat: latitude, lon: longitude });
+      setLocationName(name);
+      setLocationEnabled(true);
+      await fetchWeather(latitude, longitude);
+      
+      setLocationDialogOpen(false);
+      setLocationInput("");
+      toast.success(`Weather set to ${name}`);
+    } catch (error) {
+      console.error("Error searching location:", error);
+      toast.error("Failed to search location");
+    } finally {
+      setSearchingLocation(false);
+    }
   };
 
   const fetchWeather = async (lat: number, lon: number) => {
@@ -157,6 +218,7 @@ const OutfitPlanner = () => {
       setWeather(null);
       setWeeklyForecast([]);
       setLocation(null);
+      setLocationName("");
     }
   };
 
@@ -335,13 +397,63 @@ const OutfitPlanner = () => {
                   </div>
                   
                   {locationEnabled && weather && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground pl-6">
-                      {getWeatherIcon()}
-                      <span className="capitalize">{weather.condition}</span>
-                      <span>·</span>
-                      <span>H: {weather.high}°</span>
-                      <span>L: {weather.low}°</span>
-                    </div>
+                    <>
+                      <div className="flex items-center justify-between pl-6">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          {getWeatherIcon()}
+                          <span className="capitalize">{weather.condition}</span>
+                          <span>·</span>
+                          <span>H: {weather.high}°</span>
+                          <span>L: {weather.low}°</span>
+                        </div>
+                        <Dialog open={locationDialogOpen} onOpenChange={setLocationDialogOpen}>
+                          <DialogTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 px-2">
+                              <Edit2 className="w-3 h-3 mr-1" />
+                              {locationName || "Change"}
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-md">
+                            <DialogHeader>
+                              <DialogTitle>Change Location</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="city">City Name</Label>
+                                <Input
+                                  id="city"
+                                  placeholder="e.g., New York, London, Tokyo"
+                                  value={locationInput}
+                                  onChange={(e) => setLocationInput(e.target.value)}
+                                  onKeyDown={(e) => e.key === "Enter" && searchLocation()}
+                                />
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  onClick={requestLocation}
+                                  className="flex-1"
+                                >
+                                  <MapPin className="w-4 h-4 mr-2" />
+                                  Use Current
+                                </Button>
+                                <Button
+                                  onClick={searchLocation}
+                                  disabled={searchingLocation}
+                                  className="flex-1"
+                                >
+                                  {searchingLocation ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    "Search"
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    </>
                   )}
                 </CardContent>
               </Card>
