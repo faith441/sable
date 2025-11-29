@@ -113,11 +113,28 @@ const OutfitPlanner = () => {
           ? (outfit.items as any)?.recommended_additions 
           : undefined;
 
+        // Enrich items with image URLs from wardrobe
+        const enrichedItems = outfitItems.map((item: any) => {
+          const wardrobeItem = wardrobeData?.find((w: any) => w.id === item.id);
+          if (wardrobeItem) {
+            // Get image URL from either custom_image_url or product image_url
+            const imageUrl = wardrobeItem.is_custom 
+              ? wardrobeItem.custom_image_url 
+              : wardrobeItem.products?.image_url;
+            
+            return {
+              ...item,
+              image_url: imageUrl
+            };
+          }
+          return item;
+        });
+
         return {
           id: outfit.id,
           name: outfit.name,
           day_of_week: outfit.day_of_week || '',
-          items: outfitItems,
+          items: enrichedItems,
           image_url: outfit.image_url || undefined,
           recommended_additions: recommendedAdditions
         };
