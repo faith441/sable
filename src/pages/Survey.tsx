@@ -20,6 +20,18 @@ const Survey = () => {
     budgetRange: [] as string[],
     lifestyle: [] as string[],
     occasions: [] as string[],
+    // Body features
+    bodyType: [] as string[],
+    torsoLength: "",
+    legLength: "",
+    hairColor: [] as string[],
+    eyeColor: [] as string[],
+    weight: "",
+    // Female-specific
+    jeanSizes: {} as Record<string, string>,
+    braSize: "",
+    cleavagePreference: "",
+    hairStyle: [] as string[],
   });
 
   const styleImages = {
@@ -81,7 +93,8 @@ const Survey = () => {
       "Perfect! Let me show you some color palettes. Tap all the ones that catch your eye!",
       "Beautiful selections! What's the maximum you'd be willing to spend on a capsule wardrobe (typically 10 pieces)? Select all ranges that work for you!",
       "Almost there! Tell me about your lifestyle - select all that apply!",
-      "Last step! What occasions do you dress for most often? Select all that apply!"
+      "Now, let's talk about the occasions you dress for. Select all that apply!",
+      "Last step! Help me understand your body features so I can recommend pieces that will fit and flatter you perfectly!"
     ];
     setAiMessage(messages[currentStep - 1] || messages[0]);
   };
@@ -126,7 +139,7 @@ const Survey = () => {
       : [...array, item];
   };
 
-  const progress = (step / 6) * 100;
+  const progress = (step / 7) * 100;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -140,7 +153,7 @@ const Survey = () => {
             />
           </div>
           <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>Step {step} of 6</span>
+            <span>Step {step} of 7</span>
             <span>{Math.round(progress)}%</span>
           </div>
         </div>
@@ -347,6 +360,252 @@ const Survey = () => {
           </div>
         )}
 
+        {/* Step 7: Body Features */}
+        {step === 7 && (
+          <div className="space-y-6">
+            {/* Body Type */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">Body Type</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {["Athletic", "Slim", "Curvy", "Petite", "Plus Size", "Muscular"].map((type) => (
+                  <Card
+                    key={type}
+                    className={`cursor-pointer transition-all ${
+                      formData.bodyType.includes(type)
+                        ? 'border-primary bg-primary/5'
+                        : 'hover:border-primary/50'
+                    }`}
+                    onClick={() => setFormData({
+                      ...formData,
+                      bodyType: toggleArrayItem(formData.bodyType, type)
+                    })}
+                  >
+                    <CardContent className="p-4 text-center">
+                      <span className="text-sm font-light">{type}</span>
+                      {formData.bodyType.includes(type) && (
+                        <Heart className="w-4 h-4 mx-auto mt-1 text-primary fill-primary" />
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* Torso Length */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">Torso Length</h3>
+              <div className="grid grid-cols-3 gap-3">
+                {["Short", "Regular", "Tall"].map((length) => (
+                  <Card
+                    key={length}
+                    className={`cursor-pointer transition-all ${
+                      formData.torsoLength === length
+                        ? 'border-primary bg-primary/5'
+                        : 'hover:border-primary/50'
+                    }`}
+                    onClick={() => setFormData({...formData, torsoLength: length})}
+                  >
+                    <CardContent className="p-4 text-center">
+                      <span className="text-sm font-light">{length}</span>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* Leg Length */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">Leg Length</h3>
+              <div className="grid grid-cols-3 gap-3">
+                {["Short", "Regular", "Long"].map((length) => (
+                  <Card
+                    key={length}
+                    className={`cursor-pointer transition-all ${
+                      formData.legLength === length
+                        ? 'border-primary bg-primary/5'
+                        : 'hover:border-primary/50'
+                    }`}
+                    onClick={() => setFormData({...formData, legLength: length})}
+                  >
+                    <CardContent className="p-4 text-center">
+                      <span className="text-sm font-light">{length}</span>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* Hair Color */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">Hair Color</h3>
+              <div className="grid grid-cols-3 gap-3">
+                {["Black", "Brown", "Blonde", "Red", "Gray/Silver", "Other"].map((color) => (
+                  <Card
+                    key={color}
+                    className={`cursor-pointer transition-all ${
+                      formData.hairColor.includes(color)
+                        ? 'border-primary bg-primary/5'
+                        : 'hover:border-primary/50'
+                    }`}
+                    onClick={() => setFormData({
+                      ...formData,
+                      hairColor: toggleArrayItem(formData.hairColor, color)
+                    })}
+                  >
+                    <CardContent className="p-4 text-center">
+                      <span className="text-sm font-light">{color}</span>
+                      {formData.hairColor.includes(color) && (
+                        <Heart className="w-3 h-3 mx-auto mt-1 text-primary fill-primary" />
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* Eye Color */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">Eye Color</h3>
+              <div className="grid grid-cols-3 gap-3">
+                {["Brown", "Blue", "Green", "Hazel", "Gray", "Other"].map((color) => (
+                  <Card
+                    key={color}
+                    className={`cursor-pointer transition-all ${
+                      formData.eyeColor.includes(color)
+                        ? 'border-primary bg-primary/5'
+                        : 'hover:border-primary/50'
+                    }`}
+                    onClick={() => setFormData({
+                      ...formData,
+                      eyeColor: toggleArrayItem(formData.eyeColor, color)
+                    })}
+                  >
+                    <CardContent className="p-4 text-center">
+                      <span className="text-sm font-light">{color}</span>
+                      {formData.eyeColor.includes(color) && (
+                        <Heart className="w-3 h-3 mx-auto mt-1 text-primary fill-primary" />
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* Weight Range */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">Weight Range</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {["Under 120 lbs", "120-150 lbs", "150-180 lbs", "180-210 lbs", "210-240 lbs", "240+ lbs"].map((range) => (
+                  <Card
+                    key={range}
+                    className={`cursor-pointer transition-all ${
+                      formData.weight === range
+                        ? 'border-primary bg-primary/5'
+                        : 'hover:border-primary/50'
+                    }`}
+                    onClick={() => setFormData({...formData, weight: range})}
+                  >
+                    <CardContent className="p-4 text-center">
+                      <span className="text-sm font-light">{range}</span>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* Female-specific questions */}
+            {formData.gender.includes("Women's") && (
+              <>
+                <div className="border-t border-border pt-6 mt-6">
+                  <h3 className="text-base font-normal mb-4">Additional Fit Details</h3>
+                  
+                  {/* Jean Sizes */}
+                  <div className="space-y-3 mb-6">
+                    <h4 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">Jean Size (by brand)</h4>
+                    {["Levi's", "Madewell", "AG Jeans", "J Brand", "Citizens of Humanity"].map((brand) => (
+                      <div key={brand} className="flex items-center gap-3">
+                        <span className="text-sm font-light min-w-[140px]">{brand}</span>
+                        <input
+                          type="text"
+                          placeholder="e.g., 27, 28, 29"
+                          className="flex-1 px-4 py-2 rounded-lg border border-border bg-background text-sm"
+                          value={formData.jeanSizes[brand] || ""}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            jeanSizes: {...formData.jeanSizes, [brand]: e.target.value}
+                          })}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Bra Size */}
+                  <div className="space-y-3 mb-6">
+                    <h4 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">Bra Size</h4>
+                    <input
+                      type="text"
+                      placeholder="e.g., 34C, 36D"
+                      className="w-full px-4 py-3 rounded-lg border border-border bg-background"
+                      value={formData.braSize}
+                      onChange={(e) => setFormData({...formData, braSize: e.target.value})}
+                    />
+                  </div>
+
+                  {/* Cleavage Preference */}
+                  <div className="space-y-3 mb-6">
+                    <h4 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">Cleavage in Clothing Style</h4>
+                    <div className="grid grid-cols-3 gap-3">
+                      {["None", "A Little", "A Lot"].map((pref) => (
+                        <Card
+                          key={pref}
+                          className={`cursor-pointer transition-all ${
+                            formData.cleavagePreference === pref
+                              ? 'border-primary bg-primary/5'
+                              : 'hover:border-primary/50'
+                          }`}
+                          onClick={() => setFormData({...formData, cleavagePreference: pref})}
+                        >
+                          <CardContent className="p-4 text-center">
+                            <span className="text-sm font-light">{pref}</span>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Hair Style */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">How You Wear Your Hair</h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      {["Down & Straight", "Down & Wavy", "Down & Curly", "Half Up/Half Down", "High Bun", "Low Bun", "Ponytail", "Braided", "Short & Styled"].map((style) => (
+                        <Card
+                          key={style}
+                          className={`cursor-pointer transition-all ${
+                            formData.hairStyle.includes(style)
+                              ? 'border-primary bg-primary/5'
+                              : 'hover:border-primary/50'
+                          }`}
+                          onClick={() => setFormData({
+                            ...formData,
+                            hairStyle: toggleArrayItem(formData.hairStyle, style)
+                          })}
+                        >
+                          <CardContent className="p-4 text-center">
+                            <span className="text-sm font-light">{style}</span>
+                            {formData.hairStyle.includes(style) && (
+                              <Heart className="w-3 h-3 mx-auto mt-1 text-primary fill-primary" />
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
         {/* Navigation Buttons */}
         <div className="flex gap-3 pt-4">
           {step > 1 && (
@@ -358,7 +617,7 @@ const Survey = () => {
               Back
             </Button>
           )}
-          {step < 6 ? (
+          {step < 7 ? (
             <Button 
               onClick={() => setStep(step + 1)} 
               className="flex-1" 
@@ -368,7 +627,8 @@ const Survey = () => {
                 (step === 2 && formData.gender.length === 0) ||
                 (step === 3 && formData.colorPreferences.length === 0) ||
                 (step === 4 && formData.budgetRange.length === 0) ||
-                (step === 5 && formData.lifestyle.length === 0)
+                (step === 5 && formData.lifestyle.length === 0) ||
+                (step === 6 && formData.occasions.length === 0)
               }
             >
               Continue <ArrowRight className="ml-2 h-4 w-4" />
@@ -378,7 +638,7 @@ const Survey = () => {
               onClick={handleSubmit} 
               className="flex-1" 
               variant="luxury"
-              disabled={loading || formData.occasions.length === 0}
+              disabled={loading}
             >
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
               Generate My Wardrobe
