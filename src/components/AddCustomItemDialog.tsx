@@ -111,7 +111,6 @@ const AddCustomItemDialog = ({ open, onOpenChange, onSubmit }: AddCustomItemDial
                 onChange={handleImageChange}
                 className="hidden"
                 id="image-upload"
-                required
               />
               <label htmlFor="image-upload" className="cursor-pointer block">
                 {imagePreview ? (
@@ -131,7 +130,7 @@ const AddCustomItemDialog = ({ open, onOpenChange, onSubmit }: AddCustomItemDial
           {/* Category */}
           <div className="space-y-2">
             <Label htmlFor="category">Category *</Label>
-            <Select value={category} onValueChange={setCategory} required>
+            <Select value={category} onValueChange={setCategory}>
               <SelectTrigger>
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
