@@ -79,7 +79,7 @@ const Survey = () => {
       "Hi! I'm Luna, your personal AI stylist. Let's discover your perfect style together! Select all styles that resonate with you - the more you choose, the better I can understand your taste!",
       "Great choices! Now, which gender preferences should I focus on? You can select multiple!",
       "Perfect! Let me show you some color palettes. Tap all the ones that catch your eye!",
-      "Beautiful selections! What's your budget range? You can select multiple ranges if your budget varies!",
+      "Beautiful selections! What's the maximum you'd be willing to spend on a capsule wardrobe (typically 10 pieces)? Select all ranges that work for you!",
       "Almost there! Tell me about your lifestyle - select all that apply!",
       "Last step! What occasions do you dress for most often? Select all that apply!"
     ];
@@ -263,7 +263,7 @@ const Survey = () => {
         {/* Step 4: Budget */}
         {step === 4 && (
           <div className="space-y-3">
-            {["Under $500", "$500-$1000", "$1000-$2000", "Over $2000"].map((budget) => (
+            {["$1,000 - $2,000", "$2,000 - $3,500", "$3,500 - $5,000", "$5,000 - $7,500", "$7,500 - $10,000", "$10,000+"].map((budget) => (
               <Card
                 key={budget}
                 className={`cursor-pointer transition-all ${
