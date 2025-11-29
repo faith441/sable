@@ -389,6 +389,27 @@ const Wardrobe = () => {
             ))}
           </Tabs>
         )}
+
+        {capsules.length > 0 && (
+          <div className="mt-8 pb-8">
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full"
+              onClick={generateWardrobe}
+              disabled={generating}
+            >
+              {generating ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Regenerating...
+                </>
+              ) : (
+                "Regenerate Wardrobe"
+              )}
+            </Button>
+          </div>
+        )}
       </div>
 
       <ProfileSheet open={profileOpen} onOpenChange={setProfileOpen} />
