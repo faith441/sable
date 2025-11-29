@@ -63,7 +63,9 @@ const Cart = () => {
 
       if (error) throw error;
 
-      setItems(data?.map(item => ({
+      const itemsWithProduct = (data || []).filter((item: any) => item.product_data);
+
+      setItems(itemsWithProduct.map((item: any) => ({
         id: item.id,
         quantity: item.quantity,
         size: item.size,
@@ -108,7 +110,7 @@ const Cart = () => {
     toast.success("Proceeding to checkout...");
   };
 
-  const total = items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+  const total = items.reduce((sum, item) => sum + ((item.product?.price || 0) * item.quantity), 0);
 
   if (loading) {
     return (
