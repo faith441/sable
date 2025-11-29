@@ -244,8 +244,9 @@ const Wardrobe = () => {
         <div className="flex items-center justify-between max-w-lg mx-auto">
           <h1 
             onClick={() => navigate("/wardrobe")}
-            className="text-xl font-light cursor-pointer hover:text-primary transition-colors"
+            className="text-xl font-light cursor-pointer hover:text-sage transition-colors flex items-center gap-2"
           >
+            <span className="w-2 h-2 rounded-full bg-sage"></span>
             Sable
           </h1>
           <ProfileMenu 
@@ -272,18 +273,22 @@ const Wardrobe = () => {
           </Card>
         ) : (
           <Tabs defaultValue="0" className="space-y-6">
-            <TabsList className="w-full justify-start overflow-x-auto">
-              {capsules.map((capsule, index) => (
-                <TabsTrigger key={index} value={index.toString()} className="flex-shrink-0">
-                  {capsule.name}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+          <TabsList className="w-full justify-start overflow-x-auto">
+            {capsules.map((capsule, index) => (
+              <TabsTrigger 
+                key={index} 
+                value={index.toString()} 
+                className="flex-shrink-0 data-[state=active]:bg-sage/10 data-[state=active]:text-sage data-[state=active]:border-sage/30"
+              >
+                {capsule.name}
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
             {capsules.map((capsule, capsuleIndex) => (
               <TabsContent key={capsuleIndex} value={capsuleIndex.toString()} className="space-y-6">
                 {/* Capsule Overview Card */}
-                <Card className="bg-gradient-to-br from-primary/5 to-accent/5">
+                <Card className="bg-gradient-to-br from-sage/10 via-accent/5 to-primary/5 border-sage/20">
                   <CardContent className="p-6 space-y-4">
                     <div>
                       <h2 className="text-2xl font-light mb-2">{capsule.name}</h2>
@@ -292,15 +297,15 @@ const Wardrobe = () => {
                     
                     <div className="grid grid-cols-3 gap-4 py-4">
                       <div className="text-center">
-                        <p className="text-2xl font-light">{capsule.total_pieces}</p>
+                        <p className="text-2xl font-light text-sage">{capsule.total_pieces}</p>
                         <p className="text-xs text-muted-foreground font-light">Pieces</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-2xl font-light">${capsule.total_price}</p>
+                        <p className="text-2xl font-light text-primary">${capsule.total_price}</p>
                         <p className="text-xs text-muted-foreground font-light">Total</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-2xl font-light">{capsule.outfit_count}+</p>
+                        <p className="text-2xl font-light text-accent">{capsule.outfit_count}+</p>
                         <p className="text-xs text-muted-foreground font-light">Outfits</p>
                       </div>
                     </div>
