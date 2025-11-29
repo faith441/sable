@@ -626,6 +626,7 @@ const OutfitPlanner = () => {
                           <div className="flex items-center gap-2 text-base">
                             {getWeatherIcon()}
                             <span className="capitalize font-light">{weather.condition}</span>
+                            <span className="text-foreground font-normal">{weather.temp}°</span>
                           </div>
                           <div className="flex items-center gap-1 text-sm text-muted-foreground">
                             <span>H: {weather.high}°</span>
