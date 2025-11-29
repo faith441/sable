@@ -35,6 +35,8 @@ const Survey = () => {
     buttPreference: "",
     legPreference: "",
     hairStyle: [] as string[],
+    // Photos
+    photos: [] as File[],
   });
 
   const styleImages = {
@@ -112,7 +114,8 @@ const Survey = () => {
       "Beautiful selections! What's the maximum you'd be willing to spend on a capsule wardrobe (typically 10 pieces)? Select all ranges that work for you!",
       "Almost there! Tell me about your lifestyle - select all that apply!",
       "Now, let's talk about the occasions you dress for. Select all that apply!",
-      "Last step! Help me understand your body features so I can recommend pieces that will fit and flatter you perfectly!"
+      "Great! Now help me understand your body features so I can recommend pieces that will fit and flatter you perfectly!",
+      "Final step! Please upload 4 clear selfie photos of your face without sunglasses. This helps me understand your unique features and provide the most personalized recommendations!"
     ];
     setAiMessage(messages[currentStep - 1] || messages[0]);
   };
@@ -157,7 +160,7 @@ const Survey = () => {
       : [...array, item];
   };
 
-  const progress = (step / 7) * 100;
+  const progress = (step / 8) * 100;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -171,7 +174,7 @@ const Survey = () => {
             />
           </div>
           <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>Step {step} of 7</span>
+            <span>Step {step} of 8</span>
             <span>{Math.round(progress)}%</span>
           </div>
         </div>
@@ -723,6 +726,90 @@ const Survey = () => {
           </div>
         )}
 
+        {/* Step 8: Photo Upload */}
+        {step === 8 && (
+          <div className="space-y-6">
+            <div className="text-center space-y-2 mb-6">
+              <h3 className="text-lg font-normal">Upload Your Selfie Photos</h3>
+              <p className="text-sm text-muted-foreground font-light">
+                Please upload 4 clear photos of your face without sunglasses
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              {[0, 1, 2, 3].map((index) => (
+                <div key={index} className="space-y-2">
+                  <label
+                    htmlFor={`photo-${index}`}
+                    className={`relative block aspect-square rounded-lg border-2 border-dashed cursor-pointer transition-all overflow-hidden ${
+                      formData.photos[index]
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/50 bg-secondary/20'
+                    }`}
+                  >
+                    {formData.photos[index] ? (
+                      <div className="relative w-full h-full">
+                        <img
+                          src={URL.createObjectURL(formData.photos[index])}
+                          alt={`Selfie ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const newPhotos = [...formData.photos];
+                            newPhotos.splice(index, 1);
+                            setFormData({ ...formData, photos: newPhotos });
+                          }}
+                          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-background/90 flex items-center justify-center hover:bg-background"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-4">
+                        <Sparkles className="w-8 h-8 text-muted-foreground" />
+                        <span className="text-xs text-center font-light text-muted-foreground">
+                          Photo {index + 1}
+                        </span>
+                      </div>
+                    )}
+                    <input
+                      id={`photo-${index}`}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const newPhotos = [...formData.photos];
+                          newPhotos[index] = file;
+                          setFormData({ ...formData, photos: newPhotos });
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-secondary/30 rounded-lg p-4 space-y-2">
+              <h4 className="text-sm font-normal flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-primary" />
+                Photo Guidelines
+              </h4>
+              <ul className="text-xs text-muted-foreground font-light space-y-1 list-disc list-inside">
+                <li>Clear, well-lit photos of your face</li>
+                <li>No sunglasses or face coverings</li>
+                <li>Different angles are helpful (front, side views)</li>
+                <li>Natural expressions work best</li>
+              </ul>
+            </div>
+          </div>
+        )}
+
         {/* Navigation Buttons */}
         <div className="flex gap-3 pt-4">
           {step > 1 && (
@@ -734,7 +821,7 @@ const Survey = () => {
               Back
             </Button>
           )}
-          {step < 7 ? (
+          {step < 8 ? (
             <Button 
               onClick={() => setStep(step + 1)} 
               className="flex-1" 
@@ -745,7 +832,8 @@ const Survey = () => {
                 (step === 3 && formData.colorPreferences.length === 0) ||
                 (step === 4 && formData.budgetRange.length === 0) ||
                 (step === 5 && formData.lifestyle.length === 0) ||
-                (step === 6 && formData.occasions.length === 0)
+                (step === 6 && formData.occasions.length === 0) ||
+                (step === 7 && formData.bodyType.length === 0)
               }
             >
               Continue <ArrowRight className="ml-2 h-4 w-4" />
@@ -755,7 +843,7 @@ const Survey = () => {
               onClick={handleSubmit} 
               className="flex-1" 
               variant="luxury"
-              disabled={loading}
+              disabled={loading || formData.photos.length < 4}
             >
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
               Generate My Wardrobe
