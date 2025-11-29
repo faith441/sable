@@ -76,6 +76,60 @@ const UsersManager = () => {
     }
   };
 
+  const exportUserData = async (userId: string, userName: string) => {
+    try {
+      const [profile, preferences, wardrobes, userWardrobe, outfits, carts, chats, roles] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", userId).single(),
+        supabase.from("style_preferences").select("*").eq("user_id", userId).maybeSingle(),
+        supabase.from("capsule_wardrobes").select("*").eq("user_id", userId),
+        supabase.from("user_wardrobe").select("*").eq("user_id", userId),
+        supabase.from("outfit_plans").select("*").eq("user_id", userId),
+        supabase.from("cart_items").select("*").eq("user_id", userId),
+        supabase.from("chat_messages").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+        supabase.from("user_roles").select("*").eq("user_id", userId),
+      ]);
+
+      const exportData = {
+        export_info: {
+          exported_at: new Date().toISOString(),
+          user_id: userId,
+          user_name: userName,
+          export_type: "complete_user_data_raw_unfiltered"
+        },
+        profile: profile.data,
+        style_preferences: preferences.data,
+        capsule_wardrobes: wardrobes.data || [],
+        user_wardrobe_items: userWardrobe.data || [],
+        outfit_plans: outfits.data || [],
+        cart_items: carts.data || [],
+        chat_messages: chats.data || [],
+        user_roles: roles.data || [],
+        metadata: {
+          total_wardrobes: wardrobes.data?.length || 0,
+          total_wardrobe_items: userWardrobe.data?.length || 0,
+          total_outfits: outfits.data?.length || 0,
+          total_cart_items: carts.data?.length || 0,
+          total_chat_messages: chats.data?.length || 0,
+        }
+      };
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `user-${userName.replace(/\s+/g, "-")}-${userId}-${new Date().toISOString().split("T")[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast.success("User data exported successfully");
+    } catch (error) {
+      console.error("Error exporting user data:", error);
+      toast.error("Failed to export user data");
+    }
+  };
+
   const handleViewUser = async (user: any) => {
     setSelectedUser(user);
     await loadUserDetails(user.id);
@@ -191,6 +245,13 @@ const UsersManager = () => {
           <DialogHeader>
             <DialogTitle>User Details: {selectedUser?.full_name || selectedUser?.email}</DialogTitle>
             <DialogDescription>Complete user data and activity</DialogDescription>
+            <Button 
+              onClick={() => exportUserData(selectedUser?.id, selectedUser?.full_name || selectedUser?.email)}
+              className="mt-2"
+            >
+              <Eye className="mr-2 h-4 w-4" />
+              Export Complete User Data
+            </Button>
           </DialogHeader>
           {userDetails && (
             <Tabs defaultValue="profile" className="w-full">

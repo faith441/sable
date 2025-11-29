@@ -92,41 +92,110 @@ const DataAnalytics = () => {
 
   const exportAllData = async () => {
     try {
-      const [profiles, preferences, wardrobes, userWardrobe, outfits, carts, chats] = await Promise.all([
+      toast.info("Exporting complete database... This may take a moment.");
+      
+      const [
+        profiles, 
+        preferences, 
+        wardrobes, 
+        wardrobeItems,
+        userWardrobe, 
+        outfits, 
+        carts, 
+        chats,
+        brands,
+        products,
+        userRoles
+      ] = await Promise.all([
         supabase.from("profiles").select("*"),
         supabase.from("style_preferences").select("*"),
         supabase.from("capsule_wardrobes").select("*"),
+        supabase.from("wardrobe_items").select("*"),
         supabase.from("user_wardrobe").select("*"),
         supabase.from("outfit_plans").select("*"),
         supabase.from("cart_items").select("*"),
         supabase.from("chat_messages").select("*"),
+        supabase.from("brands").select("*"),
+        supabase.from("products").select("*"),
+        supabase.from("user_roles").select("*"),
       ]);
 
       const exportData = {
-        exported_at: new Date().toISOString(),
-        analytics: analytics,
-        raw_data: {
-          profiles: profiles.data,
-          style_preferences: preferences.data,
-          capsule_wardrobes: wardrobes.data,
-          user_wardrobe: userWardrobe.data,
-          outfit_plans: outfits.data,
-          cart_items: carts.data,
-          chat_messages: chats.data,
+        export_info: {
+          exported_at: new Date().toISOString(),
+          export_type: "complete_database_raw_unfiltered",
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          total_users: profiles.data?.length || 0,
+          total_records: (profiles.data?.length || 0) + 
+                        (preferences.data?.length || 0) + 
+                        (wardrobes.data?.length || 0) +
+                        (userWardrobe.data?.length || 0) +
+                        (outfits.data?.length || 0) +
+                        (carts.data?.length || 0) +
+                        (chats.data?.length || 0) +
+                        (brands.data?.length || 0) +
+                        (products.data?.length || 0)
         },
+        analytics_summary: analytics,
+        raw_data_complete: {
+          profiles: {
+            count: profiles.data?.length || 0,
+            data: profiles.data || []
+          },
+          style_preferences: {
+            count: preferences.data?.length || 0,
+            data: preferences.data || []
+          },
+          capsule_wardrobes: {
+            count: wardrobes.data?.length || 0,
+            data: wardrobes.data || []
+          },
+          wardrobe_items: {
+            count: wardrobeItems.data?.length || 0,
+            data: wardrobeItems.data || []
+          },
+          user_wardrobe: {
+            count: userWardrobe.data?.length || 0,
+            data: userWardrobe.data || []
+          },
+          outfit_plans: {
+            count: outfits.data?.length || 0,
+            data: outfits.data || []
+          },
+          cart_items: {
+            count: carts.data?.length || 0,
+            data: carts.data || []
+          },
+          chat_messages: {
+            count: chats.data?.length || 0,
+            data: chats.data || []
+          },
+          brands: {
+            count: brands.data?.length || 0,
+            data: brands.data || []
+          },
+          products: {
+            count: products.data?.length || 0,
+            data: products.data || []
+          },
+          user_roles: {
+            count: userRoles.data?.length || 0,
+            data: userRoles.data || []
+          }
+        }
       };
 
       const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `sable-data-export-${new Date().toISOString().split("T")[0]}.json`;
+      a.download = `sable-complete-database-export-${new Date().toISOString().split("T")[0]}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      toast.success("Data exported successfully");
+      toast.success(`Complete database exported: ${exportData.export_info.total_records} total records`);
     } catch (error) {
       console.error("Error exporting data:", error);
       toast.error("Failed to export data");
