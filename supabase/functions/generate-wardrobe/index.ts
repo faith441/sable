@@ -56,8 +56,47 @@ serve(async (req) => {
       console.error("Error fetching products:", productsError);
     }
 
-    // Generate 2-3 CAPSULE WARDROBES (not random products)
-    const prompt = `Based on these style preferences, generate 2-3 complete CAPSULE WARDROBES. Each capsule should be a cohesive collection that creates multiple outfit combinations. Include clothing, fragrance, and hair care recommendations.
+    // Parse style types and lifestyles from preferences
+    let styleTypes: string[] = [];
+    let lifestyles: string[] = [];
+
+    // Handle both array and string formats
+    if (Array.isArray(preferences.styleType)) {
+      styleTypes = preferences.styleType;
+    } else if (typeof preferences.styleType === 'string') {
+      styleTypes = preferences.styleType.split(',').map((s: string) => s.trim());
+    }
+
+    if (Array.isArray(preferences.lifestyle)) {
+      lifestyles = preferences.lifestyle;
+    } else if (typeof preferences.lifestyle === 'string') {
+      lifestyles = preferences.lifestyle.split(',').map((s: string) => s.trim());
+    }
+
+    console.log("Style types:", styleTypes);
+    console.log("Lifestyles:", lifestyles);
+
+    // Generate capsules for each style type + primary lifestyle combination
+    // Limit to reasonable number of capsules (max 10)
+    const capsuleCombinations = [];
+    
+    // Create combinations: each style type gets paired with primary lifestyles
+    for (const style of styleTypes.slice(0, 10)) {
+      const primaryLifestyle = lifestyles[0] || "Versatile";
+      capsuleCombinations.push({
+        style,
+        lifestyle: primaryLifestyle,
+        name: `${style} ${primaryLifestyle}`
+      });
+    }
+
+    console.log("Generating capsules for:", capsuleCombinations);
+
+    // Generate wardrobes for each combination
+    const prompt = `Based on these style preferences, generate ${capsuleCombinations.length} complete CAPSULE WARDROBES. Each capsule should be a cohesive collection that creates multiple outfit combinations. Include clothing, fragrance, and hair care recommendations.
+
+REQUIRED CAPSULES TO GENERATE (one for each):
+${capsuleCombinations.map(c => `- ${c.name}: A ${c.style} style capsule for ${c.lifestyle} lifestyle`).join('\n')}
     
 User Preferences:
 ${JSON.stringify(preferences, null, 2)}
@@ -89,18 +128,21 @@ Return a JSON object with this EXACT structure:
 }
 
 CRITICAL RULES:
-- Generate 2-3 complete capsule collections
+- Generate EXACTLY ${capsuleCombinations.length} capsule collections (one for each style/lifestyle combination listed above)
+- Each capsule MUST match the specific style type and lifestyle assigned to it
+- Each capsule name should clearly reflect its style + lifestyle (e.g., "Minimalist Professional", "Vintage Casual", "Chic Executive")
 - Each capsule should have 10-15 pieces that work together (clothing + 1 fragrance + 1 shampoo + 1 conditioner)
-- ALL pieces in a capsule must coordinate (colors, style, formality)
+- ALL pieces in a capsule must coordinate (colors, style, formality) and match the specific style type
 - Calculate outfit_count realistically (e.g., 3 tops × 2 bottoms = 6 outfits minimum)
-- Match capsules to user's budget range and lifestyle
-- ALWAYS include 1 signature fragrance recommendation per capsule based on user's fragrance preferences
+- Match capsules to user's budget range
+- ALWAYS include 1 signature fragrance recommendation per capsule based on user's fragrance preferences and the capsule's style
 - ALWAYS include 1 shampoo and 1 conditioner recommendation per capsule based on user's hair type and concerns
 - Use real Unsplash URLs for image_url (fashion items, perfume bottles, hair care products)
-- Each capsule should have a clear purpose/occasion
+- Each capsule should have a clear purpose/occasion matching its lifestyle
 - Items should feel premium and intentional
 - Fragrance should complement the capsule's overall aesthetic and occasion
-- Hair care should match user's specific hair type, concerns, and product preferences`;
+- Hair care should match user's specific hair type, concerns, and product preferences
+- DO NOT generate generic capsules - each must be distinctly ${capsuleCombinations.map(c => c.style).join(', ')}`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
