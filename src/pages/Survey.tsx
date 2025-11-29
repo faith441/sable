@@ -553,34 +553,6 @@ const Survey = () => {
               </div>
             </div>
 
-            {/* Hair Style */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">How You Wear Your Hair</h3>
-              <div className="grid grid-cols-2 gap-3">
-                {["Down & Straight", "Down & Wavy", "Down & Curly", "Half Up/Half Down", "High Bun", "Low Bun", "Ponytail", "Braided", "Short & Styled"].map((style) => (
-                  <Card
-                    key={style}
-                    className={`cursor-pointer transition-all ${
-                      formData.hairStyle.includes(style)
-                        ? 'border-primary bg-primary/5'
-                        : 'hover:border-primary/50'
-                    }`}
-                    onClick={() => setFormData({
-                      ...formData,
-                      hairStyle: toggleArrayItem(formData.hairStyle, style)
-                    })}
-                  >
-                    <CardContent className="p-4 text-center">
-                      <span className="text-sm font-light">{style}</span>
-                      {formData.hairStyle.includes(style) && (
-                        <Heart className="w-3 h-3 mx-auto mt-1 text-primary fill-primary" />
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-
             {/* Female-specific questions */}
             {(formData.gender.includes("Women's") || formData.gender.length === 0) && (
               <>
@@ -715,6 +687,34 @@ const Survey = () => {
                           </Card>
                         ))}
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Hair Style */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">How You Wear Your Hair</h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      {["Down & Straight", "Down & Wavy", "Down & Curly", "Half Up/Half Down", "High Bun", "Low Bun", "Ponytail", "Braided", "Short & Styled"].map((style) => (
+                        <Card
+                          key={style}
+                          className={`cursor-pointer transition-all ${
+                            formData.hairStyle.includes(style)
+                              ? 'border-primary bg-primary/5'
+                              : 'hover:border-primary/50'
+                          }`}
+                          onClick={() => setFormData({
+                            ...formData,
+                            hairStyle: toggleArrayItem(formData.hairStyle, style)
+                          })}
+                        >
+                          <CardContent className="p-4 text-center">
+                            <span className="text-sm font-light">{style}</span>
+                            {formData.hairStyle.includes(style) && (
+                              <Heart className="w-3 h-3 mx-auto mt-1 text-primary fill-primary" />
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))}
                     </div>
                   </div>
                 </div>
