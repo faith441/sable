@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, Plus, Package, Filter } from "lucide-react";
+import { Loader2, Plus, Package, Filter, ArrowLeft } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MobileNav from "@/components/MobileNav";
 import ProfileMenu from "@/components/ProfileMenu";
@@ -208,10 +208,15 @@ const Closet = () => {
     <div className="min-h-screen bg-background pb-24">
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border/50 px-4 py-4">
         <div className="flex items-center justify-between max-w-lg mx-auto">
-          <h1 
+          <Button 
+            variant="ghost" 
+            size="icon"
             onClick={() => navigate("/wardrobe")}
-            className="text-xl font-light cursor-pointer hover:text-primary transition-colors"
+            className="hover:bg-accent"
           >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <h1 className="text-xl font-light">
             StyleCapsule
           </h1>
           <ProfileMenu 
