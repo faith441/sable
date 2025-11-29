@@ -93,7 +93,7 @@ const Index = () => {
       {/* Horizontal Scroll Container */}
       <div 
         ref={scrollContainerRef}
-        className="flex overflow-x-auto overflow-y-hidden snap-x snap-proximity hide-scrollbar"
+        className="flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory hide-scrollbar"
         style={{ 
           scrollbarWidth: 'none', 
           msOverflowStyle: 'none',
