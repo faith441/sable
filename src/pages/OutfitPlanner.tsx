@@ -47,9 +47,25 @@ const OutfitPlanner = () => {
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [itemDialogOpen, setItemDialogOpen] = useState(false);
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
+  const [currentDayIndex, setCurrentDayIndex] = useState(0);
+  const [dynamicDays, setDynamicDays] = useState<string[]>([]);
 
   useEffect(() => {
     checkAuth();
+    
+    // Generate dynamic days array starting from today
+    const today = new Date();
+    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const todayIndex = today.getDay(); // 0 = Sunday, 6 = Saturday
+    
+    const nextSevenDays = [];
+    for (let i = 0; i < 7; i++) {
+      const dayIndex = (todayIndex + i) % 7;
+      nextSevenDays.push(dayNames[dayIndex]);
+    }
+    
+    setDynamicDays(nextSevenDays);
+    setCurrentDayIndex(0); // Today is always index 0
   }, []);
 
   const checkAuth = async () => {
@@ -605,13 +621,16 @@ const OutfitPlanner = () => {
                   
                   {locationEnabled && weather && (
                     <>
-                      <div className="flex items-center justify-between pl-6">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          {getWeatherIcon()}
-                          <span className="capitalize">{weather.condition}</span>
-                          <span>·</span>
-                          <span>H: {weather.high}°</span>
-                          <span>L: {weather.low}°</span>
+                      <div className="flex items-center justify-between pl-6 py-2">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2 text-base">
+                            {getWeatherIcon()}
+                            <span className="capitalize font-light">{weather.condition}</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <span>H: {weather.high}°</span>
+                            <span>L: {weather.low}°</span>
+                          </div>
                         </div>
                         <Dialog open={locationDialogOpen} onOpenChange={setLocationDialogOpen}>
                           <DialogTrigger asChild>
@@ -692,13 +711,14 @@ const OutfitPlanner = () => {
               </Card>
             </div>
 
-            <Tabs defaultValue="Monday" className="w-full">
+            <Tabs defaultValue={dynamicDays[0]} className="w-full">
               <TabsList className="grid w-full grid-cols-7 mb-6 h-auto">
-                {days.map((day, index) => {
+                {dynamicDays.map((day, index) => {
                   const dayForecast = weeklyForecast[index];
+                  const isToday = index === 0;
                   return (
                     <TabsTrigger key={day} value={day} className="text-xs px-1 flex flex-col gap-1 py-2 h-auto">
-                      <span className="font-medium">{day.slice(0, 3)}</span>
+                      <span className="font-medium">{isToday ? "Today" : day.slice(0, 3)}</span>
                       {locationEnabled && dayForecast && (
                         <>
                           <div className="text-[10px] text-muted-foreground font-normal whitespace-nowrap">
@@ -714,7 +734,7 @@ const OutfitPlanner = () => {
                 })}
               </TabsList>
 
-              {days.map(day => {
+              {dynamicDays.map((day, dayIndex) => {
                 const outfit = outfits.find(o => o.day_of_week === day);
                 
                 return (
@@ -860,7 +880,7 @@ const OutfitPlanner = () => {
                         <CardContent className="flex flex-col items-center justify-center py-16 space-y-4">
                           <Plus className="w-12 h-12 text-muted-foreground" strokeWidth={1} />
                           <p className="text-sm text-muted-foreground font-light">
-                            No outfit planned for {day}
+                            No outfit planned for {dayIndex === 0 ? "today" : day}
                           </p>
                           <Button 
                             variant="outline" 
