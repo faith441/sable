@@ -103,7 +103,7 @@ const Auth = () => {
               </svg>
             </div>
             <CardTitle className="text-4xl font-light">
-              {isLogin ? "Welcome Back" : "Join StyleCapsule"}
+              {isLogin ? "Welcome Back" : "Join Sable"}
             </CardTitle>
             <CardDescription className="text-base font-light">
               {isLogin 
