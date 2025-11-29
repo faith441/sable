@@ -42,9 +42,13 @@ const Wardrobe = () => {
   const [profileOpen, setProfileOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [productDetailOpen, setProductDetailOpen] = useState(false);
+  const [favorites, setFavorites] = useState<Product[]>([]);
 
   useEffect(() => {
     loadWardrobe();
+    // Load favorites from localStorage
+    const savedFavorites = JSON.parse(localStorage.getItem('favorite_products') || '[]');
+    setFavorites(savedFavorites);
   }, []);
 
   const loadWardrobe = async () => {
@@ -111,8 +115,8 @@ const Wardrobe = () => {
       }
 
       const { error } = await supabase.from("cart_items").insert({
-        user_id: user?.id,
-        session_id: !user ? sessionId : null,
+        user_id: user?.id || null,
+        session_id: user ? null : sessionId,
         product_id: product.id,
         quantity: 1,
       });
@@ -127,7 +131,7 @@ const Wardrobe = () => {
       });
     } catch (error: any) {
       console.error("Error adding to cart:", error);
-      toast.error("Failed to add to cart");
+      toast.error(error?.message || "Failed to add to cart");
     }
   };
 
@@ -141,8 +145,8 @@ const Wardrobe = () => {
       }
 
       const cartItems = capsule.products.map(product => ({
-        user_id: user?.id,
-        session_id: !user ? sessionId : null,
+        user_id: user?.id || null,
+        session_id: user ? null : sessionId,
         product_id: product.id,
         quantity: 1,
       }));
@@ -159,8 +163,24 @@ const Wardrobe = () => {
       });
     } catch (error: any) {
       console.error("Error adding capsule to cart:", error);
-      toast.error("Failed to add capsule to cart");
+      toast.error(error?.message || "Failed to add to cart");
     }
+  };
+
+  const toggleFavorite = (product: Product) => {
+    const isFavorited = favorites.some(f => f.id === product.id);
+    
+    let updatedFavorites: Product[];
+    if (isFavorited) {
+      updatedFavorites = favorites.filter(f => f.id !== product.id);
+      toast.success("Removed from favorites");
+    } else {
+      updatedFavorites = [...favorites, product];
+      toast.success("Added to favorites");
+    }
+    
+    setFavorites(updatedFavorites);
+    localStorage.setItem('favorite_products', JSON.stringify(updatedFavorites));
   };
 
   if (generating) {
@@ -281,23 +301,12 @@ const Wardrobe = () => {
                               className="absolute top-2 right-2 w-8 h-8 bg-background/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-background transition-colors"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                const favorites = JSON.parse(localStorage.getItem('favorite_products') || '[]');
-                                const isFavorited = favorites.some((f: Product) => f.id === product.id);
-                                
-                                if (isFavorited) {
-                                  const updated = favorites.filter((f: Product) => f.id !== product.id);
-                                  localStorage.setItem('favorite_products', JSON.stringify(updated));
-                                  toast.success("Removed from favorites");
-                                } else {
-                                  favorites.push(product);
-                                  localStorage.setItem('favorite_products', JSON.stringify(favorites));
-                                  toast.success("Added to favorites");
-                                }
+                                toggleFavorite(product);
                               }}
                             >
                               <Heart 
                                 className="w-4 h-4" 
-                                fill={JSON.parse(localStorage.getItem('favorite_products') || '[]').some((f: Product) => f.id === product.id) ? "currentColor" : "none"}
+                                fill={favorites.some(f => f.id === product.id) ? "currentColor" : "none"}
                               />
                             </button>
                           </div>
