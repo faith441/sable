@@ -225,7 +225,7 @@ const Cart = () => {
             </div>
 
             {/* Checkout Section */}
-            <Card className="sticky bottom-20 shadow-elegant">
+            <Card className="shadow-elegant">
               <CardContent className="p-6 space-y-4">
                 <div className="flex justify-between items-center text-lg">
                   <span className="font-light">Total</span>
