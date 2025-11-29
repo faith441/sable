@@ -95,41 +95,52 @@ const Closet = () => {
     brand: string;
     category: string;
   }) => {
+    console.log("handleAddCustomItem called with:", itemData);
     try {
       const { data: { user } } = await supabase.auth.getUser();
+      console.log("User:", user);
       if (!user) throw new Error("Not authenticated");
 
-      // Upload image to storage (we'll need to create a bucket for this)
+      // Upload image to storage
       const fileExt = itemData.image.name.split('.').pop();
       const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
+      console.log("Uploading to:", fileName);
       
       const { error: uploadError, data: uploadData } = await supabase.storage
         .from('closet-items')
         .upload(fileName, itemData.image);
 
+      console.log("Upload result:", { uploadError, uploadData });
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
         .from('closet-items')
         .getPublicUrl(fileName);
 
+      console.log("Public URL:", publicUrl);
+
       // Insert into user_wardrobe
+      const insertData = {
+        user_id: user.id,
+        is_custom: true,
+        custom_image_url: publicUrl,
+        custom_description: itemData.description,
+        custom_size: itemData.size,
+        custom_brand: itemData.brand,
+        custom_category: itemData.category,
+      };
+      
+      console.log("Inserting data:", insertData);
+      
       const { error: insertError } = await supabase
         .from("user_wardrobe")
-        .insert({
-          user_id: user.id,
-          is_custom: true,
-          custom_image_url: publicUrl,
-          custom_description: itemData.description,
-          custom_size: itemData.size,
-          custom_brand: itemData.brand,
-          custom_category: itemData.category,
-        });
+        .insert(insertData);
 
+      console.log("Insert error:", insertError);
       if (insertError) throw insertError;
 
       toast.success("Item added to your closet!");
-      loadCloset();
+      await loadCloset();
       setAddItemOpen(false);
     } catch (error: any) {
       console.error("Error adding item:", error);
