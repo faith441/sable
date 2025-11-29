@@ -48,7 +48,7 @@ const Survey = () => {
     swimsuitPhotos: Array(10).fill(null) as (File | null)[],
   });
 
-  const styleImages = {
+  const womensStyleImages = {
     Classic: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=400&h=500&fit=crop",
     Minimalist: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&h=500&fit=crop",
     Trendy: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400&h=500&fit=crop",
@@ -59,12 +59,31 @@ const Survey = () => {
     Military: "https://images.unsplash.com/photo-1578632292335-df3abbb0d586?w=400&h=500&fit=crop",
     Streetwear: "https://images.unsplash.com/photo-1529374255404-311a2a4f1fd9?w=400&h=500&fit=crop",
     Bold: "https://images.unsplash.com/photo-1525562723836-dca67a71d5f1?w=400&h=500&fit=crop",
-    Formal: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&h=500&fit=crop",
+    Formal: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&h=500&fit=crop",
     Chic: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&h=500&fit=crop",
     Western: "https://images.unsplash.com/photo-1516762689617-e1cffcef479d?w=400&h=500&fit=crop",
     Mountain: "https://images.unsplash.com/photo-1551232864-3f0890e580d9?w=400&h=500&fit=crop",
     Beach: "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=400&h=500&fit=crop",
     Sexy: "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&h=500&fit=crop"
+  };
+
+  const mensStyleImages = {
+    Classic: "https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?w=400&h=500&fit=crop",
+    Minimalist: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=500&fit=crop",
+    Trendy: "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=400&h=500&fit=crop",
+    Bohemian: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=500&fit=crop",
+    Edgy: "https://images.unsplash.com/photo-1508341591423-4347099e1f19?w=400&h=500&fit=crop",
+    Romantic: "https://images.unsplash.com/photo-1519689373023-dd07c7988603?w=400&h=500&fit=crop",
+    Vintage: "https://images.unsplash.com/photo-1490367532201-b9bc1dc483f6?w=400&h=500&fit=crop",
+    Military: "https://images.unsplash.com/photo-1627225924765-552d49cf47ad?w=400&h=500&fit=crop",
+    Streetwear: "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=400&h=500&fit=crop",
+    Bold: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=500&fit=crop",
+    Formal: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&h=500&fit=crop",
+    Chic: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&h=500&fit=crop",
+    Western: "https://images.unsplash.com/photo-1608613304899-ea8098577e38?w=400&h=500&fit=crop",
+    Mountain: "https://images.unsplash.com/photo-1609137144813-7d9921338f24?w=400&h=500&fit=crop",
+    Beach: "https://images.unsplash.com/photo-1549388604-817d15aa0110?w=400&h=500&fit=crop",
+    Sexy: "https://images.unsplash.com/photo-1516257984-b1b4d707412e?w=400&h=500&fit=crop"
   };
 
   const colorImages = {
@@ -285,7 +304,7 @@ const Survey = () => {
         {/* Step 2: Style Type with Images */}
         {step === 2 && (
           <div className="grid grid-cols-2 gap-3">
-            {Object.entries(styleImages).map(([style, imageUrl]) => (
+            {Object.entries(formData.gender === "Men's" ? mensStyleImages : womensStyleImages).map(([style, imageUrl]) => (
               <div
                 key={style}
                 className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
