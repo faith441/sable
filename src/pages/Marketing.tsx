@@ -6,7 +6,7 @@ import { Sparkles, Shirt, Calendar, MessageSquare, Check, ArrowRight, Download }
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import heroImage from "@/assets/hero-wardrobe.jpg";
 
@@ -358,6 +358,27 @@ const Marketing = () => {
         </div>
       </section>
 
+      {/* Style Stories - UGC Video Feed */}
+      <section className="py-20 px-4 overflow-hidden bg-card/30">
+        <div className="max-w-7xl mx-auto space-y-8">
+          <div className="text-center space-y-4">
+            <h2 className="text-4xl md:text-5xl font-bold">Style Stories</h2>
+            <p className="text-xl text-muted-foreground">
+              Real people, real style transformations
+            </p>
+          </div>
+
+          {/* Horizontal Scrolling Video Feed */}
+          <div className="relative">
+            <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-hide">
+              {[1, 2, 3, 4, 5].map((id) => (
+                <VideoCard key={id} videoId={id} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Final CTA */}
       <section className="py-20 px-4 bg-gradient-hero">
         <div className="max-w-4xl mx-auto text-center space-y-8">
@@ -398,6 +419,65 @@ const Marketing = () => {
           </div>
         </div>
       </footer>
+    </div>
+  );
+};
+
+// Video Card Component with auto-play
+const VideoCard = ({ videoId }: { videoId: number }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isInView, setIsInView] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInView(entry.isIntersecting);
+        if (entry.isIntersecting && videoRef.current) {
+          videoRef.current.play().catch(() => {
+            // Auto-play was prevented, which is fine
+          });
+        } else if (videoRef.current) {
+          videoRef.current.pause();
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (videoRef.current) {
+      observer.observe(videoRef.current);
+    }
+
+    return () => {
+      if (videoRef.current) {
+        observer.unobserve(videoRef.current);
+      }
+    };
+  }, []);
+
+  return (
+    <div className="flex-shrink-0 snap-center">
+      <Card className="overflow-hidden border-border/50 hover-scale w-[280px] h-[500px] bg-card/50">
+        <div className="relative w-full h-full">
+          {/* Placeholder for video - shows message until videos are uploaded */}
+          <div className="absolute inset-0 flex items-center justify-center bg-muted text-muted-foreground text-center p-4">
+            <div>
+              <p className="text-sm font-medium">Upload videos to</p>
+              <p className="text-sm">/public/videos/ugc-{videoId}.mp4</p>
+            </div>
+          </div>
+          
+          {/* Video element (will display when videos are uploaded) */}
+          <video
+            ref={videoRef}
+            src={`/videos/ugc-${videoId}.mp4`}
+            className="w-full h-full object-cover"
+            muted
+            loop
+            playsInline
+            poster={`/images/ugc-${videoId}.jpg`}
+          />
+        </div>
+      </Card>
     </div>
   );
 };
