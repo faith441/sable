@@ -20,6 +20,7 @@ const Survey = () => {
     budgetRange: [] as string[],
     lifestyle: [] as string[],
     occasions: [] as string[],
+    mood: [] as string[],
     // Body features
     bodyType: [] as string[],
     torsoLength: "",
@@ -120,6 +121,7 @@ const Survey = () => {
         budgetRange: parsed.budgetRange || [],
         lifestyle: parsed.lifestyle || [],
         occasions: parsed.occasions || [],
+        mood: parsed.mood || [],
         bodyType: parsed.bodyType || [],
         hairColor: parsed.hairColor || [],
         eyeColor: parsed.eyeColor || [],
@@ -151,20 +153,26 @@ const Survey = () => {
 
   useEffect(() => {
     updateAiMessage(step);
-  }, [step]);
+    
+    // Auto-skip step 10 (swimsuit photos) for men
+    if (step === 10 && formData.gender !== "Women's") {
+      setStep(11);
+    }
+  }, [step, formData.gender]);
 
   const updateAiMessage = (currentStep: number) => {
     const messages = [
       "Hi! I'm Luna, your personal AI stylist. Let's start by understanding which gender preferences I should focus on!",
       "Great choice! Now let's discover your perfect style together! Select all styles that resonate with you - the more you choose, the better I can understand your taste!",
       "Perfect! Let me show you some color palettes. Tap all the ones that catch your eye!",
-      "Beautiful selections! What's the maximum you'd be willing to spend on a capsule wardrobe (typically 10 pieces)? Select all ranges that work for you!",
+      "Beautiful selections! Now let's talk investment level. What's your wardrobe strategy? Select all ranges you're comfortable with!",
       "Almost there! Tell me about your lifestyle - select all that apply!",
       "Now, let's talk about the occasions you dress for. Select all that apply!",
+      "How do you want to feel when you get dressed? What energy are you bringing to the world? Select all moods that resonate!",
       "Great! Now help me understand your body features so I can recommend pieces that will fit and flatter you perfectly!",
       "Optionally upload up to 4 clear selfie photos of your face without sunglasses. This helps me understand your unique features and provide even more personalized recommendations!",
       "Share up to 10 photos of yourself that you really like showing your entire body. This helps me understand your style and fit preferences even better!",
-      "Last optional photo step! Upload up to 10 photos of yourself in swimsuits. This helps me provide perfect swimwear recommendations!",
+      "Upload up to 10 photos of yourself in swimsuits. This helps me provide perfect swimwear recommendations!",
       "Let's talk about fragrance! What scent profiles appeal to you? This helps me recommend the perfect signature scents!",
       "Finally, tell me about your hair! This helps me recommend the perfect shampoo and conditioner for your hair type and goals!"
     ];
@@ -232,7 +240,7 @@ const Survey = () => {
   };
 
   const isWomensSelected = formData.gender === "Women's";
-  const maxStep = isWomensSelected ? 12 : 11;
+  const maxStep = isWomensSelected ? 12 : 12;
   const progress = (step / maxStep) * 100;
 
   return (
@@ -367,7 +375,7 @@ const Survey = () => {
           </div>
         )}
 
-        {/* Step 4: Budget */}
+        {/* Step 4: Investment Level */}
         {step === 4 && (
           <div className="space-y-3">
             {["$1,000 - $2,000", "$2,000 - $3,500", "$3,500 - $5,000", "$5,000 - $7,500", "$7,500 - $10,000", "$10,000+"].map((budget) => (
@@ -454,8 +462,37 @@ const Survey = () => {
           </div>
         )}
 
-        {/* Step 7: Body Features */}
+        {/* Step 7: Mood & Energy */}
         {step === 7 && (
+          <div className="space-y-3">
+            {["Confident", "Creative", "Understated Elegance", "Bold", "Relaxed Luxury", "Professional Power", "Effortless Cool", "Romantic", "Edgy", "Playful"].map((mood) => (
+              <Card
+                key={mood}
+                className={`cursor-pointer transition-all ${
+                  formData.mood.includes(mood)
+                    ? 'border-primary bg-primary/5 shadow-lg'
+                    : 'hover:border-primary/50'
+                }`}
+                onClick={() => setFormData({
+                  ...formData,
+                  mood: toggleArrayItem(formData.mood, mood)
+                })}
+              >
+                <CardContent className="p-6 flex items-center justify-between">
+                  <span className="text-lg font-light">{mood}</span>
+                  {formData.mood.includes(mood) && (
+                    <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                      <Heart className="w-4 h-4 text-white fill-white" />
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Step 8: Body Features */}
+        {step === 8 && (
           <div className="space-y-6">
             {/* Body Type */}
             <div className="space-y-3">
@@ -585,24 +622,43 @@ const Survey = () => {
               </div>
             </div>
 
-            {/* Skin Tone */}
+            {/* Skin Tone - Visual Color Strips */}
             <div className="space-y-3">
               <h3 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">Skin Tone</h3>
-              <div className="grid grid-cols-2 gap-3">
-                {["Fair", "Light", "Medium", "Olive", "Tan", "Brown", "Deep", "Dark"].map((tone) => (
-                  <Card
-                    key={tone}
-                    className={`cursor-pointer transition-all ${
-                      formData.skinTone === tone
-                        ? 'border-primary bg-primary/5'
-                        : 'hover:border-primary/50'
+              <p className="text-xs text-muted-foreground font-light mb-3">
+                Hold your phone next to your skin to find your closest match
+              </p>
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { name: "Fair", color: "hsl(30, 45%, 92%)" },
+                  { name: "Light", color: "hsl(30, 40%, 85%)" },
+                  { name: "Medium", color: "hsl(30, 35%, 70%)" },
+                  { name: "Olive", color: "hsl(35, 30%, 60%)" },
+                  { name: "Tan", color: "hsl(30, 35%, 55%)" },
+                  { name: "Brown", color: "hsl(25, 30%, 40%)" },
+                  { name: "Deep", color: "hsl(25, 30%, 30%)" },
+                  { name: "Dark", color: "hsl(20, 25%, 20%)" }
+                ].map((tone) => (
+                  <div
+                    key={tone.name}
+                    className={`cursor-pointer transition-all rounded-lg overflow-hidden border-2 ${
+                      formData.skinTone === tone.name
+                        ? 'border-primary shadow-lg scale-105'
+                        : 'border-border hover:border-primary/50'
                     }`}
-                    onClick={() => setFormData({...formData, skinTone: tone})}
+                    onClick={() => setFormData({...formData, skinTone: tone.name})}
                   >
-                    <CardContent className="p-4 text-center">
-                      <span className="text-sm font-light">{tone}</span>
-                    </CardContent>
-                  </Card>
+                    <div 
+                      className="h-24 w-full"
+                      style={{ backgroundColor: tone.color }}
+                    />
+                    <div className="p-2 bg-background text-center">
+                      <span className="text-xs font-light">{tone.name}</span>
+                      {formData.skinTone === tone.name && (
+                        <Heart className="w-3 h-3 mx-auto mt-1 text-primary fill-primary" />
+                      )}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -630,7 +686,7 @@ const Survey = () => {
             </div>
 
             {/* Female-specific questions */}
-            {formData.gender === "Women's" && (
+            {isWomensSelected && (
               <>
                 <div className="border-t border-border pt-6 mt-6">
                   <h3 className="text-base font-normal mb-4">
@@ -797,8 +853,8 @@ const Survey = () => {
           </div>
         )}
 
-        {/* Step 8: Photo Upload */}
-        {step === 8 && (
+        {/* Step 9: Photo Upload */}
+        {step === 9 && (
           <div className="space-y-6">
             <div className="text-center space-y-2 mb-6">
               <h3 className="text-lg font-normal">Upload Your Selfie Photos (Optional)</h3>
@@ -880,8 +936,8 @@ const Survey = () => {
           </div>
         )}
 
-        {/* Step 9: Full Body Photos */}
-        {step === 9 && (
+        {/* Step 10: Full Body Photos */}
+        {step === 10 && (
           <div className="space-y-6">
             <div className="text-center space-y-2 mb-6">
               <h3 className="text-lg font-normal">Upload Full Body Photos (Optional)</h3>
@@ -1134,9 +1190,91 @@ const Survey = () => {
         {step === 12 && (
           <div className="space-y-6">
             <div className="space-y-3">
-              <h3 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">Hair Type</h3>
+              <h3 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">Fragrance Types You Love</h3>
               <div className="grid grid-cols-2 gap-3">
-                {["Straight", "Wavy", "Curly", "Coily", "Fine/Thin", "Thick/Coarse", "Color-Treated", "Natural/Virgin"].map((type) => (
+                {["Floral", "Woody", "Fresh/Citrus", "Oriental/Spicy", "Fruity", "Aquatic", "Gourmand", "Musky"].map((type) => (
+                  <Card
+                    key={type}
+                    className={`cursor-pointer transition-all ${
+                      formData.fragranceTypes.includes(type)
+                        ? 'border-primary bg-primary/5'
+                        : 'hover:border-primary/50'
+                    }`}
+                    onClick={() => setFormData({
+                      ...formData,
+                      fragranceTypes: toggleArrayItem(formData.fragranceTypes, type)
+                    })}
+                  >
+                    <CardContent className="p-4 text-center">
+                      <span className="text-sm font-light">{type}</span>
+                      {formData.fragranceTypes.includes(type) && (
+                        <Heart className="w-4 h-4 mx-auto mt-1 text-primary fill-primary" />
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">Fragrance Intensity</h3>
+              <div className="grid grid-cols-3 gap-3">
+                {["Light/Subtle", "Moderate", "Strong/Bold"].map((intensity) => (
+                  <Card
+                    key={intensity}
+                    className={`cursor-pointer transition-all ${
+                      formData.fragranceIntensity === intensity
+                        ? 'border-primary bg-primary/5'
+                        : 'hover:border-primary/50'
+                    }`}
+                    onClick={() => setFormData({...formData, fragranceIntensity: intensity})}
+                  >
+                    <CardContent className="p-4 text-center">
+                      <span className="text-sm font-light">{intensity}</span>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">Scent Preferences</h3>
+              <div className="space-y-2">
+                {["Clean & Fresh", "Sweet & Warm", "Bold & Sensual", "Light & Airy", "Earthy & Natural", "Luxury/Designer"].map((pref) => (
+                  <Card
+                    key={pref}
+                    className={`cursor-pointer transition-all ${
+                      formData.scentPreferences.includes(pref)
+                        ? 'border-primary bg-primary/5 shadow-lg'
+                        : 'hover:border-primary/50'
+                    }`}
+                    onClick={() => setFormData({
+                      ...formData,
+                      scentPreferences: toggleArrayItem(formData.scentPreferences, pref)
+                    })}
+                  >
+                    <CardContent className="p-6 flex items-center justify-between">
+                      <span className="text-lg font-light">{pref}</span>
+                      {formData.scentPreferences.includes(pref) && (
+                        <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                          <Heart className="w-4 h-4 text-white fill-white" />
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 12: Hair Care Preferences */}
+        {step === 12 && (
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <h3 className="text-sm font-normal text-muted-foreground uppercase tracking-wide">Hair Type & Texture</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {["Straight", "Wavy", "Curly", "Coily", "Frizzy", "Fine/Thin", "Thick/Coarse", "Color-Treated", "Natural/Virgin"].map((type) => (
                   <Card
                     key={type}
                     className={`cursor-pointer transition-all ${
@@ -1235,13 +1373,14 @@ const Survey = () => {
               className="flex-1" 
               variant="luxury"
               disabled={
-                (step === 1 && formData.styleType.length === 0) ||
-                (step === 2 && !formData.gender) ||
+                (step === 1 && !formData.gender) ||
+                (step === 2 && formData.styleType.length === 0) ||
                 (step === 3 && formData.colorPreferences.length === 0) ||
                 (step === 4 && formData.budgetRange.length === 0) ||
                 (step === 5 && formData.lifestyle.length === 0) ||
                 (step === 6 && formData.occasions.length === 0) ||
-                (step === 7 && formData.bodyType.length === 0) ||
+                (step === 7 && formData.mood.length === 0) ||
+                (step === 8 && formData.bodyType.length === 0) ||
                 (step === 11 && formData.fragranceTypes.length === 0) ||
                 (step === 12 && formData.hairType.length === 0)
               }
