@@ -34,15 +34,24 @@ const Marketing = () => {
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/50">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="text-2xl font-bold gradient-text">Sable</div>
-          <Button 
-            variant="luxury" 
-            size="lg"
-            onClick={() => setWaitlistOpen(true)}
-            className="gap-2"
-          >
-            <Download className="h-5 w-5" />
-            Download App
-          </Button>
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="lg"
+              onClick={() => navigate("/blog")}
+            >
+              Blog
+            </Button>
+            <Button 
+              variant="luxury" 
+              size="lg"
+              onClick={() => setWaitlistOpen(true)}
+              className="gap-2"
+            >
+              <Download className="h-5 w-5" />
+              Download App
+            </Button>
+          </div>
         </div>
       </header>
 
