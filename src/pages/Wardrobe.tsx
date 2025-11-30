@@ -280,7 +280,7 @@ const Wardrobe = () => {
                 value={index.toString()} 
                 className="flex-shrink-0 data-[state=active]:bg-sage/10 data-[state=active]:text-sage data-[state=active]:border-sage/30"
               >
-                {capsule.name}
+                Capsule {index + 1}
               </TabsTrigger>
             ))}
           </TabsList>
