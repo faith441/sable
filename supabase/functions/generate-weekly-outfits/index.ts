@@ -172,43 +172,59 @@ Make sure outfits are cohesive, weather-appropriate, and ONLY use items that exi
       throw new Error("No outfits generated");
     }
 
-    console.log("Generated outfits:", outfits);
+    console.log("Generated outfits count:", outfits.length);
 
     // Save outfits to database
     const outfitPlans = outfits.map((outfit: any) => ({
       user_id: userId,
       name: outfit.name,
       day_of_week: outfit.day,
-      items: outfit.items,
-      ...(outfit.recommended_additions && { 
-        // Store recommended_additions in items jsonb for now
-        items: {
-          items: outfit.items,
-          recommended_additions: outfit.recommended_additions
-        }
-      })
+      items: outfit.recommended_additions ? {
+        items: outfit.items,
+        recommended_additions: outfit.recommended_additions
+      } : outfit.items
     }));
+
+    console.log("Saving outfit plans to database...");
 
     // Delete existing plans for the days being generated
     if (dayOnly) {
-      await supabase
+      const { error: deleteError } = await supabase
         .from("outfit_plans")
         .delete()
         .eq("user_id", userId)
         .eq("day_of_week", dayOnly);
+      
+      if (deleteError) {
+        console.error("Delete error:", deleteError);
+        throw deleteError;
+      }
     } else {
-      await supabase
+      const { error: deleteError } = await supabase
         .from("outfit_plans")
         .delete()
         .eq("user_id", userId);
+      
+      if (deleteError) {
+        console.error("Delete error:", deleteError);
+        throw deleteError;
+      }
     }
 
-    // Insert new plans
-    const { error } = await supabase
-      .from("outfit_plans")
-      .insert(outfitPlans);
+    console.log("Deleted old plans, inserting new ones...");
 
-    if (error) throw error;
+    // Insert new plans
+    const { data: insertedData, error: insertError } = await supabase
+      .from("outfit_plans")
+      .insert(outfitPlans)
+      .select();
+
+    if (insertError) {
+      console.error("Insert error:", insertError);
+      throw insertError;
+    }
+
+    console.log("Successfully saved", insertedData?.length, "outfit plans");
 
     return new Response(
       JSON.stringify({ success: true, outfits: outfitPlans }),
