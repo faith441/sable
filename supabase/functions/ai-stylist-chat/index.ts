@@ -100,12 +100,12 @@ ${hasImages ? `TASK: The user has uploaded ${images.length} outfit photo(s). Pro
 Keep your feedback constructive, specific, and enthusiastic.` : ''}
 
 ${userPreferences ? `USER PROFILE:
-Gender: ${userPreferences.gender?.join(', ') || 'Not specified'}
-Style Types: ${userPreferences.styleTypes?.join(', ') || 'Not specified'}
-Preferred Colors: ${userPreferences.colors?.join(', ') || 'Not specified'}
+Gender: ${Array.isArray(userPreferences.gender) ? userPreferences.gender.join(', ') : userPreferences.gender || 'Not specified'}
+Style Types: ${Array.isArray(userPreferences.styleTypes) ? userPreferences.styleTypes.join(', ') : userPreferences.styleTypes || 'Not specified'}
+Preferred Colors: ${Array.isArray(userPreferences.colors) ? userPreferences.colors.join(', ') : userPreferences.colors || 'Not specified'}
 Budget Range: ${userPreferences.budget || 'Not specified'}
-Lifestyle: ${userPreferences.lifestyle?.join(', ') || 'Not specified'}
-Occasions: ${userPreferences.occasions?.join(', ') || 'Not specified'}
+Lifestyle: ${Array.isArray(userPreferences.lifestyle) ? userPreferences.lifestyle.join(', ') : userPreferences.lifestyle || 'Not specified'}
+Occasions: ${Array.isArray(userPreferences.occasions) ? userPreferences.occasions.join(', ') : userPreferences.occasions || 'Not specified'}
 Body Type: ${userPreferences.bodyType || 'Not specified'}
 ${userPreferences.measurements ? `Measurements: Torso ${userPreferences.measurements.torsoLength}, Legs ${userPreferences.measurements.legLength}, Hair ${userPreferences.measurements.hairColor}, Eyes ${userPreferences.measurements.eyeColor}` : ''}
 ${userContext}` : ''}
