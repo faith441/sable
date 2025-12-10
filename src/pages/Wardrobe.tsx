@@ -113,6 +113,12 @@ const Wardrobe = () => {
     setFavorites(savedFavorites);
   }, []);
 
+  // Helper function to check if a string is a valid UUID
+  const isValidUUID = (str: string) => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(str);
+  };
+
   const loadWardrobe = async () => {
     try {
       const preferences = localStorage.getItem('guest_preferences');
@@ -122,15 +128,26 @@ const Wardrobe = () => {
         return;
       }
 
-      // Check if we have cached capsules
+      // Check if we have cached capsules with valid UUIDs
       const cachedCapsules = localStorage.getItem('cached_capsules');
       if (cachedCapsules) {
-        setCapsules(JSON.parse(cachedCapsules));
-        setLoading(false);
-        return;
+        const parsed = JSON.parse(cachedCapsules);
+        // Validate that all product IDs are proper UUIDs
+        const hasValidIds = parsed.every((capsule: Capsule) => 
+          capsule.products.every((product: Product) => isValidUUID(product.id))
+        );
+        
+        if (hasValidIds) {
+          setCapsules(parsed);
+          setLoading(false);
+          return;
+        } else {
+          // Clear invalid cached data
+          localStorage.removeItem('cached_capsules');
+        }
       }
 
-      // If AI is disabled and no cached capsules, use sample data
+      // If AI is disabled or no valid cached capsules, use sample data
       if (AI_DISABLED) {
         setCapsules(SAMPLE_CAPSULES);
         setUsingSampleData(true);
