@@ -5,9 +5,33 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2, ShoppingBag, CreditCard, MapPin, Check } from "lucide-react";
 import { z } from "zod";
+
+const COUNTRIES = [
+  { code: "US", name: "United States" },
+  { code: "CA", name: "Canada" },
+  { code: "GB", name: "United Kingdom" },
+  { code: "AU", name: "Australia" },
+  { code: "PH", name: "Philippines" },
+  { code: "SG", name: "Singapore" },
+  { code: "JP", name: "Japan" },
+  { code: "KR", name: "South Korea" },
+  { code: "DE", name: "Germany" },
+  { code: "FR", name: "France" },
+  { code: "IT", name: "Italy" },
+  { code: "ES", name: "Spain" },
+  { code: "NL", name: "Netherlands" },
+  { code: "CH", name: "Switzerland" },
+  { code: "AE", name: "United Arab Emirates" },
+  { code: "HK", name: "Hong Kong" },
+  { code: "NZ", name: "New Zealand" },
+  { code: "MX", name: "Mexico" },
+  { code: "BR", name: "Brazil" },
+  { code: "IN", name: "India" },
+];
 
 const shippingSchema = z.object({
   firstName: z.string().min(1, "First name is required").max(50),
@@ -17,6 +41,7 @@ const shippingSchema = z.object({
   city: z.string().min(2, "City is required").max(100),
   state: z.string().min(2, "State/Province is required").max(100),
   zipCode: z.string().min(4, "ZIP/Postal code is required").max(20),
+  country: z.string().min(2, "Country is required"),
   phone: z.string().min(10, "Phone number is required").max(20),
 });
 
@@ -50,6 +75,7 @@ const Checkout = () => {
     city: "",
     state: "",
     zipCode: "",
+    country: "US",
     phone: "",
   });
 
@@ -338,10 +364,33 @@ const Checkout = () => {
                   </div>
                 </div>
 
+                {/* Country Selector */}
+                <div className="space-y-2">
+                  <Label htmlFor="country" className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Country
+                  </Label>
+                  <Select
+                    value={shippingInfo.country}
+                    onValueChange={(value) => setShippingInfo({ ...shippingInfo, country: value })}
+                  >
+                    <SelectTrigger className="h-12 bg-secondary/30 border-border/50 focus:border-primary">
+                      <SelectValue placeholder="Select country" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border-border z-50">
+                      {COUNTRIES.map((country) => (
+                        <SelectItem key={country.code} value={country.code}>
+                          {country.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.country && <p className="text-xs text-destructive">{errors.country}</p>}
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="zipCode" className="text-xs uppercase tracking-wide text-muted-foreground">
-                      ZIP Code
+                      ZIP / Postal Code
                     </Label>
                     <Input
                       id="zipCode"
@@ -395,6 +444,9 @@ const Checkout = () => {
                       </p>
                       <p className="text-sm text-muted-foreground">
                         {shippingInfo.city}, {shippingInfo.state} {shippingInfo.zipCode}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {COUNTRIES.find(c => c.code === shippingInfo.country)?.name || shippingInfo.country}
                       </p>
                     </div>
                     <button 
