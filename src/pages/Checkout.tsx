@@ -406,21 +406,72 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                {/* Payment Method Placeholder */}
-                <div className="border border-border/50 rounded-xl p-6 text-center">
-                  <CreditCard className="w-10 h-10 text-muted-foreground mx-auto mb-3" strokeWidth={1} />
-                  <p className="text-sm text-muted-foreground mb-1">
-                    Secure payment processing
-                  </p>
-                  <p className="text-xs text-muted-foreground/60">
-                    For demo purposes, click below to complete your order
+                {/* Payment Form Placeholder */}
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="cardNumber" className="text-xs uppercase tracking-wide text-muted-foreground">
+                      Card Number
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        id="cardNumber"
+                        placeholder="4242 4242 4242 4242"
+                        className="h-12 bg-secondary/30 border-border/50 focus:border-primary pl-12"
+                        maxLength={19}
+                      />
+                      <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="expiry" className="text-xs uppercase tracking-wide text-muted-foreground">
+                        Expiration
+                      </Label>
+                      <Input
+                        id="expiry"
+                        placeholder="MM / YY"
+                        className="h-12 bg-secondary/30 border-border/50 focus:border-primary"
+                        maxLength={7}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="cvc" className="text-xs uppercase tracking-wide text-muted-foreground">
+                        Security Code
+                      </Label>
+                      <Input
+                        id="cvc"
+                        placeholder="CVC"
+                        className="h-12 bg-secondary/30 border-border/50 focus:border-primary"
+                        maxLength={4}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="nameOnCard" className="text-xs uppercase tracking-wide text-muted-foreground">
+                      Name on Card
+                    </Label>
+                    <Input
+                      id="nameOnCard"
+                      placeholder="John Doe"
+                      defaultValue={`${shippingInfo.firstName} ${shippingInfo.lastName}`}
+                      className="h-12 bg-secondary/30 border-border/50 focus:border-primary"
+                    />
+                  </div>
+                </div>
+
+                {/* Demo Notice */}
+                <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 text-center">
+                  <p className="text-xs text-muted-foreground">
+                    Demo mode — no real payment will be processed
                   </p>
                 </div>
 
                 <Button 
                   variant="luxury" 
                   size="lg" 
-                  className="w-full h-14 text-base tracking-wide mt-8"
+                  className="w-full h-14 text-base tracking-wide mt-4"
                   onClick={handlePlaceOrder}
                   disabled={processing}
                 >
