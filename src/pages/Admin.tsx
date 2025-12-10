@@ -5,13 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { LogOut, Users, Package, Store, Image, BarChart3 } from "lucide-react";
+import { LogOut, Users, Package, Store, Image, BarChart3, FileText } from "lucide-react";
 import BrandsManager from "@/components/admin/BrandsManager";
 import UsersManager from "@/components/admin/UsersManager";
 import ProductsManager from "@/components/admin/ProductsManager";
 import UserPhotos from "@/components/admin/UserPhotos";
 import DataAnalytics from "@/components/admin/DataAnalytics";
 import ExternalAPIManager from "@/components/admin/ExternalAPIManager";
+import BrandApplicationsManager from "@/components/admin/BrandApplicationsManager";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -86,8 +87,12 @@ const Admin = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="brands" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 lg:w-auto">
+        <Tabs defaultValue="applications" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7 lg:w-auto">
+            <TabsTrigger value="applications">
+              <FileText className="mr-2 h-4 w-4" />
+              Applications
+            </TabsTrigger>
             <TabsTrigger value="brands">
               <Store className="mr-2 h-4 w-4" />
               Brands
@@ -113,6 +118,10 @@ const Admin = () => {
               External API
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="applications">
+            <BrandApplicationsManager />
+          </TabsContent>
 
           <TabsContent value="brands">
             <BrandsManager />

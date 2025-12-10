@@ -21,6 +21,7 @@ import Orders from "./pages/Orders";
 import PastOrders from "./pages/PastOrders";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import Contact from "./pages/Contact";
+import BrandPartnerSignup from "./pages/BrandPartnerSignup";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,6 +52,7 @@ const App = () => (
           <Route path="/terms" element={<TermsAndConditions />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/partners" element={<BrandPartnerSignup />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
