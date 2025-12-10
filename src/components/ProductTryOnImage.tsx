@@ -19,23 +19,29 @@ interface ProductTryOnImageProps {
 
 const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) => {
   const [tryOnImage, setTryOnImage] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [useOriginal, setUseOriginal] = useState(false);
 
-  const preferences = JSON.parse(localStorage.getItem('guest_preferences') || '{}');
-  const userGender = Array.isArray(preferences.gender) 
-    ? preferences.gender[0] 
-    : preferences.gender || "Women's";
+  // Check if AI try-on is disabled (e.g., credits exhausted)
+  const aiDisabled = localStorage.getItem('ai_tryon_disabled') === 'true';
 
   useEffect(() => {
-    generateTryOnImage();
-  }, [product.id]);
+    if (!aiDisabled) {
+      generateTryOnImage();
+    } else {
+      setUseOriginal(true);
+    }
+  }, [product.id, aiDisabled]);
 
   const generateTryOnImage = async () => {
     setLoading(true);
-    setError(false);
 
     try {
+      const preferences = JSON.parse(localStorage.getItem('guest_preferences') || '{}');
+      const userGender = Array.isArray(preferences.gender) 
+        ? preferences.gender[0] 
+        : preferences.gender || "Women's";
+
       const garmentImages = [{
         name: product.name,
         category: product.category,
@@ -57,25 +63,29 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
       }
 
       if (data?.error) {
-        console.error("Try-on data error:", data.error);
+        // Check if it's a credits/rate limit issue
+        if (data.error.includes("credits") || data.error.includes("Rate limit")) {
+          localStorage.setItem('ai_tryon_disabled', 'true');
+          console.log("AI try-on disabled due to:", data.error);
+        }
         throw new Error(data.error);
       }
 
       if (data?.result) {
         setTryOnImage(data.result);
       } else {
-        setError(true);
+        setUseOriginal(true);
       }
     } catch (err) {
       console.error("Error generating try-on for product:", product.name, err);
-      setError(true);
+      setUseOriginal(true);
     } finally {
       setLoading(false);
     }
   };
 
-  // Show original image if error or while loading shows skeleton
-  if (error || !tryOnImage) {
+  // Show original image
+  if (useOriginal || !tryOnImage) {
     return (
       <div className={`relative ${className}`}>
         {product.image_url ? (

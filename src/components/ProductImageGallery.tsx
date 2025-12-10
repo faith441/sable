@@ -19,29 +19,30 @@ interface ProductImageGalleryProps {
   onOpenChange: (open: boolean) => void;
 }
 
-type ViewAngle = "front" | "upperBody" | "side" | "back";
+type ViewAngle = "original" | "front" | "side" | "back";
 
 const VIEW_ANGLES: { key: ViewAngle; label: string; prompt: string }[] = [
+  { key: "original", label: "Product", prompt: "" },
   { key: "front", label: "Front", prompt: "front facing full body view, standing straight" },
-  { key: "upperBody", label: "Upper", prompt: "upper body portrait view from waist up, facing camera" },
   { key: "side", label: "Side", prompt: "side profile view, showing the silhouette and fit" },
   { key: "back", label: "Back", prompt: "back view showing the garment from behind" },
 ];
 
 const ProductImageGallery = ({ product, open, onOpenChange }: ProductImageGalleryProps) => {
-  const [selectedAngle, setSelectedAngle] = useState<ViewAngle>("front");
+  const [selectedAngle, setSelectedAngle] = useState<ViewAngle>("original");
   const [images, setImages] = useState<Record<ViewAngle, string | null>>({
+    original: null,
     front: null,
-    upperBody: null,
     side: null,
     back: null,
   });
   const [loading, setLoading] = useState<Record<ViewAngle, boolean>>({
+    original: false,
     front: false,
-    upperBody: false,
     side: false,
     back: false,
   });
+  const [aiDisabled, setAiDisabled] = useState(false);
 
   const preferences = JSON.parse(localStorage.getItem('guest_preferences') || '{}');
   const userGender = Array.isArray(preferences.gender) 
@@ -50,16 +51,30 @@ const ProductImageGallery = ({ product, open, onOpenChange }: ProductImageGaller
 
   useEffect(() => {
     if (open && product) {
+      // Check if AI is disabled
+      const disabled = localStorage.getItem('ai_tryon_disabled') === 'true';
+      setAiDisabled(disabled);
+      
       // Reset images when product changes
-      setImages({ front: null, upperBody: null, side: null, back: null });
-      setSelectedAngle("front");
-      // Generate all views
-      VIEW_ANGLES.forEach(angle => generateImage(angle.key, angle.prompt));
+      setImages({ 
+        original: product.image_url, 
+        front: null, 
+        side: null, 
+        back: null 
+      });
+      setSelectedAngle("original");
+      
+      // Only generate AI views if not disabled
+      if (!disabled) {
+        VIEW_ANGLES.filter(a => a.key !== "original").forEach(angle => 
+          generateImage(angle.key, angle.prompt)
+        );
+      }
     }
   }, [open, product?.id]);
 
   const generateImage = async (angle: ViewAngle, viewPrompt: string) => {
-    if (!product) return;
+    if (!product || angle === "original") return;
 
     setLoading(prev => ({ ...prev, [angle]: true }));
 
@@ -81,11 +96,24 @@ const ProductImageGallery = ({ product, open, onOpenChange }: ProductImageGaller
       });
 
       if (error) throw error;
+      
+      if (data?.error) {
+        // Check if it's a credits/rate limit issue
+        if (data.error.includes("credits") || data.error.includes("Rate limit")) {
+          localStorage.setItem('ai_tryon_disabled', 'true');
+          setAiDisabled(true);
+          console.log("AI try-on disabled due to:", data.error);
+        }
+        throw new Error(data.error);
+      }
+      
       if (data?.result) {
         setImages(prev => ({ ...prev, [angle]: data.result }));
       }
     } catch (err) {
       console.error(`Error generating ${angle} view:`, err);
+      // Fall back to original image for this angle
+      setImages(prev => ({ ...prev, [angle]: product.image_url }));
     } finally {
       setLoading(prev => ({ ...prev, [angle]: false }));
     }
@@ -93,8 +121,13 @@ const ProductImageGallery = ({ product, open, onOpenChange }: ProductImageGaller
 
   if (!product) return null;
 
-  const currentImage = images[selectedAngle];
+  const currentImage = images[selectedAngle] || product.image_url;
   const isCurrentLoading = loading[selectedAngle];
+
+  // Filter angles based on AI availability
+  const availableAngles = aiDisabled 
+    ? VIEW_ANGLES.filter(a => a.key === "original")
+    : VIEW_ANGLES;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -102,7 +135,7 @@ const ProductImageGallery = ({ product, open, onOpenChange }: ProductImageGaller
         <div className="flex h-full">
           {/* Thumbnail Strip */}
           <div className="w-20 md:w-24 bg-secondary/30 border-r border-border/50 p-2 flex flex-col gap-2 overflow-y-auto">
-            {VIEW_ANGLES.map((angle) => (
+            {availableAngles.map((angle) => (
               <button
                 key={angle.key}
                 onClick={() => setSelectedAngle(angle.key)}
@@ -124,11 +157,24 @@ const ProductImageGallery = ({ product, open, onOpenChange }: ProductImageGaller
                   />
                 ) : (
                   <div className="absolute inset-0 bg-secondary flex items-center justify-center">
-                    <span className="text-[10px] text-muted-foreground">{angle.label}</span>
+                    <img 
+                      src={product.image_url} 
+                      alt={angle.label}
+                      className="w-full h-full object-cover opacity-50"
+                    />
                   </div>
                 )}
+                <span className="absolute bottom-1 left-1 right-1 text-[9px] text-center bg-background/80 rounded px-1">
+                  {angle.label}
+                </span>
               </button>
             ))}
+            
+            {aiDisabled && (
+              <p className="text-[9px] text-muted-foreground text-center mt-2 px-1">
+                AI views unavailable
+              </p>
+            )}
           </div>
 
           {/* Main Image */}
