@@ -45,26 +45,42 @@ serve(async (req) => {
       throw new Error("No preferences provided");
     }
 
-    // Get available products (mock for now - in production, this would fetch from brand APIs)
+    // Fetch ALL available products from brand partners
     const { data: products, error: productsError } = await supabase
       .from("products")
-      .select("*, brands(*)")
-      .eq("is_available", true)
-      .limit(50);
+      .select("*, brands(name, logo_url)")
+      .eq("is_available", true);
 
     if (productsError) {
       console.error("Error fetching products:", productsError);
+    }
+
+    // Check if we have real products in the database
+    const hasRealProducts = products && products.length >= 15;
+    console.log(`Found ${products?.length || 0} products in database. Using ${hasRealProducts ? 'real products' : 'sample fallback'}.`);
+
+    // If no real products, return error indicating empty inventory
+    if (!hasRealProducts) {
+      return new Response(
+        JSON.stringify({ 
+          error: "no_inventory",
+          message: "No products available from brand partners yet. Please check back later or use sample wardrobes.",
+          capsules: []
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
     // Parse style types and lifestyles from preferences
     let styleTypes: string[] = [];
     let lifestyles: string[] = [];
 
-    // Handle both array and string formats
     if (Array.isArray(preferences.styleType)) {
       styleTypes = preferences.styleType;
     } else if (typeof preferences.styleType === 'string') {
-      // Check if it's a comma-separated list or just a single value
       if (preferences.styleType.includes(',')) {
         styleTypes = preferences.styleType.split(',').map((s: string) => s.trim());
       } else {
@@ -75,7 +91,6 @@ serve(async (req) => {
     if (Array.isArray(preferences.lifestyle)) {
       lifestyles = preferences.lifestyle;
     } else if (typeof preferences.lifestyle === 'string') {
-      // Check if it's a comma-separated list or just a single value
       if (preferences.lifestyle.includes(',')) {
         lifestyles = preferences.lifestyle.split(',').map((s: string) => s.trim());
       } else {
@@ -86,56 +101,65 @@ serve(async (req) => {
     console.log("Style types:", styleTypes);
     console.log("Lifestyles:", lifestyles);
 
-    // Get gender preference for filtering
     const gender = preferences.gender || 'unisex';
     console.log("Gender preference:", gender);
 
-    // Generate 3 comprehensive capsules that work across ALL styles and lifestyles
-    const prompt = `Based on these comprehensive style preferences, generate 3 complete CAPSULE WARDROBES that work across ALL the user's selected styles and lifestyles. Each capsule should be versatile and incorporate elements from multiple style types and lifestyle needs.
+    // Format products for AI to select from
+    const productCatalog = products.map((p: any) => ({
+      id: p.id,
+      name: p.name,
+      category: p.category,
+      price: p.price,
+      colors: p.colors,
+      tags: p.tags,
+      image_url: p.image_url,
+      product_url: p.product_url,
+      brand: p.brands?.name || 'Unknown Brand',
+    }));
 
-IMPORTANT: Generate ${gender === 'male' ? 'MENS' : gender === 'female' ? 'WOMENS' : 'UNISEX'} clothing only.
+    // Use AI to select and organize REAL products into capsules
+    const prompt = `You are a professional fashion stylist. Given the following REAL product catalog from brand partners, create 3 capsule wardrobes by SELECTING products from this catalog.
 
-USER'S COMPLETE STYLE PROFILE:
+AVAILABLE PRODUCTS (select from these ONLY):
+${JSON.stringify(productCatalog, null, 2)}
+
+USER PREFERENCES:
 - Gender: ${gender}
 - Style Types: ${styleTypes.join(', ')}
 - Lifestyles: ${lifestyles.join(', ')}
 - Color Preferences: ${Array.isArray(preferences.colorPreferences) ? preferences.colorPreferences.join(', ') : preferences.colorPreferences}
 - Budget Range: ${preferences.budgetRange}
-- Occasions: ${Array.isArray(preferences.occasions) ? preferences.occasions.join(', ') : preferences.occasions || 'Not specified'}
+- Occasions: ${Array.isArray(preferences.occasions) ? preferences.occasions.join(', ') : preferences.occasions || 'versatile'}
 - Body Type: ${preferences.bodyType || 'Not specified'}
-- Fragrance Preferences: ${JSON.stringify({
-  types: preferences.fragranceTypes,
-  intensity: preferences.fragranceIntensity,
-  scents: preferences.scentPreferences
-}) || 'Not specified'}
-- Hair Care Needs: ${JSON.stringify({
-  hairType: preferences.hairType,
-  concerns: preferences.hairConcerns,
-  preferences: preferences.shampooPreferences
-}) || 'Not specified'}
 
-Full Preferences Data:
-${JSON.stringify(preferences, null, 2)}
+CRITICAL INSTRUCTIONS:
+1. ONLY use products from the catalog above - use their exact id, name, price, image_url, product_url
+2. Create 3 distinct capsule wardrobes
+3. Each capsule should have 8-12 pieces that work together
+4. Match products to user's color preferences and budget
+5. Select products that fit the user's style types and lifestyles
+6. Ensure pieces coordinate within each capsule
 
-Return a JSON object with this EXACT structure:
+Return a JSON object with this EXACT structure (use real product data from catalog):
 {
   "capsules": [
     {
-      "name": "Capsule name (e.g., 'Essential Minimalist', 'Weekend Casual')",
-      "description": "Brief description of the capsule's vibe and occasion",
+      "name": "Capsule name",
+      "description": "Brief description",
       "total_pieces": number,
-      "total_price": number,
-      "outfit_count": number (how many outfits can be created),
+      "total_price": number (sum of selected product prices),
+      "outfit_count": number,
       "products": [
         {
-          "name": "Product name",
-          "category": "Category (tops/bottoms/outerwear/shoes/accessories/fragrance/shampoo/conditioner)",
-          "price": number,
-          "colors": ["color1"],
-          "image_url": "https://images.unsplash.com/photo-relevant-fashion-item",
-          "product_url": "https://example.com/product",
+          "id": "exact product id from catalog",
+          "name": "exact product name from catalog",
+          "category": "exact category from catalog",
+          "price": exact price from catalog,
+          "colors": colors array from catalog,
+          "image_url": "exact image_url from catalog",
+          "product_url": "exact product_url from catalog",
           "brand": {
-            "name": "Premium Brand Name"
+            "name": "brand name from catalog"
           }
         }
       ]
@@ -143,25 +167,7 @@ Return a JSON object with this EXACT structure:
   ]
 }
 
-CRITICAL RULES - USE ALL USER PREFERENCES:
-- Generate EXACTLY 3 capsule collections
-- Each capsule should blend multiple style types from: ${styleTypes.join(', ')}
-- Each capsule should work across multiple lifestyles from: ${lifestyles.join(', ')}
-- Name capsules descriptively based on their primary focus (e.g., "Professional Essentials", "Weekend Versatile", "Evening Elevated")
-- Each capsule should have 10-15 pieces that work together (clothing + 1 fragrance + 1 shampoo + 1 conditioner)
-- STRICTLY match user's COLOR PREFERENCES: ${Array.isArray(preferences.colorPreferences) ? preferences.colorPreferences.join(', ') : preferences.colorPreferences}
-- ALL pieces must use ONLY colors from user's preferred palette
-- Consider user's OCCASIONS when selecting pieces: ${Array.isArray(preferences.occasions) ? preferences.occasions.join(', ') : preferences.occasions || 'versatile'}
-- ALL pieces in a capsule must coordinate (colors, style, formality) and be versatile across multiple occasions
-- Calculate outfit_count realistically (e.g., 3 tops × 2 bottoms = 6 outfits minimum)
-- Match capsules STRICTLY to user's BUDGET RANGE: ${preferences.budgetRange}
-- GENERATE ${gender === 'male' ? 'MENS' : gender === 'female' ? 'WOMENS' : 'UNISEX'} CLOTHING ONLY - absolutely critical
-- Consider body type ${preferences.bodyType || 'standard'} when selecting fits and silhouettes
-- FRAGRANCE: Select based on user's fragrance type preferences (${preferences.fragranceTypes || 'any'}), intensity (${preferences.fragranceIntensity || 'moderate'}), and scent preferences (${preferences.scentPreferences || 'versatile'})
-- HAIR CARE: Select shampoo and conditioner based on hair type (${preferences.hairType || 'normal'}), hair concerns (${preferences.hairConcerns || 'general care'}), and product preferences (${preferences.shampooPreferences || 'standard'})
-- Use real Unsplash URLs for image_url (fashion items, perfume bottles, hair care products)
-- Each capsule should be versatile enough to work across multiple user lifestyles and occasions
-- Items should feel premium and intentional within the specified budget range`;
+IMPORTANT: Only output valid JSON. No markdown, no extra text.`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -174,7 +180,7 @@ CRITICAL RULES - USE ALL USER PREFERENCES:
         messages: [
           {
             role: "system",
-            content: "You are a professional fashion stylist. Always respond with valid JSON only, no markdown or extra text.",
+            content: "You are a professional fashion stylist. Select products from the provided catalog to create wardrobes. Always respond with valid JSON only.",
           },
           {
             role: "user",
@@ -188,7 +194,6 @@ CRITICAL RULES - USE ALL USER PREFERENCES:
       const errorText = await aiResponse.text();
       console.error("AI API error:", aiResponse.status, errorText);
       
-      // Check for credit/payment issues
       if (aiResponse.status === 402 || errorText.includes("payment_required") || errorText.includes("credits")) {
         return new Response(
           JSON.stringify({ error: "AI credits exhausted. Please add funds." }),
@@ -218,20 +223,31 @@ CRITICAL RULES - USE ALL USER PREFERENCES:
       throw new Error("Failed to parse wardrobe data");
     }
 
-    // Add unique IDs to all products in all capsules
+    // Validate that selected products exist in our catalog
     if (wardrobeData.capsules) {
+      const productIds = new Set(products.map((p: any) => p.id));
+      
       wardrobeData.capsules = wardrobeData.capsules.map((capsule: any) => ({
         ...capsule,
-        products: capsule.products.map((product: any) => ({
-          ...product,
-          id: crypto.randomUUID(),
-        })),
+        products: capsule.products.filter((product: any) => {
+          const exists = productIds.has(product.id);
+          if (!exists) {
+            console.warn(`Product ${product.id} not found in catalog, removing from capsule`);
+          }
+          return exists;
+        }),
+      }));
+      
+      // Recalculate totals after filtering
+      wardrobeData.capsules = wardrobeData.capsules.map((capsule: any) => ({
+        ...capsule,
+        total_pieces: capsule.products.length,
+        total_price: capsule.products.reduce((sum: number, p: any) => sum + (p.price || 0), 0),
       }));
     }
 
-    // Create wardrobe if userId provided
+    // Save capsule wardrobes if userId provided
     if (userId && wardrobeData.capsules) {
-      // Save each capsule to the database
       for (const capsule of wardrobeData.capsules) {
         const { error: wardrobeError } = await supabase
           .from("capsule_wardrobes")
@@ -251,7 +267,8 @@ CRITICAL RULES - USE ALL USER PREFERENCES:
     return new Response(
       JSON.stringify({ 
         capsules: wardrobeData.capsules,
-        message: "Capsule wardrobes generated successfully",
+        source: "brand_partners",
+        message: "Capsule wardrobes generated from brand partner inventory",
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
