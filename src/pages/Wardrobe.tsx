@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { ShoppingBag, Loader2, Heart, Package } from "lucide-react";
+import { ShoppingBag, Loader2, Heart, Package, AlertCircle } from "lucide-react";
 import MobileNav from "@/components/MobileNav";
 import VideoGuide from "@/components/VideoGuide";
 import ProfileMenu from "@/components/ProfileMenu";
@@ -13,6 +13,7 @@ import ProfileSheet from "@/components/ProfileSheet";
 import ProductDetailDialog from "@/components/ProductDetailDialog";
 import ProductTryOnImage from "@/components/ProductTryOnImage";
 import ProductImageGallery from "@/components/ProductImageGallery";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface Product {
   id: string;
@@ -36,6 +37,9 @@ interface Capsule {
   products: Product[];
 }
 
+// AI features are temporarily disabled
+const AI_DISABLED = true;
+
 const Wardrobe = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -46,8 +50,13 @@ const Wardrobe = () => {
   const [productDetailOpen, setProductDetailOpen] = useState(false);
   const [imageGalleryOpen, setImageGalleryOpen] = useState(false);
   const [favorites, setFavorites] = useState<Product[]>([]);
+  const [creditsExhausted, setCreditsExhausted] = useState(AI_DISABLED);
 
   useEffect(() => {
+    // Set AI disabled flag in localStorage for other components
+    if (AI_DISABLED) {
+      localStorage.setItem('ai_tryon_disabled', 'true');
+    }
     loadWardrobe();
     // Load favorites from localStorage
     const savedFavorites = JSON.parse(localStorage.getItem('favorite_products') || '[]');
@@ -82,6 +91,12 @@ const Wardrobe = () => {
   };
 
   const generateWardrobe = async () => {
+    // Check if AI is disabled
+    if (AI_DISABLED || creditsExhausted) {
+      toast.error("AI features are temporarily disabled. Please add AI credits to enable wardrobe generation.");
+      return;
+    }
+    
     // Clear cached capsules to force fresh generation
     localStorage.removeItem('cached_capsules');
     setGenerating(true);
@@ -96,6 +111,7 @@ const Wardrobe = () => {
       if (error) {
         const errorMsg = error.message || error.toString();
         if (errorMsg.includes("402") || errorMsg.includes("credits") || errorMsg.includes("payment")) {
+          setCreditsExhausted(true);
           toast.error("AI credits exhausted. Please add funds to continue.");
           return;
         }
@@ -104,6 +120,7 @@ const Wardrobe = () => {
       
       if (data?.error) {
         if (data.error.includes("credits") || data.error.includes("payment")) {
+          setCreditsExhausted(true);
           toast.error("AI credits exhausted. Please add funds to continue.");
           return;
         }
@@ -120,6 +137,7 @@ const Wardrobe = () => {
       console.error("Error generating wardrobe:", error);
       const errorMsg = error?.message || error?.toString() || '';
       if (errorMsg.includes("credits") || errorMsg.includes("payment") || errorMsg.includes("402")) {
+        setCreditsExhausted(true);
         toast.error("AI credits exhausted. Please add funds to continue.");
       } else {
         toast.error(error.message || "Failed to generate wardrobe");
@@ -280,6 +298,17 @@ const Wardrobe = () => {
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-6">
+        {/* AI Credits Alert */}
+        {creditsExhausted && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>AI Features Temporarily Disabled</AlertTitle>
+            <AlertDescription>
+              AI credits have been exhausted. Wardrobe generation and virtual try-on features are unavailable until credits are added. Your previously generated wardrobes are still accessible below.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {capsules.length === 0 ? (
           <Card className="mt-8">
             <CardContent className="flex flex-col items-center justify-center py-16 space-y-4">
