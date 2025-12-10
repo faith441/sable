@@ -86,11 +86,11 @@ const Marketing = () => {
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center px-4 py-20 pt-32 overflow-hidden">
         <div 
-          className="absolute inset-0 bg-cover bg-center"
+          className="absolute inset-0 bg-cover bg-center pointer-events-none"
           style={{ backgroundImage: `url(${heroImage})` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/80 to-background/95" />
-        <div className="absolute inset-0 bg-gradient-hero opacity-20" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/80 to-background/95 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-hero opacity-20 pointer-events-none" />
         
         <div className="relative z-10 max-w-4xl mx-auto text-center space-y-8 animate-fade-in">
           <Badge variant="cream" className="text-sm px-4 py-2">
