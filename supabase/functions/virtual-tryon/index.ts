@@ -11,12 +11,37 @@ serve(async (req) => {
   }
 
   try {
-    const { userImage, garmentImage } = await req.json();
+    const { userImage, garmentImages, viewType, userGender } = await req.json();
     
+    console.log("Virtual try-on request received:", { 
+      hasUserImage: !!userImage, 
+      garmentCount: garmentImages?.length || 0,
+      viewType,
+      userGender 
+    });
+
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
 
-    // For now, we'll use AI image editing to combine the images
-    // In production, you'd use a specialized virtual try-on API
+    // Build a detailed prompt for the AI image generation
+    const genderTerm = userGender === "Women's" ? "woman" : "man";
+    const viewDescription = viewType === "fullBody" 
+      ? "full body view from head to toe, standing pose" 
+      : "upper body view, from waist up, portrait style";
+
+    const garmentDescriptions = garmentImages?.map((g: any) => 
+      `${g.name} (${g.category}) - ${g.brand}`
+    ).join(", ") || "stylish clothing items";
+
+    const prompt = `Create a high-quality, photorealistic fashion photography image of a stylish ${genderTerm} model wearing these luxury clothing items: ${garmentDescriptions}. 
+
+The image should be a ${viewDescription}. 
+
+Style: Professional fashion catalog photography, clean background (soft gradient or studio setting), perfect lighting that highlights the clothing textures and details. The model should have a confident, elegant pose typical of high-end fashion brands. 
+
+Make the clothing look premium and well-fitted. The overall aesthetic should feel luxury and aspirational, like a Vogue or high-end brand campaign.`;
+
+    console.log("Generating image with prompt:", prompt.substring(0, 200) + "...");
+
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -24,11 +49,11 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image",
+        model: "google/gemini-2.5-flash-image-preview",
         messages: [
           {
             role: "user",
-            content: "Create a photo composite showing a person wearing this garment. Blend naturally."
+            content: prompt
           }
         ],
         modalities: ["image", "text"]
@@ -36,20 +61,50 @@ serve(async (req) => {
     });
 
     if (!aiResponse.ok) {
-      throw new Error("Failed to process try-on");
+      const errorText = await aiResponse.text();
+      console.error("AI gateway error:", aiResponse.status, errorText);
+      
+      if (aiResponse.status === 429) {
+        return new Response(
+          JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (aiResponse.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "AI credits exhausted. Please add funds." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      throw new Error(`AI gateway error: ${aiResponse.status}`);
     }
 
     const aiData = await aiResponse.json();
+    console.log("AI response received:", {
+      hasChoices: !!aiData.choices,
+      choicesLength: aiData.choices?.length,
+      hasImages: !!aiData.choices?.[0]?.message?.images
+    });
+
     const resultImage = aiData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
+    if (!resultImage) {
+      console.error("No image generated from AI response");
+      throw new Error("No image was generated");
+    }
+
     return new Response(
-      JSON.stringify({ result: resultImage || userImage }),
+      JSON.stringify({ 
+        result: resultImage,
+        viewType 
+      }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Virtual try-on error:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     return new Response(
       JSON.stringify({ error: errorMessage }),

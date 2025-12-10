@@ -11,6 +11,7 @@ import VideoGuide from "@/components/VideoGuide";
 import ProfileMenu from "@/components/ProfileMenu";
 import ProfileSheet from "@/components/ProfileSheet";
 import ProductDetailDialog from "@/components/ProductDetailDialog";
+import VirtualTryOnPreview from "@/components/VirtualTryOnPreview";
 
 interface Product {
   id: string;
@@ -320,6 +321,12 @@ const Wardrobe = () => {
                     </Button>
                   </CardContent>
                 </Card>
+
+                {/* Virtual Try-On Preview */}
+                <VirtualTryOnPreview 
+                  products={capsule.products} 
+                  capsuleName={capsule.name}
+                />
 
                 {/* Products Grid */}
                 <div className="space-y-4">
