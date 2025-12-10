@@ -59,12 +59,18 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
 
       if (fnError) {
         console.error("Try-on function error:", fnError);
+        // Check if it's a credits/rate limit issue from the error
+        const errorMsg = fnError.message || fnError.toString();
+        if (errorMsg.includes("402") || errorMsg.includes("credits") || errorMsg.includes("payment")) {
+          localStorage.setItem('ai_tryon_disabled', 'true');
+          console.log("AI try-on disabled due to credits issue");
+        }
         throw fnError;
       }
 
       if (data?.error) {
         // Check if it's a credits/rate limit issue
-        if (data.error.includes("credits") || data.error.includes("Rate limit")) {
+        if (data.error.includes("credits") || data.error.includes("Rate limit") || data.error.includes("payment")) {
           localStorage.setItem('ai_tryon_disabled', 'true');
           console.log("AI try-on disabled due to:", data.error);
         }
@@ -76,8 +82,13 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
       } else {
         setUseOriginal(true);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error generating try-on for product:", product.name, err);
+      // Also check for credits error in catch block
+      const errorMsg = err?.message || err?.toString() || '';
+      if (errorMsg.includes("402") || errorMsg.includes("credits") || errorMsg.includes("payment")) {
+        localStorage.setItem('ai_tryon_disabled', 'true');
+      }
       setUseOriginal(true);
     } finally {
       setLoading(false);
