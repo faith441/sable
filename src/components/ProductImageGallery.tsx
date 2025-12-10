@@ -95,11 +95,19 @@ const ProductImageGallery = ({ product, open, onOpenChange }: ProductImageGaller
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        const errorMsg = error.message || error.toString();
+        if (errorMsg.includes("402") || errorMsg.includes("credits") || errorMsg.includes("payment")) {
+          localStorage.setItem('ai_tryon_disabled', 'true');
+          setAiDisabled(true);
+          console.log("AI try-on disabled due to credits issue");
+        }
+        throw error;
+      }
       
       if (data?.error) {
         // Check if it's a credits/rate limit issue
-        if (data.error.includes("credits") || data.error.includes("Rate limit")) {
+        if (data.error.includes("credits") || data.error.includes("Rate limit") || data.error.includes("payment")) {
           localStorage.setItem('ai_tryon_disabled', 'true');
           setAiDisabled(true);
           console.log("AI try-on disabled due to:", data.error);
@@ -110,8 +118,14 @@ const ProductImageGallery = ({ product, open, onOpenChange }: ProductImageGaller
       if (data?.result) {
         setImages(prev => ({ ...prev, [angle]: data.result }));
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(`Error generating ${angle} view:`, err);
+      // Check for credits error in catch block
+      const errorMsg = err?.message || err?.toString() || '';
+      if (errorMsg.includes("402") || errorMsg.includes("credits") || errorMsg.includes("payment")) {
+        localStorage.setItem('ai_tryon_disabled', 'true');
+        setAiDisabled(true);
+      }
       // Fall back to original image for this angle
       setImages(prev => ({ ...prev, [angle]: product.image_url }));
     } finally {
