@@ -37,8 +37,8 @@ interface Capsule {
   products: Product[];
 }
 
-// AI features are temporarily disabled
-const AI_DISABLED = true;
+// AI features - set to false to enable AI wardrobe generation and virtual try-on
+const AI_DISABLED = false;
 
 // Sample wardrobe data for when AI is disabled
 const SAMPLE_CAPSULES: Capsule[] = [
