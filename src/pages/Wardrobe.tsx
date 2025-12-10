@@ -92,7 +92,23 @@ const Wardrobe = () => {
         body: { preferences },
       });
 
-      if (error) throw error;
+      // Check for credit exhaustion error
+      if (error) {
+        const errorMsg = error.message || error.toString();
+        if (errorMsg.includes("402") || errorMsg.includes("credits") || errorMsg.includes("payment")) {
+          toast.error("AI credits exhausted. Please add funds to continue.");
+          return;
+        }
+        throw error;
+      }
+      
+      if (data?.error) {
+        if (data.error.includes("credits") || data.error.includes("payment")) {
+          toast.error("AI credits exhausted. Please add funds to continue.");
+          return;
+        }
+        throw new Error(data.error);
+      }
 
       const newCapsules = data.capsules || [];
       setCapsules(newCapsules);
@@ -102,7 +118,12 @@ const Wardrobe = () => {
       toast.success("Wardrobe regenerated successfully!");
     } catch (error: any) {
       console.error("Error generating wardrobe:", error);
-      toast.error(error.message || "Failed to generate wardrobe");
+      const errorMsg = error?.message || error?.toString() || '';
+      if (errorMsg.includes("credits") || errorMsg.includes("payment") || errorMsg.includes("402")) {
+        toast.error("AI credits exhausted. Please add funds to continue.");
+      } else {
+        toast.error(error.message || "Failed to generate wardrobe");
+      }
     } finally {
       setGenerating(false);
     }

@@ -186,7 +186,19 @@ CRITICAL RULES - USE ALL USER PREFERENCES:
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
-      console.error("AI API error:", errorText);
+      console.error("AI API error:", aiResponse.status, errorText);
+      
+      // Check for credit/payment issues
+      if (aiResponse.status === 402 || errorText.includes("payment_required") || errorText.includes("credits")) {
+        return new Response(
+          JSON.stringify({ error: "AI credits exhausted. Please add funds." }),
+          {
+            status: 402,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+      
       throw new Error("Failed to generate wardrobe recommendations");
     }
 
