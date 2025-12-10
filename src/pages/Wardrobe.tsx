@@ -101,6 +101,7 @@ const Wardrobe = () => {
   const [favorites, setFavorites] = useState<Product[]>([]);
   const [creditsExhausted, setCreditsExhausted] = useState(AI_DISABLED);
   const [usingSampleData, setUsingSampleData] = useState(false);
+  const [noInventory, setNoInventory] = useState(false);
 
   useEffect(() => {
     // Set AI disabled flag in localStorage for other components
@@ -169,10 +170,14 @@ const Wardrobe = () => {
     }
   };
 
-  const fallbackToSampleData = () => {
+  const fallbackToSampleData = (reason: 'credits' | 'inventory' | 'error' = 'error') => {
     setCapsules(SAMPLE_CAPSULES);
     setUsingSampleData(true);
-    setCreditsExhausted(true);
+    if (reason === 'credits') {
+      setCreditsExhausted(true);
+    } else if (reason === 'inventory') {
+      setNoInventory(true);
+    }
   };
 
   const generateWardrobe = async () => {
@@ -197,7 +202,7 @@ const Wardrobe = () => {
       if (error) {
         const errorMsg = error.message || error.toString();
         if (errorMsg.includes("402") || errorMsg.includes("credits") || errorMsg.includes("payment") || errorMsg.includes("non-2xx")) {
-          fallbackToSampleData();
+          fallbackToSampleData('credits');
           toast.info("AI unavailable. Showing sample wardrobe collection.");
           return;
         }
@@ -206,12 +211,12 @@ const Wardrobe = () => {
       
       if (data?.error) {
         if (data.error === "no_inventory") {
-          fallbackToSampleData();
+          fallbackToSampleData('inventory');
           toast.info("No brand partner products available yet. Showing sample collection.");
           return;
         }
         if (data.error.includes("credits") || data.error.includes("payment")) {
-          fallbackToSampleData();
+          fallbackToSampleData('credits');
           toast.info("AI unavailable. Showing sample wardrobe collection.");
           return;
         }
@@ -228,11 +233,11 @@ const Wardrobe = () => {
       console.error("Error generating wardrobe:", error);
       const errorMsg = error?.message || error?.toString() || '';
       if (errorMsg.includes("credits") || errorMsg.includes("payment") || errorMsg.includes("402") || errorMsg.includes("non-2xx")) {
-        fallbackToSampleData();
+        fallbackToSampleData('credits');
         toast.info("AI unavailable. Showing sample wardrobe collection.");
       } else {
         // For other errors, also fall back to sample data
-        fallbackToSampleData();
+        fallbackToSampleData('error');
         toast.error("Failed to generate wardrobe. Showing sample collection.");
       }
     } finally {
@@ -389,8 +394,19 @@ const Wardrobe = () => {
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-6">
-        {/* AI Credits Alert */}
-        {creditsExhausted && (
+        {/* No Inventory Alert */}
+        {noInventory && (
+          <Alert className="mb-6 border-sage/50 bg-sage/10">
+            <Package className="h-4 w-4 text-sage" />
+            <AlertTitle className="text-foreground">Sample Collection</AlertTitle>
+            <AlertDescription className="text-muted-foreground">
+              Brand partner products are coming soon! Browse our curated sample collection in the meantime.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* AI Credits Alert - only show if credits exhausted but not inventory issue */}
+        {creditsExhausted && !noInventory && (
           <Alert className="mb-6 border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
             <AlertCircle className="h-4 w-4 text-amber-600" />
             <AlertTitle className="text-amber-800 dark:text-amber-200">AI Features Temporarily Unavailable</AlertTitle>
@@ -422,11 +438,15 @@ const Wardrobe = () => {
           <Tabs defaultValue="0" className="space-y-6">
           {usingSampleData && (
             <div className="flex items-center gap-2 px-2">
-              <span className="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-1 rounded-full font-medium">
+              <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                noInventory 
+                  ? 'bg-sage/20 text-sage' 
+                  : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+              }`}>
                 Sample Collection
               </span>
               <span className="text-xs text-muted-foreground">
-                Showing example wardrobes
+                {noInventory ? 'Preview collection' : 'Showing example wardrobes'}
               </span>
             </div>
           )}
