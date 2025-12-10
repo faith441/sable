@@ -205,7 +205,7 @@ const Wardrobe = () => {
     }
   };
 
-  const addToCart = async (product: Product) => {
+  const addToCart = async (product: Product, redirectToCart: boolean = true) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       const sessionId = localStorage.getItem('guest_session_id') || crypto.randomUUID();
@@ -255,12 +255,12 @@ const Wardrobe = () => {
         if (error) throw error;
       }
 
-      toast.success("Added to cart!", {
-        action: {
-          label: "View Cart",
-          onClick: () => navigate("/cart")
-        }
-      });
+      toast.success(`"${product.name}" added to cart!`);
+      
+      // Redirect to cart after a brief delay
+      if (redirectToCart) {
+        setTimeout(() => navigate("/cart"), 800);
+      }
     } catch (error: any) {
       console.error("Error adding to cart:", error);
       toast.error(error?.message || "Failed to add to cart");
@@ -294,12 +294,10 @@ const Wardrobe = () => {
 
       if (error) throw error;
 
-      toast.success("Full capsule added to cart!", {
-        action: {
-          label: "View Cart",
-          onClick: () => navigate("/cart")
-        }
-      });
+      toast.success(`${capsule.products.length} items from "${capsule.name}" added to cart!`);
+      
+      // Redirect to cart after a brief delay
+      setTimeout(() => navigate("/cart"), 1000);
     } catch (error: any) {
       console.error("Error adding capsule to cart:", error);
       toast.error(error?.message || "Failed to add to cart");
