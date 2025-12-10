@@ -12,6 +12,7 @@ import ProfileMenu from "@/components/ProfileMenu";
 import ProfileSheet from "@/components/ProfileSheet";
 import ProductDetailDialog from "@/components/ProductDetailDialog";
 import ProductTryOnImage from "@/components/ProductTryOnImage";
+import ProductImageGallery from "@/components/ProductImageGallery";
 
 interface Product {
   id: string;
@@ -43,6 +44,7 @@ const Wardrobe = () => {
   const [profileOpen, setProfileOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [productDetailOpen, setProductDetailOpen] = useState(false);
+  const [imageGalleryOpen, setImageGalleryOpen] = useState(false);
   const [favorites, setFavorites] = useState<Product[]>([]);
 
   useEffect(() => {
@@ -337,7 +339,14 @@ const Wardrobe = () => {
                     >
                       <CardContent className="p-0">
                         <div className="flex gap-4">
-                          <div className="w-32 h-40 bg-secondary flex-shrink-0 relative">
+                          <div 
+                            className="w-32 h-40 bg-secondary flex-shrink-0 relative cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedProduct(product);
+                              setImageGalleryOpen(true);
+                            }}
+                          >
                             <ProductTryOnImage 
                               product={product}
                               className="w-full h-full"
@@ -424,6 +433,11 @@ const Wardrobe = () => {
         open={productDetailOpen}
         onOpenChange={setProductDetailOpen}
         onAddToCart={addToCart}
+      />
+      <ProductImageGallery
+        product={selectedProduct}
+        open={imageGalleryOpen}
+        onOpenChange={setImageGalleryOpen}
       />
 
       <MobileNav />
