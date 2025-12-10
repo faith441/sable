@@ -18,6 +18,9 @@ interface ProductTryOnImageProps {
   className?: string;
 }
 
+// Categories that can have AI try-on images generated
+const WEARABLE_CATEGORIES = ['tops', 'bottoms', 'outerwear', 'dresses', 'shoes', 'accessories'];
+
 const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) => {
   const [tryOnImage, setTryOnImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -25,14 +28,17 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
 
   // Check if AI try-on is disabled (e.g., credits exhausted)
   const aiDisabled = localStorage.getItem('ai_tryon_disabled') === 'true';
+  
+  // Check if product category is wearable (skip fragrance, shampoo, conditioner, etc.)
+  const isWearable = WEARABLE_CATEGORIES.includes(product.category?.toLowerCase() || '');
 
   useEffect(() => {
-    if (!aiDisabled) {
+    if (!aiDisabled && isWearable) {
       generateTryOnImage();
     } else {
       setUseOriginal(true);
     }
-  }, [product.id, aiDisabled]);
+  }, [product.id, aiDisabled, isWearable]);
 
   const generateTryOnImage = async () => {
     setLoading(true);
