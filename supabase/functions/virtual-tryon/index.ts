@@ -11,34 +11,41 @@ serve(async (req) => {
   }
 
   try {
-    const { userImage, garmentImages, viewType, userGender } = await req.json();
+    const { userImage, garmentImages, viewType, userGender, customPrompt } = await req.json();
     
     console.log("Virtual try-on request received:", { 
       hasUserImage: !!userImage, 
       garmentCount: garmentImages?.length || 0,
       viewType,
-      userGender 
+      userGender,
+      hasCustomPrompt: !!customPrompt
     });
 
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
 
-    // Build a detailed prompt for the AI image generation
-    const genderTerm = userGender === "Women's" ? "woman" : "man";
-    const viewDescription = viewType === "fullBody" 
-      ? "full body view from head to toe, standing pose" 
-      : "upper body view, from waist up, portrait style";
+    let prompt: string;
 
-    const garmentDescriptions = garmentImages?.map((g: any) => 
-      `${g.name} (${g.category}) - ${g.brand}`
-    ).join(", ") || "stylish clothing items";
+    if (customPrompt) {
+      prompt = customPrompt;
+    } else {
+      // Build a detailed prompt for the AI image generation
+      const genderTerm = userGender === "Women's" ? "woman" : "man";
+      const viewDescription = viewType === "fullBody" 
+        ? "full body view from head to toe, standing pose" 
+        : "upper body view, from waist up, portrait style";
 
-    const prompt = `Create a high-quality, photorealistic fashion photography image of a stylish ${genderTerm} model wearing these luxury clothing items: ${garmentDescriptions}. 
+      const garmentDescriptions = garmentImages?.map((g: any) => 
+        `${g.name} (${g.category}) - ${g.brand}`
+      ).join(", ") || "stylish clothing items";
+
+      prompt = `Create a high-quality, photorealistic fashion photography image of a stylish ${genderTerm} model wearing these luxury clothing items: ${garmentDescriptions}. 
 
 The image should be a ${viewDescription}. 
 
 Style: Professional fashion catalog photography, clean background (soft gradient or studio setting), perfect lighting that highlights the clothing textures and details. The model should have a confident, elegant pose typical of high-end fashion brands. 
 
 Make the clothing look premium and well-fitted. The overall aesthetic should feel luxury and aspirational, like a Vogue or high-end brand campaign.`;
+    }
 
     console.log("Generating image with prompt:", prompt.substring(0, 200) + "...");
 
