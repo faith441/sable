@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface Product {
@@ -25,6 +25,7 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
   const [tryOnImage, setTryOnImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [useOriginal, setUseOriginal] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Check if AI try-on is disabled (e.g., credits exhausted)
   const aiDisabled = localStorage.getItem('ai_tryon_disabled') === 'true';
@@ -33,15 +34,20 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
   const isWearable = WEARABLE_CATEGORIES.includes(product.category?.toLowerCase() || '');
 
   useEffect(() => {
-    if (!aiDisabled && isWearable) {
-      generateTryOnImage();
-    } else {
+    console.log(`[ProductTryOnImage] Product: ${product.name}, Category: ${product.category}, isWearable: ${isWearable}, aiDisabled: ${aiDisabled}`);
+    
+    if (aiDisabled || !isWearable) {
+      console.log(`[ProductTryOnImage] Skipping AI generation - aiDisabled: ${aiDisabled}, isWearable: ${isWearable}`);
       setUseOriginal(true);
+    } else {
+      generateTryOnImage();
     }
   }, [product.id, aiDisabled, isWearable]);
 
   const generateTryOnImage = async () => {
     setLoading(true);
+    setError(null);
+    console.log(`[ProductTryOnImage] Starting generation for: ${product.name}`);
 
     try {
       const preferences = JSON.parse(localStorage.getItem('guest_preferences') || '{}');
@@ -56,6 +62,8 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
         image_url: product.image_url
       }];
 
+      console.log(`[ProductTryOnImage] Calling virtual-tryon for ${product.name} with gender: ${userGender}`);
+
       const { data, error: fnError } = await supabase.functions.invoke("virtual-tryon", {
         body: {
           garmentImages,
@@ -64,8 +72,10 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
         }
       });
 
+      console.log(`[ProductTryOnImage] Response for ${product.name}:`, { data, fnError });
+
       if (fnError) {
-        console.error("Try-on function error:", fnError);
+        console.error("[ProductTryOnImage] Function error:", fnError);
         const errorMsg = fnError.message || fnError.toString();
         if (errorMsg.includes("402") || errorMsg.includes("credits") || errorMsg.includes("payment")) {
           localStorage.setItem('ai_tryon_disabled', 'true');
@@ -74,6 +84,7 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
       }
 
       if (data?.error) {
+        console.error("[ProductTryOnImage] Data error:", data.error);
         if (data.error.includes("credits") || data.error.includes("Rate limit") || data.error.includes("payment")) {
           localStorage.setItem('ai_tryon_disabled', 'true');
         }
@@ -81,13 +92,16 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
       }
 
       if (data?.result) {
+        console.log(`[ProductTryOnImage] Success! Got image for ${product.name}`);
         setTryOnImage(data.result);
       } else {
+        console.log(`[ProductTryOnImage] No result in response for ${product.name}, using original`);
         setUseOriginal(true);
       }
     } catch (err: any) {
-      console.error("Error generating try-on for product:", product.name, err);
+      console.error("[ProductTryOnImage] Error generating try-on:", err);
       const errorMsg = err?.message || err?.toString() || '';
+      setError(errorMsg);
       if (errorMsg.includes("402") || errorMsg.includes("credits") || errorMsg.includes("payment")) {
         localStorage.setItem('ai_tryon_disabled', 'true');
       }
@@ -121,7 +135,7 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
     );
   }
 
-  // Show original image when AI disabled or failed
+  // Show original image when AI disabled, not wearable, or failed
   if (useOriginal || !tryOnImage) {
     return (
       <div className={`relative ${className}`}>
@@ -130,6 +144,10 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
             src={product.image_url} 
             alt={product.name} 
             className="w-full h-full object-cover"
+            onError={(e) => {
+              console.error(`[ProductTryOnImage] Image failed to load: ${product.image_url}`);
+              (e.target as HTMLImageElement).src = '/placeholder.svg';
+            }}
           />
         ) : (
           <div className="w-full h-full bg-secondary flex items-center justify-center">
@@ -146,6 +164,10 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
         src={tryOnImage} 
         alt={`${product.name} try-on`} 
         className="w-full h-full object-cover"
+        onError={(e) => {
+          console.error(`[ProductTryOnImage] AI image failed to load, falling back`);
+          setUseOriginal(true);
+        }}
       />
     </div>
   );
