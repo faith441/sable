@@ -27,8 +27,22 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
   const [useOriginal, setUseOriginal] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Check if AI try-on is disabled (e.g., credits exhausted)
-  const aiDisabled = localStorage.getItem('ai_tryon_disabled') === 'true';
+  // Check if AI try-on is disabled - but reset it after 1 hour to retry
+  const checkAiDisabled = () => {
+    const disabledAt = localStorage.getItem('ai_tryon_disabled_at');
+    if (disabledAt) {
+      const oneHourAgo = Date.now() - (60 * 60 * 1000);
+      if (parseInt(disabledAt) < oneHourAgo) {
+        // Reset after 1 hour
+        localStorage.removeItem('ai_tryon_disabled');
+        localStorage.removeItem('ai_tryon_disabled_at');
+        return false;
+      }
+    }
+    return localStorage.getItem('ai_tryon_disabled') === 'true';
+  };
+  
+  const aiDisabled = checkAiDisabled();
   
   // Check if product category is wearable (skip fragrance, shampoo, conditioner, etc.)
   const isWearable = WEARABLE_CATEGORIES.includes(product.category?.toLowerCase() || '');
@@ -79,6 +93,7 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
         const errorMsg = fnError.message || fnError.toString();
         if (errorMsg.includes("402") || errorMsg.includes("credits") || errorMsg.includes("payment")) {
           localStorage.setItem('ai_tryon_disabled', 'true');
+          localStorage.setItem('ai_tryon_disabled_at', Date.now().toString());
         }
         throw fnError;
       }
@@ -87,6 +102,7 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
         console.error("[ProductTryOnImage] Data error:", data.error);
         if (data.error.includes("credits") || data.error.includes("Rate limit") || data.error.includes("payment")) {
           localStorage.setItem('ai_tryon_disabled', 'true');
+          localStorage.setItem('ai_tryon_disabled_at', Date.now().toString());
         }
         throw new Error(data.error);
       }
@@ -104,6 +120,7 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
       setError(errorMsg);
       if (errorMsg.includes("402") || errorMsg.includes("credits") || errorMsg.includes("payment")) {
         localStorage.setItem('ai_tryon_disabled', 'true');
+        localStorage.setItem('ai_tryon_disabled_at', Date.now().toString());
       }
       setUseOriginal(true);
     } finally {
