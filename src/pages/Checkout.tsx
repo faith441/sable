@@ -15,8 +15,8 @@ const shippingSchema = z.object({
   address: z.string().min(5, "Address is required").max(200),
   apartment: z.string().max(50).optional(),
   city: z.string().min(2, "City is required").max(100),
-  state: z.string().min(2, "State is required").max(100),
-  zipCode: z.string().min(5, "ZIP code is required").max(20),
+  state: z.string().min(2, "State/Province is required").max(100),
+  zipCode: z.string().min(4, "ZIP/Postal code is required").max(20),
   phone: z.string().min(10, "Phone number is required").max(20),
 });
 
