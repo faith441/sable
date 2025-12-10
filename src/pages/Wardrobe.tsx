@@ -40,6 +40,55 @@ interface Capsule {
 // AI features are temporarily disabled
 const AI_DISABLED = true;
 
+// Sample wardrobe data for when AI is disabled
+const SAMPLE_CAPSULES: Capsule[] = [
+  {
+    name: "Essential Minimalist",
+    description: "A timeless collection of versatile pieces that form the foundation of any sophisticated wardrobe.",
+    total_pieces: 12,
+    total_price: 2450,
+    outfit_count: 24,
+    products: [
+      { id: "sample-1", name: "Cashmere Crewneck Sweater", category: "tops", price: 295, colors: ["Ivory"], image_url: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400", product_url: "#", brand: { name: "Loro Piana" } },
+      { id: "sample-2", name: "Tailored Wool Trousers", category: "bottoms", price: 385, colors: ["Navy"], image_url: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400", product_url: "#", brand: { name: "Theory" } },
+      { id: "sample-3", name: "Silk Button-Down Shirt", category: "tops", price: 275, colors: ["White"], image_url: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400", product_url: "#", brand: { name: "Equipment" } },
+      { id: "sample-4", name: "Double-Breasted Blazer", category: "outerwear", price: 595, colors: ["Charcoal"], image_url: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400", product_url: "#", brand: { name: "Max Mara" } },
+      { id: "sample-5", name: "Leather Chelsea Boots", category: "shoes", price: 425, colors: ["Black"], image_url: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400", product_url: "#", brand: { name: "Common Projects" } },
+      { id: "sample-6", name: "Minimalist Leather Tote", category: "accessories", price: 475, colors: ["Tan"], image_url: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400", product_url: "#", brand: { name: "Mansur Gavriel" } },
+    ]
+  },
+  {
+    name: "Weekend Casual",
+    description: "Relaxed yet refined pieces perfect for off-duty moments and casual gatherings.",
+    total_pieces: 10,
+    total_price: 1850,
+    outfit_count: 18,
+    products: [
+      { id: "sample-7", name: "Oversized Cotton Hoodie", category: "tops", price: 195, colors: ["Sage"], image_url: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400", product_url: "#", brand: { name: "Acne Studios" } },
+      { id: "sample-8", name: "Relaxed Fit Chinos", category: "bottoms", price: 165, colors: ["Khaki"], image_url: "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=400", product_url: "#", brand: { name: "A.P.C." } },
+      { id: "sample-9", name: "Premium Sneakers", category: "shoes", price: 285, colors: ["White"], image_url: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400", product_url: "#", brand: { name: "Veja" } },
+      { id: "sample-10", name: "Linen Blend T-Shirt", category: "tops", price: 85, colors: ["Cream"], image_url: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400", product_url: "#", brand: { name: "COS" } },
+      { id: "sample-11", name: "Lightweight Denim Jacket", category: "outerwear", price: 245, colors: ["Light Blue"], image_url: "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=400", product_url: "#", brand: { name: "Levi's" } },
+      { id: "sample-12", name: "Canvas Crossbody Bag", category: "accessories", price: 125, colors: ["Navy"], image_url: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400", product_url: "#", brand: { name: "Rains" } },
+    ]
+  },
+  {
+    name: "Evening Elevated",
+    description: "Sophisticated pieces for special occasions and memorable evenings.",
+    total_pieces: 8,
+    total_price: 3200,
+    outfit_count: 12,
+    products: [
+      { id: "sample-13", name: "Silk Midi Dress", category: "dresses", price: 685, colors: ["Burgundy"], image_url: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400", product_url: "#", brand: { name: "Reformation" } },
+      { id: "sample-14", name: "Velvet Blazer", category: "outerwear", price: 495, colors: ["Midnight"], image_url: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400", product_url: "#", brand: { name: "Saint Laurent" } },
+      { id: "sample-15", name: "Strappy Heeled Sandals", category: "shoes", price: 545, colors: ["Gold"], image_url: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400", product_url: "#", brand: { name: "Jimmy Choo" } },
+      { id: "sample-16", name: "Crystal Embellished Clutch", category: "accessories", price: 375, colors: ["Silver"], image_url: "https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?w=400", product_url: "#", brand: { name: "Judith Leiber" } },
+      { id: "sample-17", name: "Statement Earrings", category: "accessories", price: 195, colors: ["Pearl"], image_url: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400", product_url: "#", brand: { name: "Jennifer Behr" } },
+      { id: "sample-18", name: "Jo Malone Velvet Rose", category: "fragrance", price: 155, colors: ["Rose"], image_url: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=400", product_url: "#", brand: { name: "Jo Malone London" } },
+    ]
+  }
+];
+
 const Wardrobe = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -51,6 +100,7 @@ const Wardrobe = () => {
   const [imageGalleryOpen, setImageGalleryOpen] = useState(false);
   const [favorites, setFavorites] = useState<Product[]>([]);
   const [creditsExhausted, setCreditsExhausted] = useState(AI_DISABLED);
+  const [usingSampleData, setUsingSampleData] = useState(false);
 
   useEffect(() => {
     // Set AI disabled flag in localStorage for other components
@@ -76,6 +126,14 @@ const Wardrobe = () => {
       const cachedCapsules = localStorage.getItem('cached_capsules');
       if (cachedCapsules) {
         setCapsules(JSON.parse(cachedCapsules));
+        setLoading(false);
+        return;
+      }
+
+      // If AI is disabled and no cached capsules, use sample data
+      if (AI_DISABLED) {
+        setCapsules(SAMPLE_CAPSULES);
+        setUsingSampleData(true);
         setLoading(false);
         return;
       }
@@ -300,11 +358,14 @@ const Wardrobe = () => {
       <div className="max-w-lg mx-auto px-4 py-6">
         {/* AI Credits Alert */}
         {creditsExhausted && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>AI Features Temporarily Disabled</AlertTitle>
-            <AlertDescription>
-              AI credits have been exhausted. Wardrobe generation and virtual try-on features are unavailable until credits are added. Your previously generated wardrobes are still accessible below.
+          <Alert className="mb-6 border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
+            <AlertCircle className="h-4 w-4 text-amber-600" />
+            <AlertTitle className="text-amber-800 dark:text-amber-200">AI Features Temporarily Unavailable</AlertTitle>
+            <AlertDescription className="text-amber-700 dark:text-amber-300">
+              {usingSampleData 
+                ? "You're viewing sample wardrobe data. Add AI credits to generate personalized recommendations based on your style preferences."
+                : "AI credits have been exhausted. Your previously generated wardrobes are shown below. Add credits to regenerate or access virtual try-on features."
+              }
             </AlertDescription>
           </Alert>
         )}
@@ -326,6 +387,16 @@ const Wardrobe = () => {
           </Card>
         ) : (
           <Tabs defaultValue="0" className="space-y-6">
+          {usingSampleData && (
+            <div className="flex items-center gap-2 px-2">
+              <span className="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-1 rounded-full font-medium">
+                Sample Collection
+              </span>
+              <span className="text-xs text-muted-foreground">
+                Showing example wardrobes
+              </span>
+            </div>
+          )}
           <TabsList className="w-full justify-start overflow-x-auto">
             {capsules.map((capsule, index) => (
               <TabsTrigger 
