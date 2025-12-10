@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { ShoppingBag, Loader2, Heart, Package, Shirt } from "lucide-react";
+import { ShoppingBag, Loader2, Heart, Package, AlertCircle } from "lucide-react";
 import MobileNav from "@/components/MobileNav";
 import VideoGuide from "@/components/VideoGuide";
 import ProfileMenu from "@/components/ProfileMenu";
@@ -13,6 +13,7 @@ import ProfileSheet from "@/components/ProfileSheet";
 import ProductDetailDialog from "@/components/ProductDetailDialog";
 import ProductTryOnImage from "@/components/ProductTryOnImage";
 import ProductImageGallery from "@/components/ProductImageGallery";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface Product {
   id: string;
@@ -25,7 +26,6 @@ interface Product {
   brand: {
     name: string;
   };
-  isFromCloset?: boolean;
 }
 
 interface Capsule {
@@ -37,6 +37,58 @@ interface Capsule {
   products: Product[];
 }
 
+// AI features - set to false to enable AI wardrobe generation and virtual try-on
+const AI_DISABLED = false;
+
+// Sample wardrobe data for when AI is disabled
+const SAMPLE_CAPSULES: Capsule[] = [
+  {
+    name: "Essential Minimalist",
+    description: "A timeless collection of versatile pieces that form the foundation of any sophisticated wardrobe.",
+    total_pieces: 12,
+    total_price: 2450,
+    outfit_count: 24,
+    products: [
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c01", name: "Cashmere Crewneck Sweater", category: "tops", price: 295, colors: ["Ivory"], image_url: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Loro Piana" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c02", name: "Tailored Wool Trousers", category: "bottoms", price: 385, colors: ["Navy"], image_url: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Theory" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c03", name: "Silk Button-Down Shirt", category: "tops", price: 275, colors: ["White"], image_url: "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Equipment" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c04", name: "Double-Breasted Blazer", category: "outerwear", price: 595, colors: ["Charcoal"], image_url: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Max Mara" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c05", name: "Leather Chelsea Boots", category: "shoes", price: 425, colors: ["Black"], image_url: "https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Common Projects" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c06", name: "Minimalist Leather Tote", category: "accessories", price: 475, colors: ["Tan"], image_url: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Mansur Gavriel" } },
+    ]
+  },
+  {
+    name: "Weekend Casual",
+    description: "Relaxed yet refined pieces perfect for off-duty moments and casual gatherings.",
+    total_pieces: 10,
+    total_price: 1850,
+    outfit_count: 18,
+    products: [
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c07", name: "Oversized Cotton Hoodie", category: "tops", price: 195, colors: ["Sage"], image_url: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Acne Studios" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c08", name: "Relaxed Fit Chinos", category: "bottoms", price: 165, colors: ["Khaki"], image_url: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400&h=600&fit=crop", product_url: "#", brand: { name: "A.P.C." } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c09", name: "Premium Sneakers", category: "shoes", price: 285, colors: ["White"], image_url: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Veja" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c10", name: "Linen Blend T-Shirt", category: "tops", price: 85, colors: ["Cream"], image_url: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=600&fit=crop", product_url: "#", brand: { name: "COS" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c11", name: "Lightweight Denim Jacket", category: "outerwear", price: 245, colors: ["Light Blue"], image_url: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Levi's" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c12", name: "Canvas Crossbody Bag", category: "accessories", price: 125, colors: ["Navy"], image_url: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Rains" } },
+    ]
+  },
+  {
+    name: "Evening Elevated",
+    description: "Sophisticated pieces for special occasions and memorable evenings.",
+    total_pieces: 8,
+    total_price: 3200,
+    outfit_count: 12,
+    products: [
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c13", name: "Silk Midi Dress", category: "dresses", price: 685, colors: ["Burgundy"], image_url: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Reformation" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c14", name: "Velvet Blazer", category: "outerwear", price: 495, colors: ["Midnight"], image_url: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Saint Laurent" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c15", name: "Strappy Heeled Sandals", category: "shoes", price: 545, colors: ["Gold"], image_url: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Jimmy Choo" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c16", name: "Crystal Embellished Clutch", category: "accessories", price: 375, colors: ["Silver"], image_url: "https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Judith Leiber" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c17", name: "Statement Earrings", category: "accessories", price: 195, colors: ["Pearl"], image_url: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Jennifer Behr" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c18", name: "Jo Malone Velvet Rose", category: "fragrance", price: 155, colors: ["Rose"], image_url: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Jo Malone London" } },
+    ]
+  }
+];
+
 const Wardrobe = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -47,12 +99,25 @@ const Wardrobe = () => {
   const [productDetailOpen, setProductDetailOpen] = useState(false);
   const [imageGalleryOpen, setImageGalleryOpen] = useState(false);
   const [favorites, setFavorites] = useState<Product[]>([]);
+  const [creditsExhausted, setCreditsExhausted] = useState(AI_DISABLED);
+  const [usingSampleData, setUsingSampleData] = useState(false);
 
   useEffect(() => {
+    // Set AI disabled flag in localStorage for other components
+    if (AI_DISABLED) {
+      localStorage.setItem('ai_tryon_disabled', 'true');
+    }
     loadWardrobe();
+    // Load favorites from localStorage
     const savedFavorites = JSON.parse(localStorage.getItem('favorite_products') || '[]');
     setFavorites(savedFavorites);
   }, []);
+
+  // Helper function to check if a string is a valid UUID
+  const isValidUUID = (str: string) => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(str);
+  };
 
   const loadWardrobe = async () => {
     try {
@@ -63,135 +128,113 @@ const Wardrobe = () => {
         return;
       }
 
-      // Fetch real data from database
-      await fetchRealWardrobe();
+      // Check if we have cached capsules with valid UUIDs
+      const cachedCapsules = localStorage.getItem('cached_capsules');
+      if (cachedCapsules) {
+        const parsed = JSON.parse(cachedCapsules);
+        // Validate that all product IDs are proper UUIDs
+        const hasValidIds = parsed.every((capsule: Capsule) => 
+          capsule.products.every((product: Product) => isValidUUID(product.id))
+        );
+        
+        if (hasValidIds) {
+          setCapsules(parsed);
+          setLoading(false);
+          return;
+        } else {
+          // Clear invalid cached data
+          localStorage.removeItem('cached_capsules');
+        }
+      }
+
+      // If AI is disabled or no valid cached capsules, use sample data immediately
+      if (AI_DISABLED) {
+        setCapsules(SAMPLE_CAPSULES);
+        setUsingSampleData(true);
+        setCreditsExhausted(true);
+        setLoading(false);
+        return;
+      }
+
+      // Try to generate new wardrobes (will fall back to sample if AI fails)
+      await generateWardrobe();
     } catch (error) {
       console.error("Error loading wardrobe:", error);
-      toast.error("Failed to load wardrobe");
+      // Fall back to sample data on any error
+      setCapsules(SAMPLE_CAPSULES);
+      setUsingSampleData(true);
+      toast.error("Failed to load wardrobe. Showing sample collection.");
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchRealWardrobe = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    // Fetch approved brand products
-    const { data: brandProducts } = await supabase
-      .from("products")
-      .select(`
-        id, name, category, price, colors, image_url, product_url,
-        brands!inner(name)
-      `)
-      .eq("is_available", true)
-      .eq("approval_status", "approved")
-      .limit(30);
-
-    // Fetch user's closet items if logged in
-    let closetItems: Product[] = [];
-    if (user) {
-      const { data: userWardrobe } = await supabase
-        .from("user_wardrobe")
-        .select("*")
-        .eq("user_id", user.id);
-      
-      if (userWardrobe) {
-        closetItems = userWardrobe.map(item => ({
-          id: item.id,
-          name: item.custom_description || item.custom_category || "Wardrobe Item",
-          category: item.custom_category || "other",
-          price: 0,
-          colors: [],
-          image_url: item.custom_image_url || "",
-          product_url: "#",
-          brand: { name: item.custom_brand || "Your Closet" },
-          isFromCloset: true
-        }));
-      }
-    }
-
-    // Transform brand products
-    const shopProducts: Product[] = (brandProducts || []).map(p => ({
-      id: p.id,
-      name: p.name,
-      category: p.category,
-      price: p.price,
-      colors: p.colors || [],
-      image_url: p.image_url || "",
-      product_url: p.product_url,
-      brand: { name: (p.brands as any)?.name || "Unknown Brand" }
-    }));
-
-    // Build capsules from real data
-    const allProducts = [...shopProducts, ...closetItems];
-    
-    if (allProducts.length === 0) {
-      // No products available - show empty state
-      setCapsules([]);
-      return;
-    }
-
-    // Group products by category for smart capsule building
-    const byCategory: Record<string, Product[]> = {};
-    allProducts.forEach(p => {
-      const cat = p.category.toLowerCase();
-      if (!byCategory[cat]) byCategory[cat] = [];
-      byCategory[cat].push(p);
-    });
-
-    // Build capsules
-    const generatedCapsules: Capsule[] = [];
-
-    // Capsule 1: Your Wardrobe (closet items)
-    if (closetItems.length > 0) {
-      generatedCapsules.push({
-        name: "Your Wardrobe",
-        description: "Items you've added to your closet",
-        total_pieces: closetItems.length,
-        total_price: 0,
-        outfit_count: Math.floor(closetItems.length / 2),
-        products: closetItems
-      });
-    }
-
-    // Capsule 2: Shop Recommendations (brand products)
-    if (shopProducts.length > 0) {
-      const totalPrice = shopProducts.reduce((sum, p) => sum + p.price, 0);
-      generatedCapsules.push({
-        name: "Shop Recommendations",
-        description: "Curated pieces from our brand partners",
-        total_pieces: shopProducts.length,
-        total_price: totalPrice,
-        outfit_count: Math.floor(shopProducts.length * 2),
-        products: shopProducts
-      });
-    }
-
-    // Capsule 3: Mix & Match (combined)
-    if (closetItems.length > 0 && shopProducts.length > 0) {
-      const mixedProducts = [...closetItems.slice(0, 3), ...shopProducts.slice(0, 5)];
-      const mixedPrice = mixedProducts.filter(p => !p.isFromCloset).reduce((sum, p) => sum + p.price, 0);
-      generatedCapsules.push({
-        name: "Mix & Match",
-        description: "Combine your wardrobe with new additions",
-        total_pieces: mixedProducts.length,
-        total_price: mixedPrice,
-        outfit_count: mixedProducts.length * 2,
-        products: mixedProducts
-      });
-    }
-
-    setCapsules(generatedCapsules);
+  const fallbackToSampleData = () => {
+    setCapsules(SAMPLE_CAPSULES);
+    setUsingSampleData(true);
+    setCreditsExhausted(true);
   };
 
-  const regenerateWardrobe = async () => {
+  const generateWardrobe = async () => {
+    // Check if AI is disabled - use sample data
+    if (AI_DISABLED || creditsExhausted) {
+      fallbackToSampleData();
+      toast.info("Using sample wardrobe collection.");
+      return;
+    }
+    
+    // Clear cached capsules to force fresh generation
+    localStorage.removeItem('cached_capsules');
     setGenerating(true);
     try {
-      await fetchRealWardrobe();
-      toast.success("Wardrobe refreshed!");
-    } catch (error) {
-      console.error("Error regenerating wardrobe:", error);
-      toast.error("Failed to refresh wardrobe");
+      const preferences = JSON.parse(localStorage.getItem('guest_preferences') || '{}');
+
+      const { data, error } = await supabase.functions.invoke("generate-wardrobe", {
+        body: { preferences },
+      });
+
+      // Check for credit exhaustion error
+      if (error) {
+        const errorMsg = error.message || error.toString();
+        if (errorMsg.includes("402") || errorMsg.includes("credits") || errorMsg.includes("payment") || errorMsg.includes("non-2xx")) {
+          fallbackToSampleData();
+          toast.info("AI unavailable. Showing sample wardrobe collection.");
+          return;
+        }
+        throw error;
+      }
+      
+      if (data?.error) {
+        if (data.error === "no_inventory") {
+          fallbackToSampleData();
+          toast.info("No brand partner products available yet. Showing sample collection.");
+          return;
+        }
+        if (data.error.includes("credits") || data.error.includes("payment")) {
+          fallbackToSampleData();
+          toast.info("AI unavailable. Showing sample wardrobe collection.");
+          return;
+        }
+        throw new Error(data.error);
+      }
+
+      const newCapsules = data.capsules || [];
+      setCapsules(newCapsules);
+      
+      // Cache the generated capsules
+      localStorage.setItem('cached_capsules', JSON.stringify(newCapsules));
+      toast.success("Wardrobe regenerated successfully!");
+    } catch (error: any) {
+      console.error("Error generating wardrobe:", error);
+      const errorMsg = error?.message || error?.toString() || '';
+      if (errorMsg.includes("credits") || errorMsg.includes("payment") || errorMsg.includes("402") || errorMsg.includes("non-2xx")) {
+        fallbackToSampleData();
+        toast.info("AI unavailable. Showing sample wardrobe collection.");
+      } else {
+        // For other errors, also fall back to sample data
+        fallbackToSampleData();
+        toast.error("Failed to generate wardrobe. Showing sample collection.");
+      }
     } finally {
       setGenerating(false);
     }
@@ -346,28 +389,47 @@ const Wardrobe = () => {
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-6">
+        {/* AI Credits Alert */}
+        {creditsExhausted && (
+          <Alert className="mb-6 border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
+            <AlertCircle className="h-4 w-4 text-amber-600" />
+            <AlertTitle className="text-amber-800 dark:text-amber-200">AI Features Temporarily Unavailable</AlertTitle>
+            <AlertDescription className="text-amber-700 dark:text-amber-300">
+              {usingSampleData 
+                ? "You're viewing sample wardrobe data. Add AI credits to generate personalized recommendations based on your style preferences."
+                : "AI credits have been exhausted. Your previously generated wardrobes are shown below. Add credits to regenerate or access virtual try-on features."
+              }
+            </AlertDescription>
+          </Alert>
+        )}
+
         {capsules.length === 0 ? (
           <Card className="mt-8">
             <CardContent className="flex flex-col items-center justify-center py-16 space-y-4">
-              <Shirt className="w-16 h-16 text-muted-foreground" strokeWidth={1} />
+              <Package className="w-16 h-16 text-muted-foreground" strokeWidth={1} />
               <div className="text-center space-y-2">
-                <h3 className="text-lg font-light">No Items Yet</h3>
+                <h3 className="text-lg font-light">No Capsules Yet</h3>
                 <p className="text-sm text-muted-foreground font-light">
-                  Add items to your closet or wait for brand products to be available
+                  Complete the survey to get personalized capsule wardrobes
                 </p>
               </div>
-              <div className="flex gap-3">
-                <Button variant="luxury" onClick={() => navigate("/closet")}>
-                  Add to Closet
-                </Button>
-                <Button variant="outline" onClick={() => navigate("/survey")}>
-                  Take Survey
-                </Button>
-              </div>
+              <Button variant="luxury" onClick={() => navigate("/survey")}>
+                Take Survey
+              </Button>
             </CardContent>
           </Card>
         ) : (
           <Tabs defaultValue="0" className="space-y-6">
+          {usingSampleData && (
+            <div className="flex items-center gap-2 px-2">
+              <span className="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-1 rounded-full font-medium">
+                Sample Collection
+              </span>
+              <span className="text-xs text-muted-foreground">
+                Showing example wardrobes
+              </span>
+            </div>
+          )}
           <TabsList className="w-full justify-start overflow-x-auto">
             {capsules.map((capsule, index) => (
               <TabsTrigger 
@@ -503,7 +565,7 @@ const Wardrobe = () => {
               variant="outline"
               size="lg"
               className="w-full"
-              onClick={regenerateWardrobe}
+              onClick={generateWardrobe}
               disabled={generating}
             >
               {generating ? (
