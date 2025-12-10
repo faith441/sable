@@ -58,10 +58,7 @@ const VideoGuide = ({ gender }: VideoGuideProps) => {
     };
   }, [captionIndex]);
 
-  // Placeholder video URLs - replace with actual AI guide videos
-  const videoUrl = isWomen 
-    ? "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4" // Replace with female AI guide video
-    : "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4"; // Replace with male AI guide video
+  const videoUrl = "/videos/wardrobe-generation.mp4";
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
