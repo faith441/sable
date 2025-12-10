@@ -11,6 +11,7 @@ import Survey from "./pages/Survey";
 import Wardrobe from "./pages/Wardrobe";
 import Closet from "./pages/Closet";
 import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
 import AIStyleChat from "./pages/AIStyleChat";
 import VirtualTryOn from "./pages/VirtualTryOn";
 import OutfitPlanner from "./pages/OutfitPlanner";
@@ -39,6 +40,7 @@ const App = () => (
           <Route path="/wardrobe" element={<Wardrobe />} />
           <Route path="/closet" element={<Closet />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
           <Route path="/ai-stylist" element={<AIStyleChat />} />
           <Route path="/virtual-tryon" element={<VirtualTryOn />} />
           <Route path="/outfit-planner" element={<OutfitPlanner />} />

@@ -130,7 +130,7 @@ const Cart = () => {
       });
       return;
     }
-    toast.success("Proceeding to checkout...");
+    navigate("/checkout");
   };
 
   const total = items.reduce((sum, item) => sum + ((item.product?.price || 0) * item.quantity), 0);
