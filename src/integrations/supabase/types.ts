@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action: string
+          brand_id: string | null
+          created_at: string | null
+          details: Json | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          ip_address: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          brand_id?: string | null
+          created_at?: string | null
+          details?: Json | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          ip_address?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          brand_id?: string | null
+          created_at?: string | null
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          ip_address?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_logs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brand_api_logs: {
         Row: {
           brand_id: string | null
@@ -195,6 +239,7 @@ export type Database = {
           order_tracking_enabled: boolean | null
           payment_provider: string | null
           updated_at: string
+          user_id: string | null
           webhook_url: string | null
           website_url: string | null
         }
@@ -211,6 +256,7 @@ export type Database = {
           order_tracking_enabled?: boolean | null
           payment_provider?: string | null
           updated_at?: string
+          user_id?: string | null
           webhook_url?: string | null
           website_url?: string | null
         }
@@ -227,6 +273,7 @@ export type Database = {
           order_tracking_enabled?: boolean | null
           payment_provider?: string | null
           updated_at?: string
+          user_id?: string | null
           webhook_url?: string | null
           website_url?: string | null
         }
@@ -645,6 +692,7 @@ export type Database = {
       }
       products: {
         Row: {
+          approval_status: string | null
           brand_id: string
           category: string
           colors: string[] | null
@@ -656,11 +704,16 @@ export type Database = {
           name: string
           price: number
           product_url: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           sizes: string[] | null
+          submitted_at: string | null
           tags: string[] | null
           updated_at: string
         }
         Insert: {
+          approval_status?: string | null
           brand_id: string
           category: string
           colors?: string[] | null
@@ -672,11 +725,16 @@ export type Database = {
           name: string
           price: number
           product_url: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           sizes?: string[] | null
+          submitted_at?: string | null
           tags?: string[] | null
           updated_at?: string
         }
         Update: {
+          approval_status?: string | null
           brand_id?: string
           category?: string
           colors?: string[] | null
@@ -688,7 +746,11 @@ export type Database = {
           name?: string
           price?: number
           product_url?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           sizes?: string[] | null
+          submitted_at?: string | null
           tags?: string[] | null
           updated_at?: string
         }
@@ -903,7 +965,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role: "admin" | "user" | "brand"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1031,7 +1093,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: ["admin", "user", "brand"],
     },
   },
 } as const

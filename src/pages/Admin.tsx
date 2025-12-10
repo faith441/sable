@@ -2,10 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { LogOut, Users, Package, Store, Image, BarChart3, FileText } from "lucide-react";
+import { LogOut, Users, Package, Store, Image, BarChart3, FileText, CheckSquare, Activity } from "lucide-react";
 import BrandsManager from "@/components/admin/BrandsManager";
 import UsersManager from "@/components/admin/UsersManager";
 import ProductsManager from "@/components/admin/ProductsManager";
@@ -13,6 +12,8 @@ import UserPhotos from "@/components/admin/UserPhotos";
 import DataAnalytics from "@/components/admin/DataAnalytics";
 import ExternalAPIManager from "@/components/admin/ExternalAPIManager";
 import BrandApplicationsManager from "@/components/admin/BrandApplicationsManager";
+import ProductApprovalManager from "@/components/admin/ProductApprovalManager";
+import ActivityLogs from "@/components/admin/ActivityLogs";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -88,10 +89,14 @@ const Admin = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="applications" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7 lg:w-auto">
+          <TabsList className="flex flex-wrap gap-1 h-auto p-1">
             <TabsTrigger value="applications">
               <FileText className="mr-2 h-4 w-4" />
               Applications
+            </TabsTrigger>
+            <TabsTrigger value="approval">
+              <CheckSquare className="mr-2 h-4 w-4" />
+              Product Review
             </TabsTrigger>
             <TabsTrigger value="brands">
               <Store className="mr-2 h-4 w-4" />
@@ -113,6 +118,10 @@ const Admin = () => {
               <BarChart3 className="mr-2 h-4 w-4" />
               Analytics
             </TabsTrigger>
+            <TabsTrigger value="activity">
+              <Activity className="mr-2 h-4 w-4" />
+              Activity
+            </TabsTrigger>
             <TabsTrigger value="api">
               <Package className="mr-2 h-4 w-4" />
               External API
@@ -121,6 +130,10 @@ const Admin = () => {
 
           <TabsContent value="applications">
             <BrandApplicationsManager />
+          </TabsContent>
+
+          <TabsContent value="approval">
+            <ProductApprovalManager />
           </TabsContent>
 
           <TabsContent value="brands">
@@ -141,6 +154,10 @@ const Admin = () => {
 
           <TabsContent value="analytics">
             <DataAnalytics />
+          </TabsContent>
+
+          <TabsContent value="activity">
+            <ActivityLogs />
           </TabsContent>
 
           <TabsContent value="api">

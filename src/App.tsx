@@ -22,6 +22,11 @@ import PastOrders from "./pages/PastOrders";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import Contact from "./pages/Contact";
 import BrandPartnerSignup from "./pages/BrandPartnerSignup";
+import BrandPortal from "./pages/BrandPortal";
+import BrandAuth from "./pages/BrandAuth";
+import BrandProducts from "./pages/BrandProducts";
+import BrandProductUpload from "./pages/BrandProductUpload";
+import BrandAccount from "./pages/BrandAccount";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,6 +58,11 @@ const App = () => (
           <Route path="/contact" element={<Contact />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/partners" element={<BrandPartnerSignup />} />
+          <Route path="/brand" element={<BrandPortal />} />
+          <Route path="/brand/auth" element={<BrandAuth />} />
+          <Route path="/brand/products" element={<BrandProducts />} />
+          <Route path="/brand/products/upload" element={<BrandProductUpload />} />
+          <Route path="/brand/account" element={<BrandAccount />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
