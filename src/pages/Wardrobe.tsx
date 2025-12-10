@@ -11,7 +11,7 @@ import VideoGuide from "@/components/VideoGuide";
 import ProfileMenu from "@/components/ProfileMenu";
 import ProfileSheet from "@/components/ProfileSheet";
 import ProductDetailDialog from "@/components/ProductDetailDialog";
-import VirtualTryOnPreview from "@/components/VirtualTryOnPreview";
+import ProductTryOnImage from "@/components/ProductTryOnImage";
 
 interface Product {
   id: string;
@@ -322,12 +322,6 @@ const Wardrobe = () => {
                   </CardContent>
                 </Card>
 
-                {/* Virtual Try-On Preview */}
-                <VirtualTryOnPreview 
-                  products={capsule.products} 
-                  capsuleName={capsule.name}
-                />
-
                 {/* Products Grid */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-light px-2">Items in This Capsule</h3>
@@ -344,9 +338,10 @@ const Wardrobe = () => {
                       <CardContent className="p-0">
                         <div className="flex gap-4">
                           <div className="w-32 h-40 bg-secondary flex-shrink-0 relative">
-                            {product.image_url && (
-                              <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
-                            )}
+                            <ProductTryOnImage 
+                              product={product}
+                              className="w-full h-full"
+                            />
                             <button 
                               className="absolute top-2 right-2 w-8 h-8 bg-background/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-background transition-colors"
                               onClick={(e) => {
