@@ -23,31 +23,50 @@ serve(async (req) => {
 
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
 
+    // Build prompt based on whether user has uploaded their own image
+    const genderTerm = userGender === "Women's" ? "woman" : "man";
+    const viewDescription = viewType === "fullBody" 
+      ? "full body view from head to toe, standing pose" 
+      : "upper body view, from waist up, portrait style";
+
+    const garmentDescriptions = garmentImages?.map((g: any) => 
+      `${g.name} (${g.category}) - ${g.brand}`
+    ).join(", ") || "stylish clothing items";
+
     let prompt: string;
+    let messageContent: any;
 
     if (customPrompt) {
       prompt = customPrompt;
+      messageContent = prompt;
+    } else if (userImage) {
+      // User has uploaded their own image - use image editing to apply clothes
+      prompt = `Edit this image to show the person wearing these luxury clothing items: ${garmentDescriptions}. 
+Keep the person's face, body type, and features exactly the same. Only change/add the clothing to match the described items.
+The image should be a ${viewDescription}.
+Style: Professional fashion photography, perfect lighting that highlights the clothing textures and details.
+Make the clothing look premium and well-fitted on this specific person.`;
+      
+      messageContent = [
+        { type: "text", text: prompt },
+        { type: "image_url", image_url: { url: userImage } }
+      ];
     } else {
-      // Build a detailed prompt for the AI image generation
-      const genderTerm = userGender === "Women's" ? "woman" : "man";
-      const viewDescription = viewType === "fullBody" 
-        ? "full body view from head to toe, standing pose" 
-        : "upper body view, from waist up, portrait style";
-
-      const garmentDescriptions = garmentImages?.map((g: any) => 
-        `${g.name} (${g.category}) - ${g.brand}`
-      ).join(", ") || "stylish clothing items";
-
+      // No user image - generate AI model based on gender
       prompt = `Create a high-quality, photorealistic fashion photography image of a stylish ${genderTerm} model wearing these luxury clothing items: ${garmentDescriptions}. 
 
 The image should be a ${viewDescription}. 
 
+The model should be an attractive ${genderTerm} with ${userGender === "Women's" ? "elegant features, styled hair" : "well-groomed appearance, clean-cut look"}. 
+
 Style: Professional fashion catalog photography, clean background (soft gradient or studio setting), perfect lighting that highlights the clothing textures and details. The model should have a confident, elegant pose typical of high-end fashion brands. 
 
 Make the clothing look premium and well-fitted. The overall aesthetic should feel luxury and aspirational, like a Vogue or high-end brand campaign.`;
+      
+      messageContent = prompt;
     }
 
-    console.log("Generating image with prompt:", prompt.substring(0, 200) + "...");
+    console.log("Generating image with prompt:", typeof messageContent === 'string' ? messageContent.substring(0, 200) + "..." : "Image editing request");
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -60,7 +79,7 @@ Make the clothing look premium and well-fitted. The overall aesthetic should fee
         messages: [
           {
             role: "user",
-            content: prompt
+            content: messageContent
           }
         ],
         modalities: ["image", "text"]
