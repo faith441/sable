@@ -147,28 +147,39 @@ const Wardrobe = () => {
         }
       }
 
-      // If AI is disabled or no valid cached capsules, use sample data
+      // If AI is disabled or no valid cached capsules, use sample data immediately
       if (AI_DISABLED) {
         setCapsules(SAMPLE_CAPSULES);
         setUsingSampleData(true);
+        setCreditsExhausted(true);
         setLoading(false);
         return;
       }
 
-      // If no cached capsules, generate new ones
+      // Try to generate new wardrobes (will fall back to sample if AI fails)
       await generateWardrobe();
     } catch (error) {
       console.error("Error loading wardrobe:", error);
-      toast.error("Failed to load wardrobe");
+      // Fall back to sample data on any error
+      setCapsules(SAMPLE_CAPSULES);
+      setUsingSampleData(true);
+      toast.error("Failed to load wardrobe. Showing sample collection.");
     } finally {
       setLoading(false);
     }
   };
 
+  const fallbackToSampleData = () => {
+    setCapsules(SAMPLE_CAPSULES);
+    setUsingSampleData(true);
+    setCreditsExhausted(true);
+  };
+
   const generateWardrobe = async () => {
-    // Check if AI is disabled
+    // Check if AI is disabled - use sample data
     if (AI_DISABLED || creditsExhausted) {
-      toast.error("AI features are temporarily disabled. Please add AI credits to enable wardrobe generation.");
+      fallbackToSampleData();
+      toast.info("Using sample wardrobe collection.");
       return;
     }
     
@@ -185,9 +196,9 @@ const Wardrobe = () => {
       // Check for credit exhaustion error
       if (error) {
         const errorMsg = error.message || error.toString();
-        if (errorMsg.includes("402") || errorMsg.includes("credits") || errorMsg.includes("payment")) {
-          setCreditsExhausted(true);
-          toast.error("AI credits exhausted. Please add funds to continue.");
+        if (errorMsg.includes("402") || errorMsg.includes("credits") || errorMsg.includes("payment") || errorMsg.includes("non-2xx")) {
+          fallbackToSampleData();
+          toast.info("AI unavailable. Showing sample wardrobe collection.");
           return;
         }
         throw error;
@@ -195,8 +206,8 @@ const Wardrobe = () => {
       
       if (data?.error) {
         if (data.error.includes("credits") || data.error.includes("payment")) {
-          setCreditsExhausted(true);
-          toast.error("AI credits exhausted. Please add funds to continue.");
+          fallbackToSampleData();
+          toast.info("AI unavailable. Showing sample wardrobe collection.");
           return;
         }
         throw new Error(data.error);
@@ -211,11 +222,13 @@ const Wardrobe = () => {
     } catch (error: any) {
       console.error("Error generating wardrobe:", error);
       const errorMsg = error?.message || error?.toString() || '';
-      if (errorMsg.includes("credits") || errorMsg.includes("payment") || errorMsg.includes("402")) {
-        setCreditsExhausted(true);
-        toast.error("AI credits exhausted. Please add funds to continue.");
+      if (errorMsg.includes("credits") || errorMsg.includes("payment") || errorMsg.includes("402") || errorMsg.includes("non-2xx")) {
+        fallbackToSampleData();
+        toast.info("AI unavailable. Showing sample wardrobe collection.");
       } else {
-        toast.error(error.message || "Failed to generate wardrobe");
+        // For other errors, also fall back to sample data
+        fallbackToSampleData();
+        toast.error("Failed to generate wardrobe. Showing sample collection.");
       }
     } finally {
       setGenerating(false);
