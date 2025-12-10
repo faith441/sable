@@ -205,6 +205,11 @@ const Wardrobe = () => {
       }
       
       if (data?.error) {
+        if (data.error === "no_inventory") {
+          fallbackToSampleData();
+          toast.info("No brand partner products available yet. Showing sample collection.");
+          return;
+        }
         if (data.error.includes("credits") || data.error.includes("payment")) {
           fallbackToSampleData();
           toast.info("AI unavailable. Showing sample wardrobe collection.");
