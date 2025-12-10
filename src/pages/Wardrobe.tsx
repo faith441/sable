@@ -49,12 +49,12 @@ const SAMPLE_CAPSULES: Capsule[] = [
     total_price: 2450,
     outfit_count: 24,
     products: [
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c01", name: "Cashmere Crewneck Sweater", category: "tops", price: 295, colors: ["Ivory"], image_url: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400", product_url: "#", brand: { name: "Loro Piana" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c02", name: "Tailored Wool Trousers", category: "bottoms", price: 385, colors: ["Navy"], image_url: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400", product_url: "#", brand: { name: "Theory" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c03", name: "Silk Button-Down Shirt", category: "tops", price: 275, colors: ["White"], image_url: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400", product_url: "#", brand: { name: "Equipment" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c04", name: "Double-Breasted Blazer", category: "outerwear", price: 595, colors: ["Charcoal"], image_url: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400", product_url: "#", brand: { name: "Max Mara" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c05", name: "Leather Chelsea Boots", category: "shoes", price: 425, colors: ["Black"], image_url: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400", product_url: "#", brand: { name: "Common Projects" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c06", name: "Minimalist Leather Tote", category: "accessories", price: 475, colors: ["Tan"], image_url: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400", product_url: "#", brand: { name: "Mansur Gavriel" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c01", name: "Cashmere Crewneck Sweater", category: "tops", price: 295, colors: ["Ivory"], image_url: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Loro Piana" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c02", name: "Tailored Wool Trousers", category: "bottoms", price: 385, colors: ["Navy"], image_url: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Theory" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c03", name: "Silk Button-Down Shirt", category: "tops", price: 275, colors: ["White"], image_url: "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Equipment" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c04", name: "Double-Breasted Blazer", category: "outerwear", price: 595, colors: ["Charcoal"], image_url: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Max Mara" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c05", name: "Leather Chelsea Boots", category: "shoes", price: 425, colors: ["Black"], image_url: "https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Common Projects" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c06", name: "Minimalist Leather Tote", category: "accessories", price: 475, colors: ["Tan"], image_url: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Mansur Gavriel" } },
     ]
   },
   {
@@ -64,12 +64,12 @@ const SAMPLE_CAPSULES: Capsule[] = [
     total_price: 1850,
     outfit_count: 18,
     products: [
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c07", name: "Oversized Cotton Hoodie", category: "tops", price: 195, colors: ["Sage"], image_url: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400", product_url: "#", brand: { name: "Acne Studios" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c08", name: "Relaxed Fit Chinos", category: "bottoms", price: 165, colors: ["Khaki"], image_url: "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=400", product_url: "#", brand: { name: "A.P.C." } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c09", name: "Premium Sneakers", category: "shoes", price: 285, colors: ["White"], image_url: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400", product_url: "#", brand: { name: "Veja" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c10", name: "Linen Blend T-Shirt", category: "tops", price: 85, colors: ["Cream"], image_url: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400", product_url: "#", brand: { name: "COS" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c11", name: "Lightweight Denim Jacket", category: "outerwear", price: 245, colors: ["Light Blue"], image_url: "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=400", product_url: "#", brand: { name: "Levi's" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c12", name: "Canvas Crossbody Bag", category: "accessories", price: 125, colors: ["Navy"], image_url: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400", product_url: "#", brand: { name: "Rains" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c07", name: "Oversized Cotton Hoodie", category: "tops", price: 195, colors: ["Sage"], image_url: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Acne Studios" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c08", name: "Relaxed Fit Chinos", category: "bottoms", price: 165, colors: ["Khaki"], image_url: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400&h=600&fit=crop", product_url: "#", brand: { name: "A.P.C." } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c09", name: "Premium Sneakers", category: "shoes", price: 285, colors: ["White"], image_url: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Veja" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c10", name: "Linen Blend T-Shirt", category: "tops", price: 85, colors: ["Cream"], image_url: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=600&fit=crop", product_url: "#", brand: { name: "COS" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c11", name: "Lightweight Denim Jacket", category: "outerwear", price: 245, colors: ["Light Blue"], image_url: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Levi's" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c12", name: "Canvas Crossbody Bag", category: "accessories", price: 125, colors: ["Navy"], image_url: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Rains" } },
     ]
   },
   {
@@ -79,12 +79,12 @@ const SAMPLE_CAPSULES: Capsule[] = [
     total_price: 3200,
     outfit_count: 12,
     products: [
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c13", name: "Silk Midi Dress", category: "dresses", price: 685, colors: ["Burgundy"], image_url: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400", product_url: "#", brand: { name: "Reformation" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c14", name: "Velvet Blazer", category: "outerwear", price: 495, colors: ["Midnight"], image_url: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400", product_url: "#", brand: { name: "Saint Laurent" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c15", name: "Strappy Heeled Sandals", category: "shoes", price: 545, colors: ["Gold"], image_url: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400", product_url: "#", brand: { name: "Jimmy Choo" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c16", name: "Crystal Embellished Clutch", category: "accessories", price: 375, colors: ["Silver"], image_url: "https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?w=400", product_url: "#", brand: { name: "Judith Leiber" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c17", name: "Statement Earrings", category: "accessories", price: 195, colors: ["Pearl"], image_url: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400", product_url: "#", brand: { name: "Jennifer Behr" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c18", name: "Jo Malone Velvet Rose", category: "fragrance", price: 155, colors: ["Rose"], image_url: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=400", product_url: "#", brand: { name: "Jo Malone London" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c13", name: "Silk Midi Dress", category: "dresses", price: 685, colors: ["Burgundy"], image_url: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Reformation" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c14", name: "Velvet Blazer", category: "outerwear", price: 495, colors: ["Midnight"], image_url: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Saint Laurent" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c15", name: "Strappy Heeled Sandals", category: "shoes", price: 545, colors: ["Gold"], image_url: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Jimmy Choo" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c16", name: "Crystal Embellished Clutch", category: "accessories", price: 375, colors: ["Silver"], image_url: "https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Judith Leiber" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c17", name: "Statement Earrings", category: "accessories", price: 195, colors: ["Pearl"], image_url: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Jennifer Behr" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c18", name: "Jo Malone Velvet Rose", category: "fragrance", price: 155, colors: ["Rose"], image_url: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&h=600&fit=crop", product_url: "#", brand: { name: "Jo Malone London" } },
     ]
   }
 ];
