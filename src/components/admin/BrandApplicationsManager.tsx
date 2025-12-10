@@ -38,6 +38,12 @@ interface BrandApplication {
   created_at: string;
 }
 
+interface BrandCredentials {
+  email: string;
+  temp_password: string;
+  api_key: string;
+}
+
 export default function BrandApplicationsManager() {
   const [applications, setApplications] = useState<BrandApplication[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,7 +52,8 @@ export default function BrandApplicationsManager() {
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [approving, setApproving] = useState(false);
-  const [newApiKey, setNewApiKey] = useState<string | null>(null);
+  const [newCredentials, setNewCredentials] = useState<BrandCredentials | null>(null);
+  const [showCredentialsDialog, setShowCredentialsDialog] = useState(false);
 
   useEffect(() => {
     loadApplications();
@@ -69,47 +76,45 @@ export default function BrandApplicationsManager() {
     }
   };
 
-  const generateApiKey = () => {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    let key = "sbl_";
-    for (let i = 0; i < 32; i++) {
-      key += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return key;
-  };
-
   const handleApprove = async (app: BrandApplication) => {
     setApproving(true);
-    const apiKey = generateApiKey();
 
     try {
-      // Create brand record
-      const { error: brandError } = await supabase.from("brands").insert({
-        name: app.company_name,
-        website_url: app.website_url,
-        api_key: apiKey,
-        is_active: true,
+      // Call edge function to create brand user account
+      const { data: sessionData } = await supabase.auth.getSession();
+      
+      const response = await supabase.functions.invoke("create-brand-user", {
+        body: {
+          email: app.contact_email,
+          company_name: app.company_name,
+          website_url: app.website_url,
+          application_id: app.id,
+        },
       });
 
-      if (brandError) throw brandError;
+      if (response.error) {
+        throw new Error(response.error.message || "Failed to create brand account");
+      }
 
-      // Update application status
-      const { error: appError } = await supabase
-        .from("brand_applications")
-        .update({
-          status: "approved",
-          reviewed_at: new Date().toISOString(),
-        })
-        .eq("id", app.id);
+      const result = response.data;
+      
+      if (!result.success) {
+        throw new Error(result.error || "Failed to create brand account");
+      }
 
-      if (appError) throw appError;
-
-      setNewApiKey(apiKey);
-      toast.success(`${app.company_name} approved and API key generated!`);
+      // Store credentials to show in dialog
+      setNewCredentials({
+        email: result.email,
+        temp_password: result.temp_password,
+        api_key: result.api_key,
+      });
+      setShowCredentialsDialog(true);
+      
+      toast.success(`${app.company_name} approved! Brand account created.`);
       loadApplications();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error approving application:", error);
-      toast.error("Failed to approve application");
+      toast.error(error.message || "Failed to approve application");
     } finally {
       setApproving(false);
     }
@@ -179,40 +184,71 @@ export default function BrandApplicationsManager() {
         )}
       </div>
 
-      {newApiKey && (
-        <Card className="border-green-500/50 bg-green-500/5">
-          <CardHeader>
-            <CardTitle className="text-green-600 flex items-center gap-2">
+      {/* Credentials Dialog */}
+      <Dialog open={showCredentialsDialog} onOpenChange={setShowCredentialsDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-green-600 flex items-center gap-2">
               <Check className="w-5 h-5" />
-              Brand Approved - API Key Generated
-            </CardTitle>
-            <CardDescription>
-              Send this API key to the brand partner. It will only be shown once.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <code className="flex-1 p-3 bg-muted rounded font-mono text-sm">
-                {newApiKey}
-              </code>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => copyToClipboard(newApiKey)}
+              Brand Account Created
+            </DialogTitle>
+            <DialogDescription>
+              Send these credentials to the brand partner. The password is temporary.
+            </DialogDescription>
+          </DialogHeader>
+          {newCredentials && (
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Login Email</label>
+                <div className="flex items-center gap-2 mt-1">
+                  <code className="flex-1 p-2 bg-muted rounded text-sm">{newCredentials.email}</code>
+                  <Button variant="outline" size="icon" onClick={() => copyToClipboard(newCredentials.email)}>
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Temporary Password</label>
+                <div className="flex items-center gap-2 mt-1">
+                  <code className="flex-1 p-2 bg-muted rounded text-sm font-mono">{newCredentials.temp_password}</code>
+                  <Button variant="outline" size="icon" onClick={() => copyToClipboard(newCredentials.temp_password)}>
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Brand should change this after first login</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium">API Key</label>
+                <div className="flex items-center gap-2 mt-1">
+                  <code className="flex-1 p-2 bg-muted rounded text-sm font-mono truncate">{newCredentials.api_key}</code>
+                  <Button variant="outline" size="icon" onClick={() => copyToClipboard(newCredentials.api_key)}>
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+              <Button 
+                className="w-full" 
+                onClick={() => {
+                  const text = `Brand Portal Credentials\n\nLogin URL: ${window.location.origin}/brand/auth\nEmail: ${newCredentials.email}\nTemporary Password: ${newCredentials.temp_password}\nAPI Key: ${newCredentials.api_key}\n\nPlease change your password after first login.`;
+                  copyToClipboard(text);
+                  toast.success("All credentials copied!");
+                }}
               >
-                <Copy className="w-4 h-4" />
+                <Copy className="w-4 h-4 mr-2" />
+                Copy All Credentials
               </Button>
             </div>
-            <Button
-              variant="ghost"
-              className="mt-4"
-              onClick={() => setNewApiKey(null)}
-            >
-              Dismiss
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowCredentialsDialog(false);
+              setNewCredentials(null);
+            }}>
+              Done
             </Button>
-          </CardContent>
-        </Card>
-      )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {applications.length === 0 ? (
         <Card>
