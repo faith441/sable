@@ -88,17 +88,38 @@ Make the clothing look premium and well-fitted. The overall aesthetic should fee
     }
 
     const aiData = await aiResponse.json();
-    console.log("AI response received:", {
-      hasChoices: !!aiData.choices,
-      choicesLength: aiData.choices?.length,
-      hasImages: !!aiData.choices?.[0]?.message?.images
-    });
-
-    const resultImage = aiData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    console.log("AI response structure:", JSON.stringify(aiData, null, 2).substring(0, 1000));
+    
+    // Try multiple paths to find the image
+    let resultImage = aiData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    
+    // Alternative: check if image is in content directly
+    if (!resultImage && aiData.choices?.[0]?.message?.content) {
+      const content = aiData.choices[0].message.content;
+      // Check if content contains base64 image
+      if (typeof content === 'string' && content.includes('data:image')) {
+        resultImage = content;
+      }
+    }
+    
+    // Alternative: check for image_url at message level
+    if (!resultImage && aiData.choices?.[0]?.message?.image_url) {
+      resultImage = aiData.choices[0].message.image_url.url || aiData.choices[0].message.image_url;
+    }
 
     if (!resultImage) {
-      console.error("No image generated from AI response");
-      throw new Error("No image was generated");
+      console.error("No image found in AI response. Full response:", JSON.stringify(aiData));
+      // Return a placeholder instead of erroring
+      return new Response(
+        JSON.stringify({ 
+          result: null,
+          error: "Image generation temporarily unavailable",
+          viewType 
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
     return new Response(
