@@ -61,6 +61,57 @@ export type Database = {
           },
         ]
       }
+      brand_applications: {
+        Row: {
+          company_name: string
+          contact_email: string
+          contact_name: string
+          created_at: string
+          description: string | null
+          estimated_products: number | null
+          id: string
+          product_categories: string[] | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          company_name: string
+          contact_email: string
+          contact_name: string
+          created_at?: string
+          description?: string | null
+          estimated_products?: number | null
+          id?: string
+          product_categories?: string[] | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          company_name?: string
+          contact_email?: string
+          contact_name?: string
+          created_at?: string
+          description?: string | null
+          estimated_products?: number | null
+          id?: string
+          product_categories?: string[] | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       brand_orders: {
         Row: {
           brand_id: string | null
