@@ -73,35 +73,36 @@ serve(async (req) => {
     ];
 
     // Generate outfits using AI with detailed layering
-    const prompt = `Create ${daysToGenerate.length} complete outfit combination(s) for ${dayOnly ? dayOnly : "the week"} using ONLY items from this wardrobe:
+    const prompt = `Create ${daysToGenerate.length} outfit combination(s) for ${dayOnly ? dayOnly : "the week"} using items from this wardrobe:
 ${JSON.stringify(items, null, 2)}
 
 ${weatherContext}
 
-CRITICAL RULES:
-1. ONLY use items that exist in the wardrobe above (match by id)
-2. If an outfit needs additional items NOT in the wardrobe (belts, jewelry, bags, etc.), you can suggest them as "recommended_additions" but DO NOT include them as actual outfit items
-3. Each outfit MUST be buildable from the existing wardrobe
+IMPORTANT RULES:
+1. You MUST create at least one outfit for each requested day, even if the wardrobe is limited
+2. ONLY use items that exist in the wardrobe above (match by id exactly)
+3. If the wardrobe has only 1-2 items, create an outfit featuring that item as the centerpiece
+4. If an outfit needs additional items NOT in the wardrobe, suggest them as "recommended_additions"
+5. It's okay to reuse items across different days if the wardrobe is small
 
-For each outfit, create a complete look including available layers:
-- Base layer (if available)
-- Mid layer (shirts, blouses, dresses, pants, skirts from wardrobe)
-- Outer layer (jackets, coats from wardrobe if available)
-- Footwear (from wardrobe if available)
-- Accessories (from wardrobe if available)
+For each outfit, use whatever layers are available:
+- Mid layer (shirts, blouses, dresses, pants, skirts)
+- Outer layer (jackets, coats if available)
+- Footwear (if available)
+- Accessories (if available)
 
-Return a JSON array of outfit objects for days: ${daysToGenerate.join(", ")}
+YOU MUST return a JSON array with exactly ${daysToGenerate.length} outfit object(s) for days: ${daysToGenerate.join(", ")}
 
-Each outfit object should have:
+Each outfit object MUST have this structure:
 {
   "day": "Monday/Tuesday/etc",
   "name": "Creative outfit name",
   "items": [
     {
-      "id": "item_id_from_wardrobe",
+      "id": "exact_item_id_from_wardrobe",
       "name": "item name from wardrobe",
       "category": "item category",
-      "layer": "base/mid/outer/footwear/accessory"
+      "layer": "mid/outer/footwear/accessory"
     }
   ],
   "recommended_additions": [
@@ -114,7 +115,7 @@ Each outfit object should have:
   "description": "Brief styling note about the complete look"
 }
 
-Make sure outfits are cohesive, weather-appropriate, and ONLY use items that exist in the provided wardrobe.`;
+CRITICAL: Even with a small wardrobe, you MUST return ${daysToGenerate.length} outfit(s). Never return an empty array.`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
