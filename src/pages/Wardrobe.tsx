@@ -64,7 +64,7 @@ const saveTryOnCache = (cache: Map<string, string>) => {
   }
 };
 
-// Sample wardrobe data for when AI is disabled - using stable Pexels image URLs
+// Sample wardrobe data for when AI is disabled - using reliable picsum placeholder images
 const SAMPLE_CAPSULES: Capsule[] = [
   {
     name: "Essential Minimalist",
@@ -73,12 +73,12 @@ const SAMPLE_CAPSULES: Capsule[] = [
     total_price: 2450,
     outfit_count: 24,
     products: [
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c01", name: "Cashmere Crewneck Sweater", category: "tops", price: 295, colors: ["Ivory"], image_url: "https://images.pexels.com/photos/6311387/pexels-photo-6311387.jpeg?auto=compress&cs=tinysrgb&w=600", product_url: "#", brand: { name: "Loro Piana" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c02", name: "Tailored Wool Trousers", category: "bottoms", price: 385, colors: ["Navy"], image_url: "https://images.pexels.com/photos/1598507/pexels-photo-1598507.jpeg?auto=compress&cs=tinysrgb&w=600", product_url: "#", brand: { name: "Theory" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c03", name: "Silk Button-Down Shirt", category: "tops", price: 275, colors: ["White"], image_url: "https://images.pexels.com/photos/6764007/pexels-photo-6764007.jpeg?auto=compress&cs=tinysrgb&w=600", product_url: "#", brand: { name: "Equipment" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c04", name: "Double-Breasted Blazer", category: "outerwear", price: 595, colors: ["Charcoal"], image_url: "https://images.pexels.com/photos/6626903/pexels-photo-6626903.jpeg?auto=compress&cs=tinysrgb&w=600", product_url: "#", brand: { name: "Max Mara" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c05", name: "Leather Chelsea Boots", category: "shoes", price: 425, colors: ["Black"], image_url: "https://images.pexels.com/photos/1159670/pexels-photo-1159670.jpeg?auto=compress&cs=tinysrgb&w=600", product_url: "#", brand: { name: "Common Projects" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c06", name: "Minimalist Leather Tote", category: "accessories", price: 475, colors: ["Tan"], image_url: "https://images.pexels.com/photos/1152077/pexels-photo-1152077.jpeg?auto=compress&cs=tinysrgb&w=600", product_url: "#", brand: { name: "Mansur Gavriel" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c01", name: "Cashmere Crewneck Sweater", category: "tops", price: 295, colors: ["Ivory"], image_url: "https://picsum.photos/seed/sweater1/400/600", product_url: "#", brand: { name: "Loro Piana" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c02", name: "Tailored Wool Trousers", category: "bottoms", price: 385, colors: ["Navy"], image_url: "https://picsum.photos/seed/trousers1/400/600", product_url: "#", brand: { name: "Theory" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c03", name: "Silk Button-Down Shirt", category: "tops", price: 275, colors: ["White"], image_url: "https://picsum.photos/seed/shirt1/400/600", product_url: "#", brand: { name: "Equipment" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c04", name: "Double-Breasted Blazer", category: "outerwear", price: 595, colors: ["Charcoal"], image_url: "https://picsum.photos/seed/blazer1/400/600", product_url: "#", brand: { name: "Max Mara" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c05", name: "Leather Chelsea Boots", category: "shoes", price: 425, colors: ["Black"], image_url: "https://picsum.photos/seed/boots1/400/600", product_url: "#", brand: { name: "Common Projects" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c06", name: "Minimalist Leather Tote", category: "accessories", price: 475, colors: ["Tan"], image_url: "https://picsum.photos/seed/tote1/400/600", product_url: "#", brand: { name: "Mansur Gavriel" } },
     ]
   },
   {
@@ -88,12 +88,12 @@ const SAMPLE_CAPSULES: Capsule[] = [
     total_price: 1850,
     outfit_count: 18,
     products: [
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c07", name: "Oversized Cotton Hoodie", category: "tops", price: 195, colors: ["Sage"], image_url: "https://images.pexels.com/photos/6311652/pexels-photo-6311652.jpeg?auto=compress&cs=tinysrgb&w=600", product_url: "#", brand: { name: "Acne Studios" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c08", name: "Relaxed Fit Chinos", category: "bottoms", price: 165, colors: ["Khaki"], image_url: "https://images.pexels.com/photos/4210866/pexels-photo-4210866.jpeg?auto=compress&cs=tinysrgb&w=600", product_url: "#", brand: { name: "A.P.C." } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c09", name: "Premium Sneakers", category: "shoes", price: 285, colors: ["White"], image_url: "https://images.pexels.com/photos/2529148/pexels-photo-2529148.jpeg?auto=compress&cs=tinysrgb&w=600", product_url: "#", brand: { name: "Veja" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c10", name: "Linen Blend T-Shirt", category: "tops", price: 85, colors: ["Cream"], image_url: "https://images.pexels.com/photos/5698851/pexels-photo-5698851.jpeg?auto=compress&cs=tinysrgb&w=600", product_url: "#", brand: { name: "COS" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c11", name: "Lightweight Denim Jacket", category: "outerwear", price: 245, colors: ["Light Blue"], image_url: "https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=600", product_url: "#", brand: { name: "Levi's" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c12", name: "Canvas Crossbody Bag", category: "accessories", price: 125, colors: ["Navy"], image_url: "https://images.pexels.com/photos/1204464/pexels-photo-1204464.jpeg?auto=compress&cs=tinysrgb&w=600", product_url: "#", brand: { name: "Rains" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c07", name: "Oversized Cotton Hoodie", category: "tops", price: 195, colors: ["Sage"], image_url: "https://picsum.photos/seed/hoodie1/400/600", product_url: "#", brand: { name: "Acne Studios" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c08", name: "Relaxed Fit Chinos", category: "bottoms", price: 165, colors: ["Khaki"], image_url: "https://picsum.photos/seed/chinos1/400/600", product_url: "#", brand: { name: "A.P.C." } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c09", name: "Premium Sneakers", category: "shoes", price: 285, colors: ["White"], image_url: "https://picsum.photos/seed/sneakers1/400/600", product_url: "#", brand: { name: "Veja" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c10", name: "Linen Blend T-Shirt", category: "tops", price: 85, colors: ["Cream"], image_url: "https://picsum.photos/seed/tshirt1/400/600", product_url: "#", brand: { name: "COS" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c11", name: "Lightweight Denim Jacket", category: "outerwear", price: 245, colors: ["Light Blue"], image_url: "https://picsum.photos/seed/denim1/400/600", product_url: "#", brand: { name: "Levi's" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c12", name: "Canvas Crossbody Bag", category: "accessories", price: 125, colors: ["Navy"], image_url: "https://picsum.photos/seed/bag1/400/600", product_url: "#", brand: { name: "Rains" } },
     ]
   },
   {
@@ -103,12 +103,12 @@ const SAMPLE_CAPSULES: Capsule[] = [
     total_price: 3200,
     outfit_count: 12,
     products: [
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c13", name: "Silk Midi Dress", category: "dresses", price: 685, colors: ["Burgundy"], image_url: "https://images.pexels.com/photos/985635/pexels-photo-985635.jpeg?auto=compress&cs=tinysrgb&w=600", product_url: "#", brand: { name: "Reformation" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c14", name: "Velvet Blazer", category: "outerwear", price: 495, colors: ["Midnight"], image_url: "https://images.pexels.com/photos/6626999/pexels-photo-6626999.jpeg?auto=compress&cs=tinysrgb&w=600", product_url: "#", brand: { name: "Saint Laurent" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c15", name: "Strappy Heeled Sandals", category: "shoes", price: 545, colors: ["Gold"], image_url: "https://images.pexels.com/photos/1308324/pexels-photo-1308324.jpeg?auto=compress&cs=tinysrgb&w=600", product_url: "#", brand: { name: "Jimmy Choo" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c16", name: "Crystal Embellished Clutch", category: "accessories", price: 375, colors: ["Silver"], image_url: "https://images.pexels.com/photos/1038000/pexels-photo-1038000.jpeg?auto=compress&cs=tinysrgb&w=600", product_url: "#", brand: { name: "Judith Leiber" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c17", name: "Statement Earrings", category: "accessories", price: 195, colors: ["Pearl"], image_url: "https://images.pexels.com/photos/1191531/pexels-photo-1191531.jpeg?auto=compress&cs=tinysrgb&w=600", product_url: "#", brand: { name: "Jennifer Behr" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c18", name: "Jo Malone Velvet Rose", category: "fragrance", price: 155, colors: ["Rose"], image_url: "https://images.pexels.com/photos/965989/pexels-photo-965989.jpeg?auto=compress&cs=tinysrgb&w=600", product_url: "#", brand: { name: "Jo Malone London" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c13", name: "Silk Midi Dress", category: "dresses", price: 685, colors: ["Burgundy"], image_url: "https://picsum.photos/seed/dress1/400/600", product_url: "#", brand: { name: "Reformation" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c14", name: "Velvet Blazer", category: "outerwear", price: 495, colors: ["Midnight"], image_url: "https://picsum.photos/seed/velvet1/400/600", product_url: "#", brand: { name: "Saint Laurent" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c15", name: "Strappy Heeled Sandals", category: "shoes", price: 545, colors: ["Gold"], image_url: "https://picsum.photos/seed/heels1/400/600", product_url: "#", brand: { name: "Jimmy Choo" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c16", name: "Crystal Embellished Clutch", category: "accessories", price: 375, colors: ["Silver"], image_url: "https://picsum.photos/seed/clutch1/400/600", product_url: "#", brand: { name: "Judith Leiber" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c17", name: "Statement Earrings", category: "accessories", price: 195, colors: ["Pearl"], image_url: "https://picsum.photos/seed/earrings1/400/600", product_url: "#", brand: { name: "Jennifer Behr" } },
+      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c18", name: "Jo Malone Velvet Rose", category: "fragrance", price: 155, colors: ["Rose"], image_url: "https://picsum.photos/seed/perfume1/400/600", product_url: "#", brand: { name: "Jo Malone London" } },
     ]
   }
 ];
