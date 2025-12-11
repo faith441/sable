@@ -11,7 +11,7 @@ import VideoGuide from "@/components/VideoGuide";
 import ProfileMenu from "@/components/ProfileMenu";
 import ProfileSheet from "@/components/ProfileSheet";
 import ProductDetailDialog from "@/components/ProductDetailDialog";
-import ProductTryOnImage from "@/components/ProductTryOnImage";
+import ProductDualImage from "@/components/ProductDualImage";
 import ProductImageGallery from "@/components/ProductImageGallery";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -514,19 +514,19 @@ const Wardrobe = () => {
                       <CardContent className="p-0">
                         <div className="flex gap-4">
                           <div 
-                            className="w-32 h-40 bg-secondary flex-shrink-0 relative cursor-pointer"
+                            className="w-48 h-40 bg-secondary flex-shrink-0 relative cursor-pointer"
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedProduct(product);
                               setImageGalleryOpen(true);
                             }}
                           >
-                            <ProductTryOnImage 
+                            <ProductDualImage 
                               product={product}
                               className="w-full h-full"
                             />
                             <button 
-                              className="absolute top-2 right-2 w-8 h-8 bg-background/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-background transition-colors"
+                              className="absolute top-2 right-2 w-8 h-8 bg-background/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-background transition-colors z-10"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 toggleFavorite(product);
