@@ -514,7 +514,7 @@ const Wardrobe = () => {
                       <CardContent className="p-0">
                         <div className="flex gap-4">
                           <div 
-                            className="w-48 h-40 bg-secondary flex-shrink-0 relative cursor-pointer"
+                            className="w-44 h-40 bg-secondary flex-shrink-0 relative cursor-pointer"
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedProduct(product);
