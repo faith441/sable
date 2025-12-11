@@ -11,7 +11,9 @@ import ProfileMenu from "@/components/ProfileMenu";
 import ProfileSheet from "@/components/ProfileSheet";
 import AddCustomItemDialog, { CATEGORIES } from "@/components/AddCustomItemDialog";
 import ClosetItemDialog from "@/components/ClosetItemDialog";
+import AuthRequiredDialog from "@/components/AuthRequiredDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { User } from "@supabase/supabase-js";
 
 interface PurchasedItem {
   id: string;
@@ -49,21 +51,33 @@ const Closet = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>("All");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<PurchasedItem | null>(null);
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    loadCloset();
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        loadCloset(session.user.id);
+      }
+    });
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        loadCloset(session.user.id);
+      } else {
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const loadCloset = async () => {
+  const loadCloset = async (userId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast.error("Please sign in to view your closet");
-        navigate("/auth");
-        return;
-      }
-
       const { data, error } = await supabase
         .from("user_wardrobe")
         .select(`
@@ -79,7 +93,7 @@ const Closet = () => {
             brand:brands (name)
           )
         `)
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .order("purchased_at", { ascending: false });
 
       if (error) throw error;
@@ -145,7 +159,7 @@ const Closet = () => {
       if (insertError) throw insertError;
 
       toast.success("Item added to your closet!");
-      await loadCloset();
+      if (user) await loadCloset(user.id);
       setAddItemOpen(false);
     } catch (error: any) {
       console.error("Error adding item:", error);
@@ -176,7 +190,7 @@ const Closet = () => {
       if (error) throw error;
 
       toast.success("Item removed from closet");
-      await loadCloset();
+      if (user) await loadCloset(user.id);
     } catch (error: any) {
       console.error("Error deleting item:", error);
       toast.error("Failed to delete item");
@@ -230,7 +244,13 @@ const Closet = () => {
         <Button 
           variant="luxury" 
           className="w-full mb-6"
-          onClick={() => setAddItemOpen(true)}
+          onClick={() => {
+            if (!user) {
+              setAuthDialogOpen(true);
+            } else {
+              setAddItemOpen(true);
+            }
+          }}
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Item to Closet
@@ -364,6 +384,12 @@ const Closet = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AuthRequiredDialog 
+        open={authDialogOpen} 
+        onOpenChange={setAuthDialogOpen}
+        action="add items to your closet"
+      />
 
       <MobileNav />
     </div>
