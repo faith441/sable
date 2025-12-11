@@ -40,8 +40,9 @@ interface BrandApplication {
 
 interface BrandCredentials {
   email: string;
-  temp_password: string;
+  temp_password: string | null;
   api_key: string;
+  is_existing_user?: boolean;
 }
 
 export default function BrandApplicationsManager() {
@@ -107,10 +108,14 @@ export default function BrandApplicationsManager() {
         email: result.email,
         temp_password: result.temp_password,
         api_key: result.api_key,
+        is_existing_user: result.is_existing_user,
       });
       setShowCredentialsDialog(true);
       
-      toast.success(`${app.company_name} approved! Brand account created.`);
+      const message = result.is_existing_user 
+        ? `${app.company_name} approved! Brand linked to existing user account.`
+        : `${app.company_name} approved! Brand account created.`;
+      toast.success(message);
       loadApplications();
     } catch (error: any) {
       console.error("Error approving application:", error);
@@ -193,7 +198,9 @@ export default function BrandApplicationsManager() {
               Brand Account Created
             </DialogTitle>
             <DialogDescription>
-              Send these credentials to the brand partner. The password is temporary.
+              {newCredentials?.is_existing_user 
+                ? "Brand linked to existing user account. Share the API key with the brand partner."
+                : "Send these credentials to the brand partner. The password is temporary."}
             </DialogDescription>
           </DialogHeader>
           {newCredentials && (
@@ -207,16 +214,24 @@ export default function BrandApplicationsManager() {
                   </Button>
                 </div>
               </div>
-              <div>
-                <label className="text-sm font-medium">Temporary Password</label>
-                <div className="flex items-center gap-2 mt-1">
-                  <code className="flex-1 p-2 bg-muted rounded text-sm font-mono">{newCredentials.temp_password}</code>
-                  <Button variant="outline" size="icon" onClick={() => copyToClipboard(newCredentials.temp_password)}>
-                    <Copy className="w-4 h-4" />
-                  </Button>
+              {newCredentials.temp_password ? (
+                <div>
+                  <label className="text-sm font-medium">Temporary Password</label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <code className="flex-1 p-2 bg-muted rounded text-sm font-mono">{newCredentials.temp_password}</code>
+                    <Button variant="outline" size="icon" onClick={() => copyToClipboard(newCredentials.temp_password!)}>
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">Brand should change this after first login</p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">Brand should change this after first login</p>
-              </div>
+              ) : (
+                <div className="p-3 bg-muted rounded-md">
+                  <p className="text-sm text-muted-foreground">
+                    User already exists. They can log in with their existing credentials.
+                  </p>
+                </div>
+              )}
               <div>
                 <label className="text-sm font-medium">API Key</label>
                 <div className="flex items-center gap-2 mt-1">
@@ -229,7 +244,10 @@ export default function BrandApplicationsManager() {
               <Button 
                 className="w-full" 
                 onClick={() => {
-                  const text = `Brand Portal Credentials\n\nLogin URL: ${window.location.origin}/brand/auth\nEmail: ${newCredentials.email}\nTemporary Password: ${newCredentials.temp_password}\nAPI Key: ${newCredentials.api_key}\n\nPlease change your password after first login.`;
+                  const passwordLine = newCredentials.temp_password 
+                    ? `Temporary Password: ${newCredentials.temp_password}\n`
+                    : "(Use your existing password)\n";
+                  const text = `Brand Portal Credentials\n\nLogin URL: ${window.location.origin}/brand/auth\nEmail: ${newCredentials.email}\n${passwordLine}API Key: ${newCredentials.api_key}\n\nPlease change your password after first login.`;
                   copyToClipboard(text);
                   toast.success("All credentials copied!");
                 }}
