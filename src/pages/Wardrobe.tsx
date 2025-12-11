@@ -156,10 +156,13 @@ const Wardrobe = () => {
     setPreGeneratingTryOn(true);
     setTryOnProgress({ current: 0, total: productsToGenerate.length });
 
-    // Generate try-on images sequentially to avoid rate limits
-    for (let i = 0; i < productsToGenerate.length; i++) {
-      const product = productsToGenerate[i];
-      setTryOnProgress({ current: i + 1, total: productsToGenerate.length });
+    const BATCH_SIZE = 3;
+    let completed = 0;
+    let shouldStop = false;
+
+    // Helper to generate a single try-on image
+    const generateSingleTryOn = async (product: Product): Promise<boolean> => {
+      if (shouldStop) return false;
       
       try {
         const { data, error } = await supabase.functions.invoke("virtual-tryon", {
@@ -180,27 +183,42 @@ const Wardrobe = () => {
           if (errorMsg.includes("402") || errorMsg.includes("credits") || errorMsg.includes("payment")) {
             localStorage.setItem('ai_tryon_disabled', 'true');
             localStorage.setItem('ai_tryon_disabled_at', Date.now().toString());
-            break;
+            shouldStop = true;
+            return false;
           }
-          continue;
+          return true; // Continue with next
         }
 
         if (data?.error) {
           if (data.error.includes("credits") || data.error.includes("Rate limit") || data.error.includes("payment")) {
             localStorage.setItem('ai_tryon_disabled', 'true');
             localStorage.setItem('ai_tryon_disabled_at', Date.now().toString());
-            break;
+            shouldStop = true;
+            return false;
           }
-          continue;
+          return true; // Continue with next
         }
 
         if (data?.result) {
           cache.set(product.id, data.result);
           saveTryOnCache(cache);
         }
+        return true;
       } catch (err) {
         console.error(`[Wardrobe] Error generating try-on for ${product.name}:`, err);
+        return true; // Continue with next
       }
+    };
+
+    // Process in batches of 3
+    for (let i = 0; i < productsToGenerate.length && !shouldStop; i += BATCH_SIZE) {
+      const batch = productsToGenerate.slice(i, i + BATCH_SIZE);
+      
+      await Promise.all(batch.map(async (product) => {
+        await generateSingleTryOn(product);
+        completed++;
+        setTryOnProgress({ current: completed, total: productsToGenerate.length });
+      }));
     }
 
     setPreGeneratingTryOn(false);
