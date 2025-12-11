@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Sparkles } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -44,13 +44,13 @@ const saveCacheToStorage = (cache: Map<string, string>) => {
   }
 };
 
-const tryOnImageCache = loadCacheFromStorage();
+// Track which products have been attempted globally to prevent duplicate generation
+const generationAttempted = new Set<string>();
 
 const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) => {
   const [tryOnImage, setTryOnImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [useOriginal, setUseOriginal] = useState(false);
-  const generationAttemptedRef = useRef(false);
 
   // Check if AI try-on is disabled - but reset it after 1 hour to retry
   const checkAiDisabled = () => {
@@ -70,10 +70,13 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
   const isWearable = WEARABLE_CATEGORIES.includes(product.category?.toLowerCase() || '');
 
   useEffect(() => {
-    // Check cache first
-    const cachedImage = tryOnImageCache.get(product.id);
+    // Always reload cache from localStorage to get latest
+    const currentCache = loadCacheFromStorage();
+    const cachedImage = currentCache.get(product.id);
+    
     if (cachedImage) {
       setTryOnImage(cachedImage);
+      setUseOriginal(false);
       return;
     }
 
@@ -82,17 +85,21 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
       return;
     }
 
-    // Only attempt generation once per component instance
-    if (!generationAttemptedRef.current) {
-      generationAttemptedRef.current = true;
+    // Only attempt generation once globally per product ID
+    if (!generationAttempted.has(product.id)) {
+      generationAttempted.add(product.id);
       generateTryOnImage();
+    } else {
+      // Already attempted but no cache - show original
+      setUseOriginal(true);
     }
   }, [product.id]);
 
   const generateTryOnImage = async () => {
-    // Double-check cache before generating
-    if (tryOnImageCache.has(product.id)) {
-      setTryOnImage(tryOnImageCache.get(product.id)!);
+    // Triple-check cache before generating (in case another component just saved it)
+    const currentCache = loadCacheFromStorage();
+    if (currentCache.has(product.id)) {
+      setTryOnImage(currentCache.get(product.id)!);
       return;
     }
 
@@ -138,8 +145,9 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
 
       if (data?.result) {
         // Cache the result and persist to localStorage
-        tryOnImageCache.set(product.id, data.result);
-        saveCacheToStorage(tryOnImageCache);
+        const cacheToUpdate = loadCacheFromStorage();
+        cacheToUpdate.set(product.id, data.result);
+        saveCacheToStorage(cacheToUpdate);
         setTryOnImage(data.result);
       } else {
         setUseOriginal(true);
