@@ -34,8 +34,10 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
   const checkAiDisabled = () => {
     const disabledAt = localStorage.getItem('ai_tryon_disabled_at');
     if (disabledAt) {
-      const oneHourAgo = Date.now() - (60 * 60 * 1000);
-      if (parseInt(disabledAt) < oneHourAgo) {
+      // Reset after 5 minutes instead of 1 hour for faster retry
+      const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+      if (parseInt(disabledAt) < fiveMinutesAgo) {
+        console.log('[ProductDualImage] Resetting AI disabled flag (timeout expired)');
         localStorage.removeItem('ai_tryon_disabled');
         localStorage.removeItem('ai_tryon_disabled_at');
         return false;
@@ -43,6 +45,19 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
     }
     return localStorage.getItem('ai_tryon_disabled') === 'true';
   };
+  
+  // Clear the disabled flag on component mount to allow retry
+  useEffect(() => {
+    // Clear any stale disabled flags on page load
+    const disabledAt = localStorage.getItem('ai_tryon_disabled_at');
+    if (disabledAt) {
+      const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+      if (parseInt(disabledAt) < fiveMinutesAgo) {
+        localStorage.removeItem('ai_tryon_disabled');
+        localStorage.removeItem('ai_tryon_disabled_at');
+      }
+    }
+  }, []);
   
   const aiDisabled = checkAiDisabled();
   const isWearable = WEARABLE_CATEGORIES.includes(product.category?.toLowerCase() || '');
