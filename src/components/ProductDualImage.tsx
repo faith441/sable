@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles } from "lucide-react";
+import { Sparkles, RefreshCw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface Product {
@@ -20,20 +20,45 @@ interface ProductDualImageProps {
 
 const WEARABLE_CATEGORIES = ['tops', 'bottoms', 'outerwear', 'dresses', 'shoes', 'accessories'];
 
+// Cache for generated try-on images
+const CACHE_KEY = 'ai_tryon_dual_cache';
+
+const loadCacheFromStorage = (): Map<string, string> => {
+  try {
+    const stored = localStorage.getItem(CACHE_KEY);
+    if (stored) {
+      return new Map(JSON.parse(stored));
+    }
+  } catch (e) {
+    console.error('[ProductDualImage] Failed to load cache:', e);
+  }
+  return new Map();
+};
+
+const saveCacheToStorage = (cache: Map<string, string>) => {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(Array.from(cache.entries())));
+  } catch (e) {
+    console.error('[ProductDualImage] Failed to save cache:', e);
+  }
+};
+
+// Track which products have been attempted globally to prevent duplicate generation
+const generationAttempted = new Set<string>();
+
 const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) => {
   const [tryOnImage, setTryOnImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeView, setActiveView] = useState<'product' | 'tryon'>('tryon');
   const [error, setError] = useState<string | null>(null);
   const [showThumbnails, setShowThumbnails] = useState(false);
+  const mountedRef = useRef(true);
 
   const checkAiDisabled = () => {
     const disabledAt = localStorage.getItem('ai_tryon_disabled_at');
     if (disabledAt) {
-      // Reset after 5 minutes instead of 1 hour for faster retry
       const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
       if (parseInt(disabledAt) < fiveMinutesAgo) {
-        console.log('[ProductDualImage] Resetting AI disabled flag (timeout expired)');
         localStorage.removeItem('ai_tryon_disabled');
         localStorage.removeItem('ai_tryon_disabled_at');
         return false;
@@ -42,36 +67,48 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
     return localStorage.getItem('ai_tryon_disabled') === 'true';
   };
   
-  // Clear the disabled flag on component mount to allow retry
-  useEffect(() => {
-    // Clear any stale disabled flags on page load
-    const disabledAt = localStorage.getItem('ai_tryon_disabled_at');
-    if (disabledAt) {
-      const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
-      if (parseInt(disabledAt) < fiveMinutesAgo) {
-        localStorage.removeItem('ai_tryon_disabled');
-        localStorage.removeItem('ai_tryon_disabled_at');
-      }
-    }
-  }, []);
-  
   const aiDisabled = checkAiDisabled();
   const isWearable = WEARABLE_CATEGORIES.includes(product.category?.toLowerCase() || '');
   const hasProductImage = !!product.image_url;
 
   useEffect(() => {
-    console.log(`[ProductDualImage] Init for ${product.name}, category: ${product.category}, isWearable: ${isWearable}, aiDisabled: ${aiDisabled}, hasImage: ${hasProductImage}`);
-    if (!aiDisabled && isWearable && hasProductImage) {
+    mountedRef.current = true;
+    
+    // Check cache first
+    const currentCache = loadCacheFromStorage();
+    const cachedImage = currentCache.get(product.id);
+    
+    if (cachedImage) {
+      setTryOnImage(cachedImage);
+      setActiveView('tryon');
+      return;
+    }
+
+    // Only attempt once per product ID globally
+    if (!aiDisabled && isWearable && hasProductImage && !generationAttempted.has(product.id)) {
+      generationAttempted.add(product.id);
       generateTryOnImage();
     } else if (!hasProductImage) {
       setActiveView('product');
     }
+
+    return () => {
+      mountedRef.current = false;
+    };
   }, [product.id]);
 
-  const generateTryOnImage = async () => {
+  const generateTryOnImage = async (forceRegenerate = false) => {
+    // Check cache unless forcing regeneration
+    if (!forceRegenerate) {
+      const currentCache = loadCacheFromStorage();
+      if (currentCache.has(product.id)) {
+        setTryOnImage(currentCache.get(product.id)!);
+        return;
+      }
+    }
+
     setLoading(true);
     setError(null);
-    console.log(`[ProductDualImage] Starting AI try-on generation for: ${product.name}`);
 
     try {
       const preferences = JSON.parse(localStorage.getItem('guest_preferences') || '{}');
@@ -79,7 +116,6 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
         ? preferences.gender[0] 
         : preferences.gender || "Women's";
 
-      // Get user's uploaded body photo from survey
       const bodyPhotos = preferences.bodyPhotos || [];
       const userImage = bodyPhotos.length > 0 ? bodyPhotos[0] : null;
 
@@ -90,13 +126,6 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
         image_url: product.image_url
       }];
 
-      console.log(`[ProductDualImage] Calling virtual-tryon with:`, { 
-        garmentCount: garmentImages.length, 
-        viewType: 'fullBody', 
-        userGender,
-        hasUserImage: !!userImage 
-      });
-
       const { data, error: fnError } = await supabase.functions.invoke("virtual-tryon", {
         body: {
           garmentImages,
@@ -106,10 +135,9 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
         }
       });
 
-      console.log(`[ProductDualImage] Response:`, { data, fnError });
+      if (!mountedRef.current) return;
 
       if (fnError) {
-        console.error("[ProductDualImage] Function error:", fnError);
         const errorMsg = fnError.message || fnError.toString();
         setError(errorMsg);
         if (errorMsg.includes("402") || errorMsg.includes("credits") || errorMsg.includes("payment")) {
@@ -120,7 +148,6 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
       }
 
       if (data?.error) {
-        console.error("[ProductDualImage] Data error:", data.error);
         setError(data.error);
         if (data.error.includes("credits") || data.error.includes("Rate limit") || data.error.includes("payment")) {
           localStorage.setItem('ai_tryon_disabled', 'true');
@@ -130,26 +157,35 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
       }
 
       if (data?.result) {
-        console.log(`[ProductDualImage] Success! Got AI try-on image for ${product.name}`);
+        // Cache the result
+        const cacheToUpdate = loadCacheFromStorage();
+        cacheToUpdate.set(product.id, data.result);
+        saveCacheToStorage(cacheToUpdate);
         setTryOnImage(data.result);
+        setActiveView('tryon');
       } else {
-        console.log(`[ProductDualImage] No result in response for ${product.name}`);
         setError("No image generated");
       }
     } catch (err: any) {
-      console.error("[ProductDualImage] Exception:", err);
-      const errorMsg = err?.message || err?.toString() || 'Unknown error';
+      if (!mountedRef.current) return;
+      const errorMsg = err?.message || 'Unknown error';
       setError(errorMsg);
       if (errorMsg.includes("402") || errorMsg.includes("credits") || errorMsg.includes("payment")) {
         localStorage.setItem('ai_tryon_disabled', 'true');
         localStorage.setItem('ai_tryon_disabled_at', Date.now().toString());
       }
     } finally {
-      setLoading(false);
+      if (mountedRef.current) {
+        setLoading(false);
+      }
     }
   };
 
-  // Main card shows the selected view - fallback to placeholder if no images
+  const handleManualRegenerate = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    generateTryOnImage(true);
+  };
+
   const mainCardImage = activeView === 'tryon' && tryOnImage 
     ? tryOnImage 
     : (product.image_url || '/placeholder.svg');
@@ -158,10 +194,8 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
 
   return (
     <div className={`flex gap-2 ${className}`}>
-      {/* Thumbnail strip - only visible when clicked */}
       {showThumbnails && (
         <div className="flex flex-col gap-1.5">
-          {/* Product thumbnail */}
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -181,7 +215,6 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
             </span>
           </button>
 
-          {/* AI Try-on thumbnail */}
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -212,10 +245,21 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
               AI Try-On
             </span>
           </button>
+
+          {/* Manual regenerate button */}
+          {isWearable && hasProductImage && !aiDisabled && (
+            <button
+              onClick={handleManualRegenerate}
+              disabled={loading}
+              className="w-14 h-8 rounded-md border border-border/50 hover:border-sage/50 flex items-center justify-center transition-all disabled:opacity-50"
+              title="Regenerate AI Try-On"
+            >
+              <RefreshCw className={`w-3 h-3 text-muted-foreground ${loading ? 'animate-spin' : ''}`} />
+            </button>
+          )}
         </div>
       )}
 
-      {/* Main image - clickable to toggle thumbnails */}
       <div 
         className="relative flex-1 bg-secondary rounded-lg overflow-hidden cursor-pointer"
         onClick={() => setShowThumbnails(!showThumbnails)}
@@ -243,13 +287,11 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
             alt={activeView === 'tryon' ? `${product.name} try-on` : product.name}
             className="w-full h-full object-cover"
             onError={(e) => {
-              console.log(`[ProductDualImage] Image load error, falling back`);
               (e.target as HTMLImageElement).src = '/placeholder.svg';
             }}
           />
         )}
         
-        {/* Small AI indicator badge */}
         {activeView === 'tryon' && tryOnImage && !loading && (
           <div className="absolute bottom-1 left-1 bg-background/80 backdrop-blur-sm rounded px-1.5 py-0.5 flex items-center gap-1">
             <Sparkles className="w-3 h-3 text-sage" />
@@ -257,7 +299,6 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
           </div>
         )}
         
-        {/* Error indicator */}
         {error && !loading && !tryOnImage && activeView === 'tryon' && (
           <div className="absolute bottom-1 left-1 bg-destructive/80 backdrop-blur-sm rounded px-1.5 py-0.5">
             <span className="text-[9px] text-destructive-foreground">AI unavailable</span>
