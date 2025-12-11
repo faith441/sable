@@ -136,6 +136,20 @@ Professional fashion catalog photography, clean background, perfect lighting. Th
         );
       }
       
+      // Handle 400 errors (usually invalid/broken image URLs) gracefully
+      if (aiResponse.status === 400) {
+        console.log("Image URL likely invalid or inaccessible, skipping try-on for this product");
+        return new Response(
+          JSON.stringify({ 
+            result: null,
+            skipped: true,
+            reason: "Product image unavailable for try-on",
+            viewType 
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
       throw new Error(`AI gateway error: ${aiResponse.status}`);
     }
 
