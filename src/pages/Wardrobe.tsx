@@ -113,6 +113,13 @@ const SAMPLE_CAPSULES: Capsule[] = [
   }
 ];
 
+interface CompletedTryOn {
+  productId: string;
+  productName: string;
+  productImage: string;
+  tryOnImage: string;
+}
+
 const Wardrobe = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -128,6 +135,7 @@ const Wardrobe = () => {
   const [noInventory, setNoInventory] = useState(false);
   const [preGeneratingTryOn, setPreGeneratingTryOn] = useState(false);
   const [tryOnProgress, setTryOnProgress] = useState({ current: 0, total: 0 });
+  const [completedTryOns, setCompletedTryOns] = useState<CompletedTryOn[]>([]);
 
   // Pre-generate try-on images for all products in capsules
   const preGenerateTryOnImages = async (capsulesData: Capsule[]) => {
@@ -155,6 +163,7 @@ const Wardrobe = () => {
 
     setPreGeneratingTryOn(true);
     setTryOnProgress({ current: 0, total: productsToGenerate.length });
+    setCompletedTryOns([]);
 
     const BATCH_SIZE = 3;
     let completed = 0;
@@ -202,6 +211,13 @@ const Wardrobe = () => {
         if (data?.result) {
           cache.set(product.id, data.result);
           saveTryOnCache(cache);
+          // Add to completed try-ons for visual progress
+          setCompletedTryOns(prev => [...prev, {
+            productId: product.id,
+            productName: product.name,
+            productImage: product.image_url,
+            tryOnImage: data.result
+          }]);
         }
         return true;
       } catch (err) {
@@ -222,6 +238,7 @@ const Wardrobe = () => {
     }
 
     setPreGeneratingTryOn(false);
+    setCompletedTryOns([]);
   };
 
   useEffect(() => {
@@ -502,6 +519,7 @@ const Wardrobe = () => {
       <VideoGuide 
         gender={preferences.gender || []} 
         tryOnProgress={preGeneratingTryOn ? tryOnProgress : undefined}
+        completedTryOns={preGeneratingTryOn ? completedTryOns : undefined}
       />
     );
   }

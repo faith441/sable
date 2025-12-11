@@ -1,17 +1,33 @@
 import { useEffect, useRef, useState } from "react";
 
+interface CompletedTryOn {
+  productId: string;
+  productName: string;
+  productImage: string;
+  tryOnImage: string;
+}
+
 interface VideoGuideProps {
   gender: string[];
   tryOnProgress?: { current: number; total: number };
+  completedTryOns?: CompletedTryOn[];
 }
 
-const VideoGuide = ({ gender, tryOnProgress }: VideoGuideProps) => {
+const VideoGuide = ({ gender, tryOnProgress, completedTryOns = [] }: VideoGuideProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [currentCaption, setCurrentCaption] = useState("");
   const [captionIndex, setCaptionIndex] = useState(0);
+  const thumbnailsRef = useRef<HTMLDivElement>(null);
 
   const isWomen = gender.includes("Women's");
   const isGeneratingTryOn = tryOnProgress && tryOnProgress.total > 0;
+
+  // Auto-scroll to show latest thumbnail
+  useEffect(() => {
+    if (thumbnailsRef.current && completedTryOns.length > 0) {
+      thumbnailsRef.current.scrollLeft = thumbnailsRef.current.scrollWidth;
+    }
+  }, [completedTryOns.length]);
 
   // Captions with timestamps (in seconds)
   const captions = isGeneratingTryOn ? [
@@ -85,7 +101,7 @@ const VideoGuide = ({ gender, tryOnProgress }: VideoGuideProps) => {
 
         {/* Caption Area */}
         <div className="text-center space-y-4 animate-fade-in">
-          <div className="min-h-[4rem] flex items-center justify-center">
+          <div className="min-h-[3rem] flex items-center justify-center">
             <p className="text-lg md:text-xl font-light text-foreground px-6 animate-fade-in">
               {currentCaption}
             </p>
@@ -93,7 +109,7 @@ const VideoGuide = ({ gender, tryOnProgress }: VideoGuideProps) => {
           
           {/* Progress Indicator */}
           {isGeneratingTryOn ? (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
                 Generating try-on {tryOnProgress.current} of {tryOnProgress.total}
               </p>
@@ -103,6 +119,33 @@ const VideoGuide = ({ gender, tryOnProgress }: VideoGuideProps) => {
                   style={{ width: `${(tryOnProgress.current / tryOnProgress.total) * 100}%` }}
                 />
               </div>
+              
+              {/* Completed Try-On Thumbnails */}
+              {completedTryOns.length > 0 && (
+                <div className="pt-2">
+                  <div 
+                    ref={thumbnailsRef}
+                    className="flex gap-2 overflow-x-auto pb-2 px-1 scrollbar-hide"
+                    style={{ scrollBehavior: 'smooth' }}
+                  >
+                    {completedTryOns.map((item, index) => (
+                      <div 
+                        key={item.productId}
+                        className="flex-shrink-0 animate-scale-in"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <div className="w-14 h-14 rounded-lg overflow-hidden border-2 border-primary/50 shadow-lg">
+                          <img 
+                            src={item.tryOnImage} 
+                            alt={item.productName}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="flex items-center justify-center gap-2">
