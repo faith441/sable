@@ -50,10 +50,10 @@ const Survey = () => {
     hairType: [] as string[],
     hairConcerns: [] as string[],
     shampooPreferences: [] as string[],
-    // Photos
-    photos: [null, null, null, null] as (File | null)[],
-    fullBodyPhotos: Array(10).fill(null) as (File | null)[],
-    swimsuitPhotos: Array(10).fill(null) as (File | null)[],
+    // Photos - can be File (new upload) or string (loaded from localStorage)
+    photos: [null, null, null, null] as (File | string | null)[],
+    fullBodyPhotos: Array(10).fill(null) as (File | string | null)[],
+    swimsuitPhotos: Array(10).fill(null) as (File | string | null)[],
   });
 
   const womensStyleImages = {
