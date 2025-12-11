@@ -66,6 +66,12 @@ const ProductImageGallery = ({ product, open, onOpenChange }: ProductImageGaller
       setAiDisabled(disabled);
       setSelectedView("product");
       
+      // Only attempt AI try-on if product has an image
+      if (!product.image_url) {
+        setTryOnImage(null);
+        return;
+      }
+      
       // Check cache first
       const cachedImage = getCachedTryOnImage(product.id);
       if (cachedImage) {
@@ -140,7 +146,8 @@ const ProductImageGallery = ({ product, open, onOpenChange }: ProductImageGaller
 
   if (!product) return null;
 
-  const currentImage = selectedView === "tryon" && tryOnImage ? tryOnImage : product.image_url;
+  const productImageSrc = product.image_url || '/placeholder.svg';
+  const currentImage = selectedView === "tryon" && tryOnImage ? tryOnImage : productImageSrc;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -161,7 +168,7 @@ const ProductImageGallery = ({ product, open, onOpenChange }: ProductImageGaller
               }`}
             >
               <img 
-                src={product.image_url} 
+                src={productImageSrc} 
                 alt="Product"
                 className="w-full h-full object-cover"
               />

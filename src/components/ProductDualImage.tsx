@@ -57,11 +57,14 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
   
   const aiDisabled = checkAiDisabled();
   const isWearable = WEARABLE_CATEGORIES.includes(product.category?.toLowerCase() || '');
+  const hasProductImage = !!product.image_url;
 
   useEffect(() => {
-    console.log(`[ProductDualImage] Init for ${product.name}, category: ${product.category}, isWearable: ${isWearable}, aiDisabled: ${aiDisabled}`);
-    if (!aiDisabled && isWearable) {
+    console.log(`[ProductDualImage] Init for ${product.name}, category: ${product.category}, isWearable: ${isWearable}, aiDisabled: ${aiDisabled}, hasImage: ${hasProductImage}`);
+    if (!aiDisabled && isWearable && hasProductImage) {
       generateTryOnImage();
+    } else if (!hasProductImage) {
+      setActiveView('product');
     }
   }, [product.id]);
 
@@ -146,8 +149,12 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
     }
   };
 
-  // Main card shows the selected view
-  const mainCardImage = activeView === 'tryon' && tryOnImage ? tryOnImage : product.image_url;
+  // Main card shows the selected view - fallback to placeholder if no images
+  const mainCardImage = activeView === 'tryon' && tryOnImage 
+    ? tryOnImage 
+    : (product.image_url || '/placeholder.svg');
+
+  const productImageSrc = product.image_url || '/placeholder.svg';
 
   return (
     <div className={`flex gap-2 ${className}`}>
@@ -164,17 +171,11 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
               activeView === 'product' ? 'border-sage ring-1 ring-sage/30' : 'border-border/50 hover:border-sage/50'
             }`}
           >
-            {product.image_url ? (
-              <img 
-                src={product.image_url} 
-                alt="Product"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-muted flex items-center justify-center">
-                <span className="text-[9px] text-muted-foreground">N/A</span>
-              </div>
-            )}
+            <img 
+              src={productImageSrc} 
+              alt="Product"
+              className="w-full h-full object-cover"
+            />
             <span className="absolute bottom-0 left-0 right-0 bg-background/90 text-[8px] text-center py-0.5 font-medium">
               Product
             </span>
@@ -222,13 +223,11 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
         {loading && activeView === 'tryon' ? (
           <>
             <Skeleton className="w-full h-full absolute inset-0" />
-            {product.image_url && (
-              <img 
-                src={product.image_url} 
-                alt={product.name} 
-                className="w-full h-full object-cover opacity-30"
-              />
-            )}
+            <img 
+              src={productImageSrc} 
+              alt={product.name} 
+              className="w-full h-full object-cover opacity-30"
+            />
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
               <div className="bg-background/80 backdrop-blur-sm rounded-full p-2">
                 <Sparkles className="w-4 h-4 text-primary animate-pulse" />
@@ -245,7 +244,7 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
             className="w-full h-full object-cover"
             onError={(e) => {
               console.log(`[ProductDualImage] Image load error, falling back`);
-              (e.target as HTMLImageElement).src = product.image_url || '/placeholder.svg';
+              (e.target as HTMLImageElement).src = '/placeholder.svg';
             }}
           />
         )}
