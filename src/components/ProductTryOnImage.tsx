@@ -22,7 +22,29 @@ interface ProductTryOnImageProps {
 const WEARABLE_CATEGORIES = ['tops', 'bottoms', 'outerwear', 'dresses', 'shoes', 'accessories'];
 
 // Cache for generated try-on images keyed by product ID
-const tryOnImageCache = new Map<string, string>();
+const CACHE_KEY = 'ai_tryon_image_cache';
+
+const loadCacheFromStorage = (): Map<string, string> => {
+  try {
+    const stored = localStorage.getItem(CACHE_KEY);
+    if (stored) {
+      return new Map(JSON.parse(stored));
+    }
+  } catch (e) {
+    console.error('[ProductTryOnImage] Failed to load cache from localStorage:', e);
+  }
+  return new Map();
+};
+
+const saveCacheToStorage = (cache: Map<string, string>) => {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(Array.from(cache.entries())));
+  } catch (e) {
+    console.error('[ProductTryOnImage] Failed to save cache to localStorage:', e);
+  }
+};
+
+const tryOnImageCache = loadCacheFromStorage();
 
 const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) => {
   const [tryOnImage, setTryOnImage] = useState<string | null>(null);
@@ -115,8 +137,9 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
       }
 
       if (data?.result) {
-        // Cache the result
+        // Cache the result and persist to localStorage
         tryOnImageCache.set(product.id, data.result);
+        saveCacheToStorage(tryOnImageCache);
         setTryOnImage(data.result);
       } else {
         setUseOriginal(true);
