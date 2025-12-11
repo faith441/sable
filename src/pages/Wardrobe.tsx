@@ -40,6 +40,30 @@ interface Capsule {
 // AI features - set to false to enable AI wardrobe generation and virtual try-on
 const AI_DISABLED = false;
 
+// Shared cache key with ProductTryOnImage
+const TRYON_CACHE_KEY = 'ai_tryon_image_cache';
+const WEARABLE_CATEGORIES = ['tops', 'bottoms', 'outerwear', 'dresses', 'shoes', 'accessories'];
+
+const getTryOnCache = (): Map<string, string> => {
+  try {
+    const stored = localStorage.getItem(TRYON_CACHE_KEY);
+    if (stored) {
+      return new Map<string, string>(JSON.parse(stored));
+    }
+  } catch (e) {
+    console.error('[Wardrobe] Failed to load try-on cache:', e);
+  }
+  return new Map();
+};
+
+const saveTryOnCache = (cache: Map<string, string>) => {
+  try {
+    localStorage.setItem(TRYON_CACHE_KEY, JSON.stringify(Array.from(cache.entries())));
+  } catch (e) {
+    console.error('[Wardrobe] Failed to save try-on cache:', e);
+  }
+};
+
 // Sample wardrobe data for when AI is disabled - using stable Pexels image URLs
 const SAMPLE_CAPSULES: Capsule[] = [
   {
@@ -102,6 +126,85 @@ const Wardrobe = () => {
   const [creditsExhausted, setCreditsExhausted] = useState(AI_DISABLED);
   const [usingSampleData, setUsingSampleData] = useState(false);
   const [noInventory, setNoInventory] = useState(false);
+  const [preGeneratingTryOn, setPreGeneratingTryOn] = useState(false);
+  const [tryOnProgress, setTryOnProgress] = useState({ current: 0, total: 0 });
+
+  // Pre-generate try-on images for all products in capsules
+  const preGenerateTryOnImages = async (capsulesData: Capsule[]) => {
+    const aiDisabled = localStorage.getItem('ai_tryon_disabled') === 'true';
+    if (aiDisabled || AI_DISABLED) return;
+
+    const cache = getTryOnCache();
+    const preferences = JSON.parse(localStorage.getItem('guest_preferences') || '{}');
+    const userGender = Array.isArray(preferences.gender) 
+      ? preferences.gender[0] 
+      : preferences.gender || "Women's";
+
+    // Collect all wearable products that aren't cached
+    const productsToGenerate: Product[] = [];
+    for (const capsule of capsulesData) {
+      for (const product of capsule.products) {
+        const isWearable = WEARABLE_CATEGORIES.includes(product.category?.toLowerCase() || '');
+        if (isWearable && !cache.has(product.id)) {
+          productsToGenerate.push(product);
+        }
+      }
+    }
+
+    if (productsToGenerate.length === 0) return;
+
+    setPreGeneratingTryOn(true);
+    setTryOnProgress({ current: 0, total: productsToGenerate.length });
+
+    // Generate try-on images sequentially to avoid rate limits
+    for (let i = 0; i < productsToGenerate.length; i++) {
+      const product = productsToGenerate[i];
+      setTryOnProgress({ current: i + 1, total: productsToGenerate.length });
+      
+      try {
+        const { data, error } = await supabase.functions.invoke("virtual-tryon", {
+          body: {
+            garmentImages: [{
+              name: product.name,
+              category: product.category,
+              brand: product.brand.name,
+              image_url: product.image_url
+            }],
+            viewType: "fullBody",
+            userGender
+          }
+        });
+
+        if (error) {
+          const errorMsg = error.message || error.toString();
+          if (errorMsg.includes("402") || errorMsg.includes("credits") || errorMsg.includes("payment")) {
+            localStorage.setItem('ai_tryon_disabled', 'true');
+            localStorage.setItem('ai_tryon_disabled_at', Date.now().toString());
+            break;
+          }
+          continue;
+        }
+
+        if (data?.error) {
+          if (data.error.includes("credits") || data.error.includes("Rate limit") || data.error.includes("payment")) {
+            localStorage.setItem('ai_tryon_disabled', 'true');
+            localStorage.setItem('ai_tryon_disabled_at', Date.now().toString());
+            break;
+          }
+          continue;
+        }
+
+        if (data?.result) {
+          cache.set(product.id, data.result);
+          saveTryOnCache(cache);
+        }
+      } catch (err) {
+        console.error(`[Wardrobe] Error generating try-on for ${product.name}:`, err);
+      }
+    }
+
+    setPreGeneratingTryOn(false);
+  };
 
   useEffect(() => {
     // Manage AI disabled flag in localStorage
@@ -145,6 +248,8 @@ const Wardrobe = () => {
         if (hasValidIds) {
           setCapsules(parsed);
           setLoading(false);
+          // Pre-generate try-on images in background
+          preGenerateTryOnImages(parsed);
           return;
         } else {
           // Clear invalid cached data
@@ -158,6 +263,8 @@ const Wardrobe = () => {
         setUsingSampleData(true);
         setCreditsExhausted(true);
         setLoading(false);
+        // Pre-generate try-on images in background
+        preGenerateTryOnImages(SAMPLE_CAPSULES);
         return;
       }
 
@@ -182,6 +289,8 @@ const Wardrobe = () => {
     } else if (reason === 'inventory') {
       setNoInventory(true);
     }
+    // Pre-generate try-on images in background
+    preGenerateTryOnImages(SAMPLE_CAPSULES);
   };
 
   const generateWardrobe = async () => {
@@ -232,6 +341,10 @@ const Wardrobe = () => {
       
       // Cache the generated capsules
       localStorage.setItem('cached_capsules', JSON.stringify(newCapsules));
+      
+      // Pre-generate try-on images (will show progress in UI)
+      await preGenerateTryOnImages(newCapsules);
+      
       toast.success("Wardrobe regenerated successfully!");
     } catch (error: any) {
       console.error("Error generating wardrobe:", error);
@@ -364,9 +477,14 @@ const Wardrobe = () => {
     localStorage.setItem('favorite_products', JSON.stringify(updatedFavorites));
   };
 
-  if (generating) {
+  if (generating || preGeneratingTryOn) {
     const preferences = JSON.parse(localStorage.getItem('guest_preferences') || '{}');
-    return <VideoGuide gender={preferences.gender || []} />;
+    return (
+      <VideoGuide 
+        gender={preferences.gender || []} 
+        tryOnProgress={preGeneratingTryOn ? tryOnProgress : undefined}
+      />
+    );
   }
 
   if (loading) {
