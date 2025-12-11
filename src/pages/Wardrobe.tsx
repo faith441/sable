@@ -282,9 +282,10 @@ const Wardrobe = () => {
         
         if (hasValidIds) {
           setCapsules(parsed);
-          // Wait for try-on images to complete before showing wardrobe
-          await preGenerateTryOnImages(parsed);
+          // Show wardrobe immediately, generate try-on images in background (no video guide)
           setLoading(false);
+          // Fire and forget - don't await, don't show video guide
+          preGenerateTryOnImages(parsed).catch(console.error);
           return;
         } else {
           // Clear invalid cached data
