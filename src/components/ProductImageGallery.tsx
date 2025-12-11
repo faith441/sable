@@ -22,18 +22,15 @@ interface ProductImageGalleryProps {
 
 type ViewType = "product" | "tryon";
 
-// Check both cache keys for compatibility
-const CACHE_KEYS = ['ai_tryon_dual_cache', 'ai_tryon_image_cache'];
+// Single unified cache key - must match Wardrobe.tsx and ProductDualImage.tsx
+const CACHE_KEY = 'ai_tryon_image_cache';
 
 const getCachedTryOnImage = (productId: string): string | null => {
   try {
-    for (const key of CACHE_KEYS) {
-      const stored = localStorage.getItem(key);
-      if (stored) {
-        const cache = new Map<string, string>(JSON.parse(stored));
-        const cached = cache.get(productId);
-        if (cached) return cached;
-      }
+    const stored = localStorage.getItem(CACHE_KEY);
+    if (stored) {
+      const cache = new Map<string, string>(JSON.parse(stored));
+      return cache.get(productId) || null;
     }
   } catch (e) {
     console.error('[ProductImageGallery] Failed to load cache:', e);
@@ -43,12 +40,10 @@ const getCachedTryOnImage = (productId: string): string | null => {
 
 const saveToCacheStorage = (productId: string, imageUrl: string) => {
   try {
-    // Save to primary cache (dual cache)
-    const cacheKey = 'ai_tryon_dual_cache';
-    const stored = localStorage.getItem(cacheKey);
+    const stored = localStorage.getItem(CACHE_KEY);
     const cache = stored ? new Map<string, string>(JSON.parse(stored)) : new Map<string, string>();
     cache.set(productId, imageUrl);
-    localStorage.setItem(cacheKey, JSON.stringify(Array.from(cache.entries())));
+    localStorage.setItem(CACHE_KEY, JSON.stringify(Array.from(cache.entries())));
   } catch (e) {
     console.error('[ProductImageGallery] Failed to save to cache:', e);
   }

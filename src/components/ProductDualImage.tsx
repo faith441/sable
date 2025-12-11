@@ -20,8 +20,8 @@ interface ProductDualImageProps {
 
 const WEARABLE_CATEGORIES = ['tops', 'bottoms', 'outerwear', 'dresses', 'shoes', 'accessories'];
 
-// Cache for generated try-on images
-const CACHE_KEY = 'ai_tryon_dual_cache';
+// Single unified cache key - must match Wardrobe.tsx
+const CACHE_KEY = 'ai_tryon_image_cache';
 
 const loadCacheFromStorage = (): Map<string, string> => {
   try {
