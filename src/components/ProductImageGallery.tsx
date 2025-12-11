@@ -22,6 +22,33 @@ interface ProductImageGalleryProps {
 
 type ViewType = "product" | "tryon";
 
+// Shared cache key with ProductTryOnImage
+const CACHE_KEY = 'ai_tryon_image_cache';
+
+const getCachedTryOnImage = (productId: string): string | null => {
+  try {
+    const stored = localStorage.getItem(CACHE_KEY);
+    if (stored) {
+      const cache = new Map<string, string>(JSON.parse(stored));
+      return cache.get(productId) || null;
+    }
+  } catch (e) {
+    console.error('[ProductImageGallery] Failed to load cache:', e);
+  }
+  return null;
+};
+
+const saveToCacheStorage = (productId: string, imageUrl: string) => {
+  try {
+    const stored = localStorage.getItem(CACHE_KEY);
+    const cache = stored ? new Map<string, string>(JSON.parse(stored)) : new Map<string, string>();
+    cache.set(productId, imageUrl);
+    localStorage.setItem(CACHE_KEY, JSON.stringify(Array.from(cache.entries())));
+  } catch (e) {
+    console.error('[ProductImageGallery] Failed to save to cache:', e);
+  }
+};
+
 const ProductImageGallery = ({ product, open, onOpenChange }: ProductImageGalleryProps) => {
   const [selectedView, setSelectedView] = useState<ViewType>("product");
   const [tryOnImage, setTryOnImage] = useState<string | null>(null);
@@ -37,9 +64,16 @@ const ProductImageGallery = ({ product, open, onOpenChange }: ProductImageGaller
     if (open && product) {
       const disabled = localStorage.getItem('ai_tryon_disabled') === 'true';
       setAiDisabled(disabled);
+      setSelectedView("product");
+      
+      // Check cache first
+      const cachedImage = getCachedTryOnImage(product.id);
+      if (cachedImage) {
+        setTryOnImage(cachedImage);
+        return;
+      }
       
       setTryOnImage(null);
-      setSelectedView("product");
       
       if (!disabled) {
         generateTryOnImage();
@@ -88,6 +122,8 @@ const ProductImageGallery = ({ product, open, onOpenChange }: ProductImageGaller
       }
       
       if (data?.result) {
+        // Save to shared cache
+        saveToCacheStorage(product.id, data.result);
         setTryOnImage(data.result);
       }
     } catch (err: any) {
