@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Sparkles } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,11 +21,14 @@ interface ProductTryOnImageProps {
 // Categories that can have AI try-on images generated
 const WEARABLE_CATEGORIES = ['tops', 'bottoms', 'outerwear', 'dresses', 'shoes', 'accessories'];
 
+// Cache for generated try-on images keyed by product ID
+const tryOnImageCache = new Map<string, string>();
+
 const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) => {
   const [tryOnImage, setTryOnImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [useOriginal, setUseOriginal] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const generationAttemptedRef = useRef(false);
 
   // Check if AI try-on is disabled - but reset it after 1 hour to retry
   const checkAiDisabled = () => {
@@ -33,7 +36,6 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
     if (disabledAt) {
       const oneHourAgo = Date.now() - (60 * 60 * 1000);
       if (parseInt(disabledAt) < oneHourAgo) {
-        // Reset after 1 hour
         localStorage.removeItem('ai_tryon_disabled');
         localStorage.removeItem('ai_tryon_disabled_at');
         return false;
@@ -43,25 +45,36 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
   };
   
   const aiDisabled = checkAiDisabled();
-  
-  // Check if product category is wearable (skip fragrance, shampoo, conditioner, etc.)
   const isWearable = WEARABLE_CATEGORIES.includes(product.category?.toLowerCase() || '');
 
   useEffect(() => {
-    console.log(`[ProductTryOnImage] Product: ${product.name}, Category: ${product.category}, isWearable: ${isWearable}, aiDisabled: ${aiDisabled}`);
-    
+    // Check cache first
+    const cachedImage = tryOnImageCache.get(product.id);
+    if (cachedImage) {
+      setTryOnImage(cachedImage);
+      return;
+    }
+
     if (aiDisabled || !isWearable) {
-      console.log(`[ProductTryOnImage] Skipping AI generation - aiDisabled: ${aiDisabled}, isWearable: ${isWearable}`);
       setUseOriginal(true);
-    } else {
+      return;
+    }
+
+    // Only attempt generation once per component instance
+    if (!generationAttemptedRef.current) {
+      generationAttemptedRef.current = true;
       generateTryOnImage();
     }
-  }, [product.id, aiDisabled, isWearable]);
+  }, [product.id]);
 
   const generateTryOnImage = async () => {
+    // Double-check cache before generating
+    if (tryOnImageCache.has(product.id)) {
+      setTryOnImage(tryOnImageCache.get(product.id)!);
+      return;
+    }
+
     setLoading(true);
-    setError(null);
-    console.log(`[ProductTryOnImage] Starting generation for: ${product.name}`);
 
     try {
       const preferences = JSON.parse(localStorage.getItem('guest_preferences') || '{}');
@@ -76,20 +89,15 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
         image_url: product.image_url
       }];
 
-      console.log(`[ProductTryOnImage] Calling virtual-tryon for ${product.name} with gender: ${userGender}`);
-
       const { data, error: fnError } = await supabase.functions.invoke("virtual-tryon", {
         body: {
           garmentImages,
-          viewType: "upperBody",
+          viewType: "fullBody",
           userGender
         }
       });
 
-      console.log(`[ProductTryOnImage] Response for ${product.name}:`, { data, fnError });
-
       if (fnError) {
-        console.error("[ProductTryOnImage] Function error:", fnError);
         const errorMsg = fnError.message || fnError.toString();
         if (errorMsg.includes("402") || errorMsg.includes("credits") || errorMsg.includes("payment")) {
           localStorage.setItem('ai_tryon_disabled', 'true');
@@ -99,7 +107,6 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
       }
 
       if (data?.error) {
-        console.error("[ProductTryOnImage] Data error:", data.error);
         if (data.error.includes("credits") || data.error.includes("Rate limit") || data.error.includes("payment")) {
           localStorage.setItem('ai_tryon_disabled', 'true');
           localStorage.setItem('ai_tryon_disabled_at', Date.now().toString());
@@ -108,27 +115,20 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
       }
 
       if (data?.result) {
-        console.log(`[ProductTryOnImage] Success! Got image for ${product.name}`);
+        // Cache the result
+        tryOnImageCache.set(product.id, data.result);
         setTryOnImage(data.result);
       } else {
-        console.log(`[ProductTryOnImage] No result in response for ${product.name}, using original`);
         setUseOriginal(true);
       }
     } catch (err: any) {
       console.error("[ProductTryOnImage] Error generating try-on:", err);
-      const errorMsg = err?.message || err?.toString() || '';
-      setError(errorMsg);
-      if (errorMsg.includes("402") || errorMsg.includes("credits") || errorMsg.includes("payment")) {
-        localStorage.setItem('ai_tryon_disabled', 'true');
-        localStorage.setItem('ai_tryon_disabled_at', Date.now().toString());
-      }
       setUseOriginal(true);
     } finally {
       setLoading(false);
     }
   };
 
-  // Loading state with skeleton
   if (loading) {
     return (
       <div className={`relative ${className}`}>
@@ -152,7 +152,6 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
     );
   }
 
-  // Show original image when AI disabled, not wearable, or failed
   if (useOriginal || !tryOnImage) {
     return (
       <div className={`relative ${className}`}>
@@ -162,7 +161,6 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
             alt={product.name} 
             className="w-full h-full object-cover"
             onError={(e) => {
-              console.error(`[ProductTryOnImage] Image failed to load: ${product.image_url}`);
               (e.target as HTMLImageElement).src = '/placeholder.svg';
             }}
           />
@@ -181,10 +179,7 @@ const ProductTryOnImage = ({ product, className = "" }: ProductTryOnImageProps) 
         src={tryOnImage} 
         alt={`${product.name} try-on`} 
         className="w-full h-full object-cover"
-        onError={(e) => {
-          console.error(`[ProductTryOnImage] AI image failed to load, falling back`);
-          setUseOriginal(true);
-        }}
+        onError={() => setUseOriginal(true)}
       />
     </div>
   );
