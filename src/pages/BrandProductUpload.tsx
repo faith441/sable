@@ -287,7 +287,7 @@ const BrandProductUpload = () => {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Image Upload */}
                   <div className="space-y-2">
-                    <Label>Product Image</Label>
+                    <Label>Product Image *</Label>
                     <div
                       className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
                         dragActive ? "border-primary bg-primary/5" : "border-border"
@@ -427,9 +427,14 @@ const BrandProductUpload = () => {
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={uploading || !formData.name || !formData.category}>
+                  <Button type="submit" className="w-full" disabled={uploading || !formData.name || !formData.category || !imageFile}>
                     {uploading ? "Uploading..." : "Submit for Review"}
                   </Button>
+                  {!imageFile && (
+                    <p className="text-xs text-muted-foreground text-center">
+                      Product image is required
+                    </p>
+                  )}
                 </form>
               </CardContent>
             </Card>
