@@ -7,10 +7,23 @@ import { toast } from "sonner";
 import { ArrowRight, Loader2, Sparkles, Heart, X } from "lucide-react";
 
 // Helper function to get image source from File or string
-const getImageSrc = (photo: File | string | null): string => {
+const getImageSrc = (photo: File | string | null | unknown): string => {
   if (!photo) return '';
-  if (typeof photo === 'string') return photo;
-  return URL.createObjectURL(photo);
+  if (typeof photo === 'string' && photo.length > 0) return photo;
+  // Check if it's actually a File/Blob object (not an empty object from localStorage)
+  if (photo instanceof File || photo instanceof Blob) {
+    return URL.createObjectURL(photo);
+  }
+  // Invalid value (e.g., {} from serialized File), return empty
+  return '';
+};
+
+// Helper to check if a photo value is valid (not null/undefined/empty object)
+const isValidPhoto = (photo: unknown): boolean => {
+  if (!photo) return false;
+  if (typeof photo === 'string' && photo.length > 0) return true;
+  if (photo instanceof File || photo instanceof Blob) return true;
+  return false;
 };
 
 const Survey = () => {
@@ -876,12 +889,12 @@ const Survey = () => {
                   <label
                     htmlFor={`photo-${index}`}
                     className={`relative block aspect-square rounded-lg border-2 border-dashed cursor-pointer transition-all overflow-hidden ${
-                      formData.photos[index]
+                      isValidPhoto(formData.photos[index])
                         ? 'border-primary bg-primary/5'
                         : 'border-border hover:border-primary/50 bg-secondary/20'
                     }`}
                   >
-                    {formData.photos[index] ? (
+                    {isValidPhoto(formData.photos[index]) ? (
                       <div className="relative w-full h-full">
                         <img
                           src={getImageSrc(formData.photos[index])}
@@ -959,12 +972,12 @@ const Survey = () => {
                   <label
                     htmlFor={`full-body-photo-${index}`}
                     className={`relative block aspect-[3/4] rounded-lg border-2 border-dashed cursor-pointer transition-all overflow-hidden ${
-                      formData.fullBodyPhotos[index]
+                      isValidPhoto(formData.fullBodyPhotos[index])
                         ? 'border-primary bg-primary/5'
                         : 'border-border hover:border-primary/50 bg-secondary/20'
                     }`}
                   >
-                    {formData.fullBodyPhotos[index] ? (
+                    {isValidPhoto(formData.fullBodyPhotos[index]) ? (
                       <div className="relative w-full h-full">
                         <img
                           src={getImageSrc(formData.fullBodyPhotos[index])}
@@ -1043,12 +1056,12 @@ const Survey = () => {
                   <label
                     htmlFor={`swimsuit-photo-${index}`}
                     className={`relative block aspect-[3/4] rounded-lg border-2 border-dashed cursor-pointer transition-all overflow-hidden ${
-                      formData.swimsuitPhotos[index]
+                      isValidPhoto(formData.swimsuitPhotos[index])
                         ? 'border-primary bg-primary/5'
                         : 'border-border hover:border-primary/50 bg-secondary/20'
                     }`}
                   >
-                    {formData.swimsuitPhotos[index] ? (
+                    {isValidPhoto(formData.swimsuitPhotos[index]) ? (
                       <div className="relative w-full h-full">
                         <img
                           src={getImageSrc(formData.swimsuitPhotos[index])}
