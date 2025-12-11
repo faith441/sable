@@ -6,6 +6,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { ArrowRight, Loader2, Sparkles, Heart, X } from "lucide-react";
 
+// Helper function to get image source from File or string
+const getImageSrc = (photo: File | string | null): string => {
+  if (!photo) return '';
+  if (typeof photo === 'string') return photo;
+  return URL.createObjectURL(photo);
+};
+
 const Survey = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
@@ -877,7 +884,7 @@ const Survey = () => {
                     {formData.photos[index] ? (
                       <div className="relative w-full h-full">
                         <img
-                          src={URL.createObjectURL(formData.photos[index])}
+                          src={getImageSrc(formData.photos[index])}
                           alt={`Selfie ${index + 1}`}
                           className="w-full h-full object-cover"
                         />
@@ -960,7 +967,7 @@ const Survey = () => {
                     {formData.fullBodyPhotos[index] ? (
                       <div className="relative w-full h-full">
                         <img
-                          src={URL.createObjectURL(formData.fullBodyPhotos[index]!)}
+                          src={getImageSrc(formData.fullBodyPhotos[index])}
                           alt={`Full body photo ${index + 1}`}
                           className="w-full h-full object-cover"
                         />
@@ -1044,7 +1051,7 @@ const Survey = () => {
                     {formData.swimsuitPhotos[index] ? (
                       <div className="relative w-full h-full">
                         <img
-                          src={URL.createObjectURL(formData.swimsuitPhotos[index]!)}
+                          src={getImageSrc(formData.swimsuitPhotos[index])}
                           alt={`Swimsuit photo ${index + 1}`}
                           className="w-full h-full object-cover"
                         />
