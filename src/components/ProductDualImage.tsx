@@ -2,6 +2,10 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Sparkles } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
 
 interface Product {
   id: string;
@@ -23,6 +27,7 @@ const WEARABLE_CATEGORIES = ['tops', 'bottoms', 'outerwear', 'dresses', 'shoes',
 const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) => {
   const [tryOnImage, setTryOnImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [activeView, setActiveView] = useState<'product' | 'tryon'>('tryon');
 
   const checkAiDisabled = () => {
@@ -44,8 +49,6 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
   useEffect(() => {
     if (!aiDisabled && isWearable) {
       generateTryOnImage();
-    } else {
-      setActiveView('product');
     }
   }, [product.id, aiDisabled, isWearable]);
 
@@ -58,6 +61,10 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
         ? preferences.gender[0] 
         : preferences.gender || "Women's";
 
+      // Get user's uploaded body photo from survey
+      const bodyPhotos = preferences.bodyPhotos || [];
+      const userImage = bodyPhotos.length > 0 ? bodyPhotos[0] : null;
+
       const garmentImages = [{
         name: product.name,
         category: product.category,
@@ -69,7 +76,8 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
         body: {
           garmentImages,
           viewType: "fullBody",
-          userGender
+          userGender,
+          userImage // Pass user's photo if available
         }
       });
 
@@ -79,7 +87,6 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
           localStorage.setItem('ai_tryon_disabled', 'true');
           localStorage.setItem('ai_tryon_disabled_at', Date.now().toString());
         }
-        setActiveView('product');
         return;
       }
 
@@ -88,14 +95,11 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
           localStorage.setItem('ai_tryon_disabled', 'true');
           localStorage.setItem('ai_tryon_disabled_at', Date.now().toString());
         }
-        setActiveView('product');
         return;
       }
 
       if (data?.result) {
         setTryOnImage(data.result);
-      } else {
-        setActiveView('product');
       }
     } catch (err: any) {
       const errorMsg = err?.message || err?.toString() || '';
@@ -103,79 +107,26 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
         localStorage.setItem('ai_tryon_disabled', 'true');
         localStorage.setItem('ai_tryon_disabled_at', Date.now().toString());
       }
-      setActiveView('product');
     } finally {
       setLoading(false);
     }
   };
 
-  const mainImage = activeView === 'tryon' && tryOnImage ? tryOnImage : product.image_url;
+  // Main card always shows AI try-on (or product image if AI unavailable)
+  const mainCardImage = tryOnImage || product.image_url;
+  const dialogMainImage = activeView === 'tryon' && tryOnImage ? tryOnImage : product.image_url;
 
   return (
-    <div className={`flex ${className}`}>
-      {/* Thumbnail strip on left */}
-      <div className="flex flex-col gap-1 w-12 flex-shrink-0 p-1">
-        {/* Product thumbnail */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setActiveView('product');
-          }}
-          className={`relative w-10 h-12 rounded-md overflow-hidden border-2 transition-all ${
-            activeView === 'product' ? 'border-sage ring-1 ring-sage/30' : 'border-border/50 hover:border-sage/50'
-          }`}
-        >
-          {product.image_url ? (
-            <img 
-              src={product.image_url} 
-              alt="Product"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-muted flex items-center justify-center">
-              <span className="text-[8px] text-muted-foreground">N/A</span>
-            </div>
-          )}
-          <span className="absolute bottom-0 left-0 right-0 bg-background/90 text-[7px] text-center py-0.5 font-medium">
-            Product
-          </span>
-        </button>
-
-        {/* AI Try-on thumbnail */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            if (tryOnImage) setActiveView('tryon');
-          }}
-          disabled={!tryOnImage && !loading}
-          className={`relative w-10 h-12 rounded-md overflow-hidden border-2 transition-all ${
-            activeView === 'tryon' && tryOnImage ? 'border-sage ring-1 ring-sage/30' : 'border-border/50'
-          } ${tryOnImage ? 'hover:border-sage/50 cursor-pointer' : 'opacity-60 cursor-not-allowed'}`}
-        >
-          {loading ? (
-            <div className="w-full h-full bg-muted flex items-center justify-center">
-              <Sparkles className="w-3 h-3 text-primary animate-pulse" />
-            </div>
-          ) : tryOnImage ? (
-            <img 
-              src={tryOnImage} 
-              alt="AI Try-on"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-muted/50 flex items-center justify-center">
-              <Sparkles className="w-3 h-3 text-muted-foreground/40" />
-            </div>
-          )}
-          <span className="absolute bottom-0 left-0 right-0 bg-background/90 text-[7px] text-center py-0.5 font-medium">
-            AI views
-          </span>
-        </button>
-      </div>
-
-      {/* Main image */}
-      <div className="flex-1 relative bg-secondary">
-        {loading && activeView === 'tryon' ? (
+    <>
+      {/* Main card - just shows the AI try-on image */}
+      <div 
+        className={`relative bg-secondary cursor-pointer ${className}`}
+        onClick={(e) => {
+          e.stopPropagation();
+          setDialogOpen(true);
+        }}
+      >
+        {loading ? (
           <>
             <Skeleton className="w-full h-full absolute inset-0" />
             {product.image_url && (
@@ -190,22 +141,99 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
                 <Sparkles className="w-4 h-4 text-primary animate-pulse" />
               </div>
               <span className="text-xs text-muted-foreground bg-background/80 backdrop-blur-sm px-2 py-1 rounded">
-                Generating AI Try-On...
+                AI Try-On...
               </span>
             </div>
           </>
         ) : (
           <img 
-            src={mainImage} 
-            alt={activeView === 'tryon' ? `${product.name} try-on` : product.name}
+            src={mainCardImage} 
+            alt={`${product.name} try-on`}
             className="w-full h-full object-cover"
             onError={(e) => {
-              (e.target as HTMLImageElement).src = '/placeholder.svg';
+              (e.target as HTMLImageElement).src = product.image_url || '/placeholder.svg';
             }}
           />
         )}
+        
+        {/* Small AI indicator badge */}
+        {tryOnImage && !loading && (
+          <div className="absolute bottom-1 left-1 bg-background/80 backdrop-blur-sm rounded px-1.5 py-0.5 flex items-center gap-1">
+            <Sparkles className="w-3 h-3 text-sage" />
+            <span className="text-[9px] text-muted-foreground">AI</span>
+          </div>
+        )}
       </div>
-    </div>
+
+      {/* Dialog with thumbnail switcher */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-sm p-0 overflow-hidden">
+          <div className="flex">
+            {/* Thumbnail strip */}
+            <div className="flex flex-col gap-2 p-3 bg-muted/30">
+              {/* Product thumbnail */}
+              <button
+                onClick={() => setActiveView('product')}
+                className={`relative w-16 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                  activeView === 'product' ? 'border-sage ring-2 ring-sage/30' : 'border-border hover:border-sage/50'
+                }`}
+              >
+                {product.image_url ? (
+                  <img 
+                    src={product.image_url} 
+                    alt="Product"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-muted flex items-center justify-center">
+                    <span className="text-xs text-muted-foreground">N/A</span>
+                  </div>
+                )}
+                <span className="absolute bottom-0 left-0 right-0 bg-background/90 text-[10px] text-center py-0.5 font-medium">
+                  Product
+                </span>
+              </button>
+
+              {/* AI Try-on thumbnail */}
+              <button
+                onClick={() => tryOnImage && setActiveView('tryon')}
+                disabled={!tryOnImage}
+                className={`relative w-16 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                  activeView === 'tryon' && tryOnImage ? 'border-sage ring-2 ring-sage/30' : 'border-border'
+                } ${tryOnImage ? 'hover:border-sage/50 cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}
+              >
+                {tryOnImage ? (
+                  <img 
+                    src={tryOnImage} 
+                    alt="AI Try-on"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-muted/50 flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-muted-foreground/40" />
+                  </div>
+                )}
+                <span className="absolute bottom-0 left-0 right-0 bg-background/90 text-[10px] text-center py-0.5 font-medium">
+                  AI Try-On
+                </span>
+              </button>
+            </div>
+
+            {/* Main dialog image */}
+            <div className="flex-1 aspect-[3/4] bg-secondary">
+              <img 
+                src={dialogMainImage} 
+                alt={activeView === 'tryon' ? `${product.name} try-on` : product.name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/placeholder.svg';
+                }}
+              />
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
