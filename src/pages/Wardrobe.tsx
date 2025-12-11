@@ -265,9 +265,9 @@ const Wardrobe = () => {
         
         if (hasValidIds) {
           setCapsules(parsed);
+          // Wait for try-on images to complete before showing wardrobe
+          await preGenerateTryOnImages(parsed);
           setLoading(false);
-          // Pre-generate try-on images in background
-          preGenerateTryOnImages(parsed);
           return;
         } else {
           // Clear invalid cached data
@@ -280,9 +280,9 @@ const Wardrobe = () => {
         setCapsules(SAMPLE_CAPSULES);
         setUsingSampleData(true);
         setCreditsExhausted(true);
+        // Wait for try-on images to complete before showing wardrobe
+        await preGenerateTryOnImages(SAMPLE_CAPSULES);
         setLoading(false);
-        // Pre-generate try-on images in background
-        preGenerateTryOnImages(SAMPLE_CAPSULES);
         return;
       }
 
@@ -293,13 +293,14 @@ const Wardrobe = () => {
       // Fall back to sample data on any error
       setCapsules(SAMPLE_CAPSULES);
       setUsingSampleData(true);
+      await preGenerateTryOnImages(SAMPLE_CAPSULES);
       toast.error("Failed to load wardrobe. Showing sample collection.");
     } finally {
       setLoading(false);
     }
   };
 
-  const fallbackToSampleData = (reason: 'credits' | 'inventory' | 'error' = 'error') => {
+  const fallbackToSampleData = async (reason: 'credits' | 'inventory' | 'error' = 'error') => {
     setCapsules(SAMPLE_CAPSULES);
     setUsingSampleData(true);
     if (reason === 'credits') {
@@ -307,14 +308,14 @@ const Wardrobe = () => {
     } else if (reason === 'inventory') {
       setNoInventory(true);
     }
-    // Pre-generate try-on images in background
-    preGenerateTryOnImages(SAMPLE_CAPSULES);
+    // Wait for try-on images to complete before showing wardrobe
+    await preGenerateTryOnImages(SAMPLE_CAPSULES);
   };
 
   const generateWardrobe = async () => {
     // Check if AI is disabled - use sample data
     if (AI_DISABLED || creditsExhausted) {
-      fallbackToSampleData();
+      await fallbackToSampleData();
       toast.info("Using sample wardrobe collection.");
       return;
     }
@@ -333,7 +334,7 @@ const Wardrobe = () => {
       if (error) {
         const errorMsg = error.message || error.toString();
         if (errorMsg.includes("402") || errorMsg.includes("credits") || errorMsg.includes("payment") || errorMsg.includes("non-2xx")) {
-          fallbackToSampleData('credits');
+          await fallbackToSampleData('credits');
           toast.info("AI unavailable. Showing sample wardrobe collection.");
           return;
         }
@@ -342,12 +343,12 @@ const Wardrobe = () => {
       
       if (data?.error) {
         if (data.error === "no_inventory") {
-          fallbackToSampleData('inventory');
+          await fallbackToSampleData('inventory');
           toast.info("No brand partner products available yet. Showing sample collection.");
           return;
         }
         if (data.error.includes("credits") || data.error.includes("payment")) {
-          fallbackToSampleData('credits');
+          await fallbackToSampleData('credits');
           toast.info("AI unavailable. Showing sample wardrobe collection.");
           return;
         }
@@ -360,7 +361,7 @@ const Wardrobe = () => {
       // Cache the generated capsules
       localStorage.setItem('cached_capsules', JSON.stringify(newCapsules));
       
-      // Pre-generate try-on images (will show progress in UI)
+      // Wait for try-on images to complete before showing wardrobe
       await preGenerateTryOnImages(newCapsules);
       
       toast.success("Wardrobe regenerated successfully!");
@@ -368,11 +369,11 @@ const Wardrobe = () => {
       console.error("Error generating wardrobe:", error);
       const errorMsg = error?.message || error?.toString() || '';
       if (errorMsg.includes("credits") || errorMsg.includes("payment") || errorMsg.includes("402") || errorMsg.includes("non-2xx")) {
-        fallbackToSampleData('credits');
+        await fallbackToSampleData('credits');
         toast.info("AI unavailable. Showing sample wardrobe collection.");
       } else {
         // For other errors, also fall back to sample data
-        fallbackToSampleData('error');
+        await fallbackToSampleData('error');
         toast.error("Failed to generate wardrobe. Showing sample collection.");
       }
     } finally {
