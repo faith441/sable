@@ -22,6 +22,7 @@ const WEARABLE_CATEGORIES = ['tops', 'bottoms', 'outerwear', 'dresses', 'shoes',
 
 // Single unified cache key - must match Wardrobe.tsx
 const CACHE_KEY = 'ai_tryon_image_cache';
+const MAX_CACHE_ENTRIES = 20; // Limit cache size to prevent quota issues
 
 const loadCacheFromStorage = (): Map<string, string> => {
   try {
@@ -37,9 +38,28 @@ const loadCacheFromStorage = (): Map<string, string> => {
 
 const saveCacheToStorage = (cache: Map<string, string>) => {
   try {
+    // Limit cache size - remove oldest entries if over limit
+    while (cache.size > MAX_CACHE_ENTRIES) {
+      const firstKey = cache.keys().next().value;
+      if (firstKey) cache.delete(firstKey);
+    }
     localStorage.setItem(CACHE_KEY, JSON.stringify(Array.from(cache.entries())));
-  } catch (e) {
-    console.error('[ProductDualImage] Failed to save cache:', e);
+  } catch (e: any) {
+    // Handle quota exceeded by clearing old cache
+    if (e?.name === 'QuotaExceededError') {
+      console.warn('[ProductDualImage] Cache quota exceeded, clearing old entries');
+      try {
+        // Keep only the newest entries
+        const entries = Array.from(cache.entries());
+        const newCache = new Map(entries.slice(-10));
+        localStorage.setItem(CACHE_KEY, JSON.stringify(Array.from(newCache.entries())));
+      } catch {
+        // Last resort - clear the cache entirely
+        localStorage.removeItem(CACHE_KEY);
+      }
+    } else {
+      console.error('[ProductDualImage] Failed to save cache:', e);
+    }
   }
 };
 
