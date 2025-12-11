@@ -102,6 +102,27 @@ export default function BrandApplicationsManager() {
         throw new Error(result.error || "Failed to create brand account");
       }
 
+      // Send credentials to n8n webhook
+      try {
+        await fetch('https://faithtemporosa.app.n8n.cloud/webhook/e861e286-7ead-42b6-b4ae-c6397b54f2c6', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          mode: 'no-cors',
+          body: JSON.stringify({
+            company_name: app.company_name,
+            contact_name: app.contact_name,
+            email: result.email,
+            temp_password: result.temp_password,
+            login_url: `${window.location.origin}/brand/auth`,
+            is_existing_user: result.is_existing_user,
+            timestamp: new Date().toISOString(),
+          }),
+        });
+        console.log('Credentials sent to webhook');
+      } catch (webhookError) {
+        console.error('Webhook error:', webhookError);
+      }
+
       // Store credentials to show in dialog
       setNewCredentials({
         email: result.email,
@@ -110,10 +131,7 @@ export default function BrandApplicationsManager() {
       });
       setShowCredentialsDialog(true);
       
-      const message = result.is_existing_user 
-        ? `${app.company_name} approved! Brand linked to existing user account.`
-        : `${app.company_name} approved! Brand account created.`;
-      toast.success(message);
+      toast.success(`${app.company_name} approved! Credentials sent.`);
       loadApplications();
     } catch (error: any) {
       console.error("Error approving application:", error);
