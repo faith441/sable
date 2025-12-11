@@ -2,17 +2,23 @@ import { useEffect, useRef, useState } from "react";
 
 interface VideoGuideProps {
   gender: string[];
+  tryOnProgress?: { current: number; total: number };
 }
 
-const VideoGuide = ({ gender }: VideoGuideProps) => {
+const VideoGuide = ({ gender, tryOnProgress }: VideoGuideProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [currentCaption, setCurrentCaption] = useState("");
   const [captionIndex, setCaptionIndex] = useState(0);
 
   const isWomen = gender.includes("Women's");
+  const isGeneratingTryOn = tryOnProgress && tryOnProgress.total > 0;
 
   // Captions with timestamps (in seconds)
-  const captions = [
+  const captions = isGeneratingTryOn ? [
+    { time: 0, text: "Creating virtual try-on previews..." },
+    { time: 3, text: "Generating personalized styling images..." },
+    { time: 6, text: "Almost ready! Finalizing your looks..." },
+  ] : [
     { time: 0, text: "Hello! I'm here to help curate your perfect capsule wardrobe..." },
     { time: 3, text: "Analyzing your style preferences and lifestyle needs..." },
     { time: 6, text: "Selecting pieces that work together seamlessly..." },
@@ -85,19 +91,33 @@ const VideoGuide = ({ gender }: VideoGuideProps) => {
             </p>
           </div>
           
-          {/* Progress Dots */}
-          <div className="flex items-center justify-center gap-2">
-            {captions.map((_, index) => (
-              <div
-                key={index}
-                className={`h-1.5 rounded-full transition-all duration-500 ${
-                  index <= captionIndex 
-                    ? 'w-8 bg-primary' 
-                    : 'w-1.5 bg-muted-foreground/30'
-                }`}
-              />
-            ))}
-          </div>
+          {/* Progress Indicator */}
+          {isGeneratingTryOn ? (
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Generating try-on {tryOnProgress.current} of {tryOnProgress.total}
+              </p>
+              <div className="h-1.5 bg-muted rounded-full overflow-hidden max-w-xs mx-auto">
+                <div 
+                  className="h-full bg-primary transition-all duration-300"
+                  style={{ width: `${(tryOnProgress.current / tryOnProgress.total) * 100}%` }}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center gap-2">
+              {captions.map((_, index) => (
+                <div
+                  key={index}
+                  className={`h-1.5 rounded-full transition-all duration-500 ${
+                    index <= captionIndex 
+                      ? 'w-8 bg-primary' 
+                      : 'w-1.5 bg-muted-foreground/30'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
