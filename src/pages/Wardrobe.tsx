@@ -64,54 +64,7 @@ const saveTryOnCache = (cache: Map<string, string>) => {
   }
 };
 
-// Sample wardrobe data for when AI is disabled - using reliable picsum placeholder images
-const SAMPLE_CAPSULES: Capsule[] = [
-  {
-    name: "Essential Minimalist",
-    description: "A timeless collection of versatile pieces that form the foundation of any sophisticated wardrobe.",
-    total_pieces: 12,
-    total_price: 2450,
-    outfit_count: 24,
-    products: [
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c01", name: "Cashmere Crewneck Sweater", category: "tops", price: 295, colors: ["Ivory"], image_url: "https://picsum.photos/seed/sweater1/400/600", product_url: "#", brand: { name: "Loro Piana" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c02", name: "Tailored Wool Trousers", category: "bottoms", price: 385, colors: ["Navy"], image_url: "https://picsum.photos/seed/trousers1/400/600", product_url: "#", brand: { name: "Theory" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c03", name: "Silk Button-Down Shirt", category: "tops", price: 275, colors: ["White"], image_url: "https://picsum.photos/seed/shirt1/400/600", product_url: "#", brand: { name: "Equipment" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c04", name: "Double-Breasted Blazer", category: "outerwear", price: 595, colors: ["Charcoal"], image_url: "https://picsum.photos/seed/blazer1/400/600", product_url: "#", brand: { name: "Max Mara" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c05", name: "Leather Chelsea Boots", category: "shoes", price: 425, colors: ["Black"], image_url: "https://picsum.photos/seed/boots1/400/600", product_url: "#", brand: { name: "Common Projects" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c06", name: "Minimalist Leather Tote", category: "accessories", price: 475, colors: ["Tan"], image_url: "https://picsum.photos/seed/tote1/400/600", product_url: "#", brand: { name: "Mansur Gavriel" } },
-    ]
-  },
-  {
-    name: "Weekend Casual",
-    description: "Relaxed yet refined pieces perfect for off-duty moments and casual gatherings.",
-    total_pieces: 10,
-    total_price: 1850,
-    outfit_count: 18,
-    products: [
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c07", name: "Oversized Cotton Hoodie", category: "tops", price: 195, colors: ["Sage"], image_url: "https://picsum.photos/seed/hoodie1/400/600", product_url: "#", brand: { name: "Acne Studios" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c08", name: "Relaxed Fit Chinos", category: "bottoms", price: 165, colors: ["Khaki"], image_url: "https://picsum.photos/seed/chinos1/400/600", product_url: "#", brand: { name: "A.P.C." } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c09", name: "Premium Sneakers", category: "shoes", price: 285, colors: ["White"], image_url: "https://picsum.photos/seed/sneakers1/400/600", product_url: "#", brand: { name: "Veja" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c10", name: "Linen Blend T-Shirt", category: "tops", price: 85, colors: ["Cream"], image_url: "https://picsum.photos/seed/tshirt1/400/600", product_url: "#", brand: { name: "COS" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c11", name: "Lightweight Denim Jacket", category: "outerwear", price: 245, colors: ["Light Blue"], image_url: "https://picsum.photos/seed/denim1/400/600", product_url: "#", brand: { name: "Levi's" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c12", name: "Canvas Crossbody Bag", category: "accessories", price: 125, colors: ["Navy"], image_url: "https://picsum.photos/seed/bag1/400/600", product_url: "#", brand: { name: "Rains" } },
-    ]
-  },
-  {
-    name: "Evening Elevated",
-    description: "Sophisticated pieces for special occasions and memorable evenings.",
-    total_pieces: 8,
-    total_price: 3200,
-    outfit_count: 12,
-    products: [
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c13", name: "Silk Midi Dress", category: "dresses", price: 685, colors: ["Burgundy"], image_url: "https://picsum.photos/seed/dress1/400/600", product_url: "#", brand: { name: "Reformation" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c14", name: "Velvet Blazer", category: "outerwear", price: 495, colors: ["Midnight"], image_url: "https://picsum.photos/seed/velvet1/400/600", product_url: "#", brand: { name: "Saint Laurent" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c15", name: "Strappy Heeled Sandals", category: "shoes", price: 545, colors: ["Gold"], image_url: "https://picsum.photos/seed/heels1/400/600", product_url: "#", brand: { name: "Jimmy Choo" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c16", name: "Crystal Embellished Clutch", category: "accessories", price: 375, colors: ["Silver"], image_url: "https://picsum.photos/seed/clutch1/400/600", product_url: "#", brand: { name: "Judith Leiber" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c17", name: "Statement Earrings", category: "accessories", price: 195, colors: ["Pearl"], image_url: "https://picsum.photos/seed/earrings1/400/600", product_url: "#", brand: { name: "Jennifer Behr" } },
-      { id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c18", name: "Jo Malone Velvet Rose", category: "fragrance", price: 155, colors: ["Rose"], image_url: "https://picsum.photos/seed/perfume1/400/600", product_url: "#", brand: { name: "Jo Malone London" } },
-    ]
-  }
-];
+// No sample data - wait for real brand partner inventory
 
 interface CompletedTryOn {
   productId: string;
@@ -299,13 +252,11 @@ const Wardrobe = () => {
         }
       }
 
-      // If AI is disabled or no valid cached capsules, use sample data immediately
+      // If AI is disabled, show empty state
       if (AI_DISABLED) {
-        setCapsules(SAMPLE_CAPSULES);
+        setCapsules([]);
         setUsingSampleData(true);
         setCreditsExhausted(true);
-        // Wait for try-on images to complete before showing wardrobe
-        await preGenerateTryOnImages(SAMPLE_CAPSULES);
         setLoading(false);
         return;
       }
@@ -314,33 +265,30 @@ const Wardrobe = () => {
       await generateWardrobe();
     } catch (error) {
       console.error("Error loading wardrobe:", error);
-      // Fall back to sample data on any error
-      setCapsules(SAMPLE_CAPSULES);
+      // Show empty state on error
+      setCapsules([]);
       setUsingSampleData(true);
-      await preGenerateTryOnImages(SAMPLE_CAPSULES);
-      toast.error("Failed to load wardrobe. Showing sample collection.");
+      toast.error("Failed to load wardrobe. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const fallbackToSampleData = async (reason: 'credits' | 'inventory' | 'error' = 'error') => {
-    setCapsules(SAMPLE_CAPSULES);
+  const fallbackToEmptyState = async (reason: 'credits' | 'inventory' | 'error' = 'error') => {
+    setCapsules([]);
     setUsingSampleData(true);
     if (reason === 'credits') {
       setCreditsExhausted(true);
     } else if (reason === 'inventory') {
       setNoInventory(true);
     }
-    // Wait for try-on images to complete before showing wardrobe
-    await preGenerateTryOnImages(SAMPLE_CAPSULES);
   };
 
   const generateWardrobe = async () => {
-    // Check if AI is disabled - use sample data
+    // Check if AI is disabled - show empty state
     if (AI_DISABLED || creditsExhausted) {
-      await fallbackToSampleData();
-      toast.info("Using sample wardrobe collection.");
+      await fallbackToEmptyState();
+      toast.info("No wardrobe available. Please check back later.");
       return;
     }
     
@@ -358,8 +306,8 @@ const Wardrobe = () => {
       if (error) {
         const errorMsg = error.message || error.toString();
         if (errorMsg.includes("402") || errorMsg.includes("credits") || errorMsg.includes("payment") || errorMsg.includes("non-2xx")) {
-          await fallbackToSampleData('credits');
-          toast.info("AI unavailable. Showing sample wardrobe collection.");
+          await fallbackToEmptyState('credits');
+          toast.info("AI unavailable. Please check back later.");
           return;
         }
         throw error;
@@ -367,13 +315,13 @@ const Wardrobe = () => {
       
       if (data?.error) {
         if (data.error === "no_inventory") {
-          await fallbackToSampleData('inventory');
-          toast.info("No brand partner products available yet. Showing sample collection.");
+          await fallbackToEmptyState('inventory');
+          toast.info("No brand partner products available yet.");
           return;
         }
         if (data.error.includes("credits") || data.error.includes("payment")) {
-          await fallbackToSampleData('credits');
-          toast.info("AI unavailable. Showing sample wardrobe collection.");
+          await fallbackToEmptyState('credits');
+          toast.info("AI unavailable. Please check back later.");
           return;
         }
         throw new Error(data.error);
@@ -393,12 +341,12 @@ const Wardrobe = () => {
       console.error("Error generating wardrobe:", error);
       const errorMsg = error?.message || error?.toString() || '';
       if (errorMsg.includes("credits") || errorMsg.includes("payment") || errorMsg.includes("402") || errorMsg.includes("non-2xx")) {
-        await fallbackToSampleData('credits');
-        toast.info("AI unavailable. Showing sample wardrobe collection.");
+        await fallbackToEmptyState('credits');
+        toast.info("AI unavailable. Please check back later.");
       } else {
-        // For other errors, also fall back to sample data
-        await fallbackToSampleData('error');
-        toast.error("Failed to generate wardrobe. Showing sample collection.");
+        // For other errors, show empty state
+        await fallbackToEmptyState('error');
+        toast.error("Failed to generate wardrobe. Please try again.");
       }
     } finally {
       setGenerating(false);
@@ -564,9 +512,9 @@ const Wardrobe = () => {
         {noInventory && (
           <Alert className="mb-6 border-sage/50 bg-sage/10">
             <Package className="h-4 w-4 text-sage" />
-            <AlertTitle className="text-foreground">Sample Collection</AlertTitle>
+            <AlertTitle className="text-foreground">Coming Soon</AlertTitle>
             <AlertDescription className="text-muted-foreground">
-              Brand partner products are coming soon! Browse our curated sample collection in the meantime.
+              Brand partner products are coming soon! Check back later for personalized wardrobe recommendations.
             </AlertDescription>
           </Alert>
         )}
@@ -577,10 +525,7 @@ const Wardrobe = () => {
             <AlertCircle className="h-4 w-4 text-amber-600" />
             <AlertTitle className="text-amber-800 dark:text-amber-200">AI Features Temporarily Unavailable</AlertTitle>
             <AlertDescription className="text-amber-700 dark:text-amber-300">
-              {usingSampleData 
-                ? "You're viewing sample wardrobe data. Add AI credits to generate personalized recommendations based on your style preferences."
-                : "AI credits have been exhausted. Your previously generated wardrobes are shown below. Add credits to regenerate or access virtual try-on features."
-              }
+              AI credits have been exhausted. Please check back later for personalized wardrobe recommendations.
             </AlertDescription>
           </Alert>
         )}
@@ -602,20 +547,6 @@ const Wardrobe = () => {
           </Card>
         ) : (
           <Tabs defaultValue="0" className="space-y-6">
-          {usingSampleData && (
-            <div className="flex items-center gap-2 px-2">
-              <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                noInventory 
-                  ? 'bg-sage/20 text-sage' 
-                  : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
-              }`}>
-                Sample Collection
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {noInventory ? 'Preview collection' : 'Showing example wardrobes'}
-              </span>
-            </div>
-          )}
           <TabsList className="w-full justify-start overflow-x-auto">
             {capsules.map((capsule, index) => (
               <TabsTrigger 
