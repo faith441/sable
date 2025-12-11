@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Upload, X } from "lucide-react";
 
 const ProductsManager = () => {
   const [products, setProducts] = useState<any[]>([]);
@@ -17,6 +17,10 @@ const ProductsManager = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -55,12 +59,96 @@ const ProductsManager = () => {
     }
   };
 
+  const handleDrag = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDragIn = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragOut = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      handleFile(files[0]);
+    }
+  }, []);
+
+  const handleFile = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      handleFile(files[0]);
+    }
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+  };
+
+  const uploadImage = async (): Promise<string | null> => {
+    if (!imageFile) return formData.image_url || null;
+    
+    const fileExt = imageFile.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const filePath = `products/${fileName}`;
+    
+    const { error: uploadError } = await supabase.storage
+      .from('products')
+      .upload(filePath, imageFile);
+    
+    if (uploadError) {
+      console.error('Upload error:', uploadError);
+      throw uploadError;
+    }
+    
+    const { data: { publicUrl } } = supabase.storage
+      .from('products')
+      .getPublicUrl(filePath);
+    
+    return publicUrl;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setUploading(true);
 
     try {
+      let imageUrl = formData.image_url;
+      
+      if (imageFile) {
+        imageUrl = await uploadImage() || '';
+      }
+
       const productData = {
         ...formData,
+        image_url: imageUrl,
         price: parseFloat(formData.price),
         sizes: formData.sizes ? formData.sizes.split(",").map(s => s.trim()) : [],
         colors: formData.colors ? formData.colors.split(",").map(c => c.trim()) : [],
@@ -87,6 +175,8 @@ const ProductsManager = () => {
     } catch (error) {
       console.error("Error saving product:", error);
       toast.error("Failed to save product");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -105,6 +195,8 @@ const ProductsManager = () => {
       tags: product.tags?.join(", ") || "",
       is_available: product.is_available,
     });
+    setImageFile(null);
+    setImagePreview(product.image_url || null);
     setDialogOpen(true);
   };
 
@@ -124,6 +216,8 @@ const ProductsManager = () => {
 
   const resetForm = () => {
     setEditingProduct(null);
+    setImageFile(null);
+    setImagePreview(null);
     setFormData({
       name: "",
       description: "",
@@ -216,13 +310,52 @@ const ProductsManager = () => {
                     required
                   />
                 </div>
-                <div>
-                  <Label>Image URL</Label>
-                  <Input
-                    value={formData.image_url}
-                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                    placeholder="https://..."
-                  />
+                <div className="col-span-2">
+                  <Label>Product Image</Label>
+                  <div
+                    onDragEnter={handleDragIn}
+                    onDragLeave={handleDragOut}
+                    onDragOver={handleDrag}
+                    onDrop={handleDrop}
+                    className={`relative border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${
+                      isDragging ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                    }`}
+                  >
+                    {imagePreview ? (
+                      <div className="relative">
+                        <img 
+                          src={imagePreview} 
+                          alt="Preview" 
+                          className="max-h-32 mx-auto rounded object-contain"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-0 right-0 h-6 w-6"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeImage();
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <label className="cursor-pointer block">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileInput}
+                          className="hidden"
+                        />
+                        <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">
+                          Drag & drop an image or click to browse
+                        </p>
+                      </label>
+                    )}
+                  </div>
                 </div>
                 <div className="col-span-2">
                   <Label>Product URL</Label>
@@ -259,11 +392,11 @@ const ProductsManager = () => {
                 </div>
               </div>
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} disabled={uploading}>
                   Cancel
                 </Button>
-                <Button type="submit">
-                  {editingProduct ? "Update Product" : "Create Product"}
+                <Button type="submit" disabled={uploading}>
+                  {uploading ? "Uploading..." : (editingProduct ? "Update Product" : "Create Product")}
                 </Button>
               </div>
             </form>
