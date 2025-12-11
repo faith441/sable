@@ -104,9 +104,13 @@ const Wardrobe = () => {
   const [noInventory, setNoInventory] = useState(false);
 
   useEffect(() => {
-    // Set AI disabled flag in localStorage for other components
+    // Manage AI disabled flag in localStorage
     if (AI_DISABLED) {
       localStorage.setItem('ai_tryon_disabled', 'true');
+    } else {
+      // Clear any stale AI disabled flags when AI is enabled
+      localStorage.removeItem('ai_tryon_disabled');
+      localStorage.removeItem('ai_tryon_disabled_at');
     }
     loadWardrobe();
     // Load favorites from localStorage
