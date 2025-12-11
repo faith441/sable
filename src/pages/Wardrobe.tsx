@@ -138,7 +138,8 @@ const Wardrobe = () => {
   const [completedTryOns, setCompletedTryOns] = useState<CompletedTryOn[]>([]);
 
   // Pre-generate try-on images for all products in capsules
-  const preGenerateTryOnImages = async (capsulesData: Capsule[]) => {
+  // showVideoGuide = false for background generation (when returning to cached wardrobe)
+  const preGenerateTryOnImages = async (capsulesData: Capsule[], showVideoGuide: boolean = true) => {
     const aiDisabled = localStorage.getItem('ai_tryon_disabled') === 'true';
     if (aiDisabled || AI_DISABLED) return;
 
@@ -161,9 +162,12 @@ const Wardrobe = () => {
 
     if (productsToGenerate.length === 0) return;
 
-    setPreGeneratingTryOn(true);
-    setTryOnProgress({ current: 0, total: productsToGenerate.length });
-    setCompletedTryOns([]);
+    // Only show video guide for initial generation, not background generation
+    if (showVideoGuide) {
+      setPreGeneratingTryOn(true);
+      setTryOnProgress({ current: 0, total: productsToGenerate.length });
+      setCompletedTryOns([]);
+    }
 
     const BATCH_SIZE = 3;
     let completed = 0;
@@ -237,8 +241,10 @@ const Wardrobe = () => {
       }));
     }
 
-    setPreGeneratingTryOn(false);
-    setCompletedTryOns([]);
+    if (showVideoGuide) {
+      setPreGeneratingTryOn(false);
+      setCompletedTryOns([]);
+    }
   };
 
   useEffect(() => {
@@ -285,7 +291,7 @@ const Wardrobe = () => {
           // Show wardrobe immediately, generate try-on images in background (no video guide)
           setLoading(false);
           // Fire and forget - don't await, don't show video guide
-          preGenerateTryOnImages(parsed).catch(console.error);
+          preGenerateTryOnImages(parsed, false).catch(console.error);
           return;
         } else {
           // Clear invalid cached data
