@@ -40,9 +40,10 @@ interface Capsule {
 // AI features - set to false to enable AI wardrobe generation and virtual try-on
 const AI_DISABLED = false;
 
-// Shared cache key with ProductTryOnImage
+// Shared cache key with ProductDualImage and ProductImageGallery
 const TRYON_CACHE_KEY = 'ai_tryon_image_cache';
 const WEARABLE_CATEGORIES = ['tops', 'bottoms', 'outerwear', 'dresses', 'shoes', 'accessories'];
+const MAX_CACHE_ENTRIES = 20;
 
 const getTryOnCache = (): Map<string, string> => {
   try {
@@ -58,9 +59,25 @@ const getTryOnCache = (): Map<string, string> => {
 
 const saveTryOnCache = (cache: Map<string, string>) => {
   try {
+    // Limit cache size
+    while (cache.size > MAX_CACHE_ENTRIES) {
+      const firstKey = cache.keys().next().value;
+      if (firstKey) cache.delete(firstKey);
+    }
     localStorage.setItem(TRYON_CACHE_KEY, JSON.stringify(Array.from(cache.entries())));
-  } catch (e) {
-    console.error('[Wardrobe] Failed to save try-on cache:', e);
+  } catch (e: any) {
+    if (e?.name === 'QuotaExceededError') {
+      console.warn('[Wardrobe] Cache quota exceeded, clearing old entries');
+      try {
+        const entries = Array.from(cache.entries());
+        const newCache = new Map(entries.slice(-10));
+        localStorage.setItem(TRYON_CACHE_KEY, JSON.stringify(Array.from(newCache.entries())));
+      } catch {
+        localStorage.removeItem(TRYON_CACHE_KEY);
+      }
+    } else {
+      console.error('[Wardrobe] Failed to save try-on cache:', e);
+    }
   }
 };
 
