@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Sheet,
   SheetContent,
@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, X, Plus, Camera } from "lucide-react";
 
 interface ProfileSheetProps {
   open: boolean;
@@ -51,6 +51,14 @@ const ProfileSheet = ({ open, onOpenChange }: ProfileSheetProps) => {
     buttPreference: "",
     legPreference: "",
   });
+  
+  // Photo states
+  const [facialPhotos, setFacialPhotos] = useState<string[]>([]);
+  const [bodyPhotos, setBodyPhotos] = useState<string[]>([]);
+  const [swimwearPhotos, setSwimwearPhotos] = useState<string[]>([]);
+  const facialInputRef = useRef<HTMLInputElement>(null);
+  const bodyInputRef = useRef<HTMLInputElement>(null);
+  const swimwearInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (open) {
@@ -73,6 +81,10 @@ const ProfileSheet = ({ open, onOpenChange }: ProfileSheetProps) => {
           buttPreference: parsed.buttPreference || "",
           legPreference: parsed.legPreference || "",
         });
+        // Load photos
+        setFacialPhotos(parsed.facialPhotos || []);
+        setBodyPhotos(parsed.bodyPhotos || []);
+        setSwimwearPhotos(parsed.swimwearPhotos || []);
       }
     }
   }, [open]);
@@ -86,6 +98,42 @@ const ProfileSheet = ({ open, onOpenChange }: ProfileSheetProps) => {
     }));
   };
 
+  const handlePhotoUpload = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    photoType: 'facial' | 'body' | 'swimwear'
+  ) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const dataUrl = event.target?.result as string;
+        if (photoType === 'facial') {
+          setFacialPhotos((prev) => [...prev.slice(0, 3), dataUrl].slice(0, 4));
+        } else if (photoType === 'body') {
+          setBodyPhotos((prev) => [...prev.slice(0, 9), dataUrl].slice(0, 10));
+        } else {
+          setSwimwearPhotos((prev) => [...prev.slice(0, 9), dataUrl].slice(0, 10));
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+    
+    // Reset input
+    e.target.value = '';
+  };
+
+  const handleDeletePhoto = (photoType: 'facial' | 'body' | 'swimwear', index: number) => {
+    if (photoType === 'facial') {
+      setFacialPhotos((prev) => prev.filter((_, i) => i !== index));
+    } else if (photoType === 'body') {
+      setBodyPhotos((prev) => prev.filter((_, i) => i !== index));
+    } else {
+      setSwimwearPhotos((prev) => prev.filter((_, i) => i !== index));
+    }
+  };
+
   const handleSave = async () => {
     setLoading(true);
     try {
@@ -93,7 +141,10 @@ const ProfileSheet = ({ open, onOpenChange }: ProfileSheetProps) => {
       const allPrefs = existingPrefs ? JSON.parse(existingPrefs) : {};
       localStorage.setItem('guest_preferences', JSON.stringify({
         ...allPrefs,
-        ...formData
+        ...formData,
+        facialPhotos,
+        bodyPhotos,
+        swimwearPhotos,
       }));
 
       const { data: { user } } = await supabase.auth.getUser();
@@ -169,11 +220,12 @@ const ProfileSheet = ({ open, onOpenChange }: ProfileSheetProps) => {
         </SheetHeader>
         
         <Tabs defaultValue="style" className="flex-1 flex flex-col overflow-hidden">
-          <TabsList className="mx-6 mt-3 grid w-[calc(100%-3rem)] grid-cols-4">
+          <TabsList className="mx-6 mt-3 grid w-[calc(100%-3rem)] grid-cols-5">
             <TabsTrigger value="style" className="text-xs">Style</TabsTrigger>
             <TabsTrigger value="lifestyle" className="text-xs">Lifestyle</TabsTrigger>
             <TabsTrigger value="body" className="text-xs">Body</TabsTrigger>
             <TabsTrigger value="care" className="text-xs">Care</TabsTrigger>
+            <TabsTrigger value="photos" className="text-xs">Photos</TabsTrigger>
           </TabsList>
 
           <ScrollArea className="flex-1 px-6">
@@ -430,6 +482,143 @@ const ProfileSheet = ({ open, onOpenChange }: ProfileSheetProps) => {
                     />
                   ))}
                 </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="photos" className="mt-4 space-y-6 pb-4">
+              {/* Facial Photos */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="font-medium text-sm">Selfie Photos</Label>
+                  <span className="text-xs text-muted-foreground">{facialPhotos.length}/4</span>
+                </div>
+                <p className="text-xs text-muted-foreground">Clear photos of your face for personalized recommendations</p>
+                <div className="grid grid-cols-4 gap-2">
+                  {facialPhotos.map((photo, index) => (
+                    <div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-border">
+                      <img src={photo} alt={`Selfie ${index + 1}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePhoto('facial', index)}
+                        className="absolute top-1 right-1 w-6 h-6 rounded-full bg-background/90 flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  {facialPhotos.length < 4 && (
+                    <button
+                      type="button"
+                      onClick={() => facialInputRef.current?.click()}
+                      className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center gap-1 transition-colors"
+                    >
+                      <Plus className="w-5 h-5 text-muted-foreground" />
+                      <span className="text-[10px] text-muted-foreground">Add</span>
+                    </button>
+                  )}
+                </div>
+                <input
+                  ref={facialInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handlePhotoUpload(e, 'facial')}
+                />
+              </div>
+
+              {/* Body Photos */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="font-medium text-sm">Full Body Photos</Label>
+                  <span className="text-xs text-muted-foreground">{bodyPhotos.length}/10</span>
+                </div>
+                <p className="text-xs text-muted-foreground">Photos showing your entire body for better fit recommendations</p>
+                <div className="grid grid-cols-5 gap-2">
+                  {bodyPhotos.map((photo, index) => (
+                    <div key={index} className="relative aspect-[3/4] rounded-lg overflow-hidden border border-border">
+                      <img src={photo} alt={`Body ${index + 1}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePhoto('body', index)}
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-background/90 flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  {bodyPhotos.length < 10 && (
+                    <button
+                      type="button"
+                      onClick={() => bodyInputRef.current?.click()}
+                      className="aspect-[3/4] rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center gap-1 transition-colors"
+                    >
+                      <Plus className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-[10px] text-muted-foreground">Add</span>
+                    </button>
+                  )}
+                </div>
+                <input
+                  ref={bodyInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handlePhotoUpload(e, 'body')}
+                />
+              </div>
+
+              {/* Swimwear Photos - Women only */}
+              {formData.gender === "Women's" && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="font-medium text-sm">Swimwear Photos</Label>
+                    <span className="text-xs text-muted-foreground">{swimwearPhotos.length}/10</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Photos in swimwear for swimwear and formal wear recommendations</p>
+                  <div className="grid grid-cols-5 gap-2">
+                    {swimwearPhotos.map((photo, index) => (
+                      <div key={index} className="relative aspect-[3/4] rounded-lg overflow-hidden border border-border">
+                        <img src={photo} alt={`Swimwear ${index + 1}`} className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePhoto('swimwear', index)}
+                          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-background/90 flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                    {swimwearPhotos.length < 10 && (
+                      <button
+                        type="button"
+                        onClick={() => swimwearInputRef.current?.click()}
+                        className="aspect-[3/4] rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center gap-1 transition-colors"
+                      >
+                        <Plus className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-[10px] text-muted-foreground">Add</span>
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    ref={swimwearInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handlePhotoUpload(e, 'swimwear')}
+                  />
+                </div>
+              )}
+
+              {/* Photo Guidelines */}
+              <div className="bg-secondary/30 rounded-lg p-4 space-y-2">
+                <h4 className="text-sm font-medium flex items-center gap-2">
+                  <Camera className="w-4 h-4 text-primary" />
+                  Photo Guidelines
+                </h4>
+                <ul className="text-xs text-muted-foreground font-light space-y-1 list-disc list-inside">
+                  <li>Clear, well-lit photos work best</li>
+                  <li>No sunglasses for face photos</li>
+                  <li>Photos are stored locally on your device</li>
+                </ul>
               </div>
             </TabsContent>
           </ScrollArea>
