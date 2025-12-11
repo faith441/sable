@@ -114,7 +114,7 @@ const BrandProductUpload = () => {
     const fileName = `${brandId}/${Date.now()}.${fileExt}`;
 
     const { data, error } = await supabase.storage
-      .from("closet-items")
+      .from("brand-products")
       .upload(fileName, imageFile);
 
     if (error) {
@@ -123,7 +123,7 @@ const BrandProductUpload = () => {
     }
 
     const { data: urlData } = supabase.storage
-      .from("closet-items")
+      .from("brand-products")
       .getPublicUrl(fileName);
 
     return urlData.publicUrl;
