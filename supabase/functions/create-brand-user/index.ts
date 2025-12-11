@@ -71,28 +71,55 @@ serve(async (req: Request) => {
 
     // Generate a temporary password
     const tempPassword = `Sable_${crypto.randomUUID().slice(0, 8)}!`;
+    
+    let newUserId: string;
+    let isExistingUser = false;
 
-    // Create the user
-    const { data: userData, error: createUserError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password: tempPassword,
-      email_confirm: true, // Auto-confirm the email
-      user_metadata: {
-        full_name: company_name,
-        is_brand: true,
-      },
-    });
+    // First, check if user already exists
+    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
+    const existingUser = existingUsers?.users?.find(u => u.email === email);
 
-    if (createUserError) {
-      console.error("Error creating user:", createUserError);
-      return new Response(
-        JSON.stringify({ error: createUserError.message }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    if (existingUser) {
+      console.log(`User already exists with ID: ${existingUser.id}, using existing user`);
+      newUserId = existingUser.id;
+      isExistingUser = true;
+      
+      // Check if they already have a brand record
+      const { data: existingBrand } = await supabaseAdmin
+        .from("brands")
+        .select("id")
+        .eq("user_id", existingUser.id)
+        .single();
+        
+      if (existingBrand) {
+        return new Response(
+          JSON.stringify({ error: "This user already has a brand account" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    } else {
+      // Create the user
+      const { data: userData, error: createUserError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password: tempPassword,
+        email_confirm: true, // Auto-confirm the email
+        user_metadata: {
+          full_name: company_name,
+          is_brand: true,
+        },
+      });
+
+      if (createUserError) {
+        console.error("Error creating user:", createUserError);
+        return new Response(
+          JSON.stringify({ error: createUserError.message }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      newUserId = userData.user.id;
+      console.log(`User created with ID: ${newUserId}`);
     }
-
-    const newUserId = userData.user.id;
-    console.log(`User created with ID: ${newUserId}`);
 
     // Generate API key
     const apiKey = `sbl_${crypto.randomUUID().replace(/-/g, '')}`;
@@ -168,8 +195,9 @@ serve(async (req: Request) => {
         user_id: newUserId,
         brand_id: brandData.id,
         api_key: apiKey,
-        temp_password: tempPassword,
+        temp_password: isExistingUser ? null : tempPassword,
         email: email,
+        is_existing_user: isExistingUser,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
