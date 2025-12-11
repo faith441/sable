@@ -30,8 +30,11 @@ serve(async (req) => {
       : "upper body view, from waist up, portrait style";
 
     const garmentDescriptions = garmentImages?.map((g: any) => 
-      `${g.name} (${g.category}) - ${g.brand}`
+      `${g.name} (${g.category}) by ${g.brand}`
     ).join(", ") || "stylish clothing items";
+
+    // Get the primary garment image URL for the AI to reference
+    const primaryGarmentImage = garmentImages?.[0]?.image_url;
 
     let prompt: string;
     let messageContent: any;
@@ -39,34 +42,64 @@ serve(async (req) => {
     if (customPrompt) {
       prompt = customPrompt;
       messageContent = prompt;
-    } else if (userImage) {
-      // User has uploaded their own image - use image editing to apply clothes
-      prompt = `Edit this image to show the person wearing these luxury clothing items: ${garmentDescriptions}. 
-Keep the person's face, body type, and features exactly the same. Only change/add the clothing to match the described items.
-The image should be a ${viewDescription}.
-Style: Professional fashion photography, perfect lighting that highlights the clothing textures and details.
-Make the clothing look premium and well-fitted on this specific person.`;
+    } else if (userImage && primaryGarmentImage) {
+      // User has uploaded their own image AND we have the garment image
+      // Use both images so AI can see the exact clothing to apply
+      prompt = `Virtual try-on task: Take the clothing item from the SECOND image (the product photo) and show it being worn by the person in the FIRST image.
+
+FIRST IMAGE: The customer's photo - keep their face, body shape, skin tone, hair exactly the same.
+SECOND IMAGE: The product clothing - this is the EXACT garment that must appear on the person.
+
+Requirements:
+- The person must be wearing the EXACT clothing item shown in the product image (same color, pattern, style, details)
+- Keep the person's appearance identical - only change their outfit
+- Show a ${viewDescription}
+- Professional fashion photography lighting
+- The clothing should look naturally fitted on this person`;
       
       messageContent = [
         { type: "text", text: prompt },
-        { type: "image_url", image_url: { url: userImage } }
+        { type: "image_url", image_url: { url: userImage } },
+        { type: "image_url", image_url: { url: primaryGarmentImage } }
+      ];
+    } else if (primaryGarmentImage) {
+      // No user image but we have the garment image - generate model wearing THIS EXACT garment
+      prompt = `Create a fashion photography image showing a ${genderTerm} model wearing the EXACT clothing item shown in the provided product image.
+
+CRITICAL: The model MUST be wearing the EXACT same garment from the product photo:
+- Same color and pattern
+- Same style and design details
+- Same fabric appearance
+
+Product: ${garmentDescriptions}
+
+Requirements:
+- ${viewDescription}
+- The model should be an attractive ${genderTerm} with ${userGender === "Women's" ? "elegant features, styled hair" : "well-groomed appearance, clean-cut look"}
+- Professional fashion catalog photography style
+- Clean studio background (soft gradient or neutral)
+- Perfect lighting highlighting the clothing textures
+- Confident, elegant pose typical of luxury fashion brands
+- The clothing must look premium and well-fitted
+
+The overall aesthetic should feel like a high-end fashion campaign.`;
+      
+      messageContent = [
+        { type: "text", text: prompt },
+        { type: "image_url", image_url: { url: primaryGarmentImage } }
       ];
     } else {
-      // No user image - generate AI model based on gender
-      prompt = `Create a high-quality, photorealistic fashion photography image of a stylish ${genderTerm} model wearing these luxury clothing items: ${garmentDescriptions}. 
+      // Fallback - no garment image available (shouldn't happen normally)
+      prompt = `Create a high-quality fashion photography image of a stylish ${genderTerm} model wearing luxury ${garmentDescriptions}. 
 
-The image should be a ${viewDescription}. 
+${viewDescription}. 
 
-The model should be an attractive ${genderTerm} with ${userGender === "Women's" ? "elegant features, styled hair" : "well-groomed appearance, clean-cut look"}. 
-
-Style: Professional fashion catalog photography, clean background (soft gradient or studio setting), perfect lighting that highlights the clothing textures and details. The model should have a confident, elegant pose typical of high-end fashion brands. 
-
-Make the clothing look premium and well-fitted. The overall aesthetic should feel luxury and aspirational, like a Vogue or high-end brand campaign.`;
+Professional fashion catalog photography, clean background, perfect lighting. The model should have a confident, elegant pose. Make the clothing look premium and well-fitted.`;
       
       messageContent = prompt;
     }
 
-    console.log("Generating image with prompt:", typeof messageContent === 'string' ? messageContent.substring(0, 200) + "..." : "Image editing request");
+    console.log("Generating image with prompt:", typeof messageContent === 'string' ? messageContent.substring(0, 200) + "..." : `Multi-image request with ${Array.isArray(messageContent) ? messageContent.filter((m: any) => m.type === 'image_url').length : 0} images`);
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
