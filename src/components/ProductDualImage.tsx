@@ -29,6 +29,7 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [activeView, setActiveView] = useState<'product' | 'tryon'>('tryon');
+  const [error, setError] = useState<string | null>(null);
 
   const checkAiDisabled = () => {
     const disabledAt = localStorage.getItem('ai_tryon_disabled_at');
@@ -47,13 +48,16 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
   const isWearable = WEARABLE_CATEGORIES.includes(product.category?.toLowerCase() || '');
 
   useEffect(() => {
+    console.log(`[ProductDualImage] Init for ${product.name}, category: ${product.category}, isWearable: ${isWearable}, aiDisabled: ${aiDisabled}`);
     if (!aiDisabled && isWearable) {
       generateTryOnImage();
     }
-  }, [product.id, aiDisabled, isWearable]);
+  }, [product.id]);
 
   const generateTryOnImage = async () => {
     setLoading(true);
+    setError(null);
+    console.log(`[ProductDualImage] Starting AI try-on generation for: ${product.name}`);
 
     try {
       const preferences = JSON.parse(localStorage.getItem('guest_preferences') || '{}');
@@ -68,21 +72,32 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
       const garmentImages = [{
         name: product.name,
         category: product.category,
-        brand: product.brand.name,
+        brand: product.brand?.name || 'Unknown',
         image_url: product.image_url
       }];
+
+      console.log(`[ProductDualImage] Calling virtual-tryon with:`, { 
+        garmentCount: garmentImages.length, 
+        viewType: 'fullBody', 
+        userGender,
+        hasUserImage: !!userImage 
+      });
 
       const { data, error: fnError } = await supabase.functions.invoke("virtual-tryon", {
         body: {
           garmentImages,
           viewType: "fullBody",
           userGender,
-          userImage // Pass user's photo if available
+          userImage
         }
       });
 
+      console.log(`[ProductDualImage] Response:`, { data, fnError });
+
       if (fnError) {
+        console.error("[ProductDualImage] Function error:", fnError);
         const errorMsg = fnError.message || fnError.toString();
+        setError(errorMsg);
         if (errorMsg.includes("402") || errorMsg.includes("credits") || errorMsg.includes("payment")) {
           localStorage.setItem('ai_tryon_disabled', 'true');
           localStorage.setItem('ai_tryon_disabled_at', Date.now().toString());
@@ -91,6 +106,8 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
       }
 
       if (data?.error) {
+        console.error("[ProductDualImage] Data error:", data.error);
+        setError(data.error);
         if (data.error.includes("credits") || data.error.includes("Rate limit") || data.error.includes("payment")) {
           localStorage.setItem('ai_tryon_disabled', 'true');
           localStorage.setItem('ai_tryon_disabled_at', Date.now().toString());
@@ -99,10 +116,16 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
       }
 
       if (data?.result) {
+        console.log(`[ProductDualImage] Success! Got AI try-on image for ${product.name}`);
         setTryOnImage(data.result);
+      } else {
+        console.log(`[ProductDualImage] No result in response for ${product.name}`);
+        setError("No image generated");
       }
     } catch (err: any) {
-      const errorMsg = err?.message || err?.toString() || '';
+      console.error("[ProductDualImage] Exception:", err);
+      const errorMsg = err?.message || err?.toString() || 'Unknown error';
+      setError(errorMsg);
       if (errorMsg.includes("402") || errorMsg.includes("credits") || errorMsg.includes("payment")) {
         localStorage.setItem('ai_tryon_disabled', 'true');
         localStorage.setItem('ai_tryon_disabled_at', Date.now().toString());
@@ -151,6 +174,7 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
             alt={`${product.name} try-on`}
             className="w-full h-full object-cover"
             onError={(e) => {
+              console.log(`[ProductDualImage] Image load error, falling back`);
               (e.target as HTMLImageElement).src = product.image_url || '/placeholder.svg';
             }}
           />
@@ -161,6 +185,13 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
           <div className="absolute bottom-1 left-1 bg-background/80 backdrop-blur-sm rounded px-1.5 py-0.5 flex items-center gap-1">
             <Sparkles className="w-3 h-3 text-sage" />
             <span className="text-[9px] text-muted-foreground">AI</span>
+          </div>
+        )}
+        
+        {/* Error indicator */}
+        {error && !loading && !tryOnImage && (
+          <div className="absolute bottom-1 left-1 bg-destructive/80 backdrop-blur-sm rounded px-1.5 py-0.5">
+            <span className="text-[9px] text-destructive-foreground">AI unavailable</span>
           </div>
         )}
       </div>
@@ -202,15 +233,20 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
                   activeView === 'tryon' && tryOnImage ? 'border-sage ring-2 ring-sage/30' : 'border-border'
                 } ${tryOnImage ? 'hover:border-sage/50 cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}
               >
-                {tryOnImage ? (
+                {loading ? (
+                  <div className="w-full h-full bg-muted flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+                  </div>
+                ) : tryOnImage ? (
                   <img 
                     src={tryOnImage} 
                     alt="AI Try-on"
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full bg-muted/50 flex items-center justify-center">
+                  <div className="w-full h-full bg-muted/50 flex flex-col items-center justify-center gap-1">
                     <Sparkles className="w-4 h-4 text-muted-foreground/40" />
+                    <span className="text-[8px] text-muted-foreground">Unavailable</span>
                   </div>
                 )}
                 <span className="absolute bottom-0 left-0 right-0 bg-background/90 text-[10px] text-center py-0.5 font-medium">
