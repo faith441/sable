@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { Upload, X, Image as ImageIcon } from "lucide-react";
 
 interface Product {
   id: string;
@@ -40,6 +41,11 @@ const CATEGORIES = [
 
 const BrandProductEditDialog = ({ product, onClose, onSave }: BrandProductEditDialogProps) => {
   const [saving, setSaving] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(product.image_url);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const [formData, setFormData] = useState({
     name: product.name,
     description: product.description || "",
@@ -48,15 +54,92 @@ const BrandProductEditDialog = ({ product, onClose, onSave }: BrandProductEditDi
     sizes: product.sizes?.join(", ") || "",
     colors: product.colors?.join(", ") || "",
     tags: product.tags?.join(", ") || "",
-    image_url: product.image_url || "",
     product_url: product.product_url || "",
   });
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFile = (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file");
+      return;
+    }
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFile(e.target.files[0]);
+    }
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const uploadImage = async (): Promise<string | null> => {
+    if (!imageFile) return product.image_url;
+
+    const fileExt = imageFile.name.split(".").pop();
+    const fileName = `${product.id}-${Date.now()}.${fileExt}`;
+    const filePath = `product-images/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("products")
+      .upload(filePath, imageFile);
+
+    if (uploadError) {
+      console.error("Upload error:", uploadError);
+      throw new Error("Failed to upload image");
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from("products")
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
 
     try {
+      let imageUrl = product.image_url;
+      
+      if (imageFile) {
+        imageUrl = await uploadImage();
+      } else if (!imagePreview) {
+        imageUrl = null;
+      }
+
       const { error } = await supabase
         .from("products")
         .update({
@@ -67,9 +150,8 @@ const BrandProductEditDialog = ({ product, onClose, onSave }: BrandProductEditDi
           sizes: formData.sizes ? formData.sizes.split(",").map(s => s.trim()) : [],
           colors: formData.colors ? formData.colors.split(",").map(c => c.trim()) : [],
           tags: formData.tags ? formData.tags.split(",").map(t => t.trim()) : [],
-          image_url: formData.image_url || null,
+          image_url: imageUrl,
           product_url: formData.product_url || null,
-          // Reset to pending if editing
           approval_status: "pending",
         })
         .eq("id", product.id);
@@ -95,6 +177,60 @@ const BrandProductEditDialog = ({ product, onClose, onSave }: BrandProductEditDi
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Image Upload */}
+          <div className="space-y-2">
+            <Label>Product Image *</Label>
+            {imagePreview ? (
+              <div className="relative">
+                <img
+                  src={imagePreview}
+                  alt="Product preview"
+                  className="w-full h-48 object-cover rounded-lg"
+                />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="absolute top-2 right-2"
+                  onClick={removeImage}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div
+                className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
+                  dragActive ? "border-primary bg-primary/5" : "border-border"
+                }`}
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileInput}
+                  className="hidden"
+                />
+                <div className="flex flex-col items-center gap-2">
+                  <div className="p-3 bg-muted rounded-full">
+                    <Upload className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Drop image here or click to upload</p>
+                    <p className="text-sm text-muted-foreground">PNG, JPG up to 10MB</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            {!imagePreview && (
+              <p className="text-xs text-muted-foreground">Product image is required</p>
+            )}
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="name">Product Name *</Label>
             <Input
@@ -168,19 +304,11 @@ const BrandProductEditDialog = ({ product, onClose, onSave }: BrandProductEditDi
               placeholder="casual, summer, essentials"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="image_url">Image URL</Label>
-            <Input
-              id="image_url"
-              value={formData.image_url}
-              onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-            />
-          </div>
           <div className="flex gap-2 justify-end">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={saving}>
+            <Button type="submit" disabled={saving || !imagePreview}>
               {saving ? "Saving..." : "Save & Resubmit"}
             </Button>
           </div>
