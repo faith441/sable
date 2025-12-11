@@ -45,18 +45,19 @@ serve(async (req) => {
       throw new Error("No preferences provided");
     }
 
-    // Fetch ALL available products from brand partners
+    // Fetch ALL available and approved products from brand partners
     const { data: products, error: productsError } = await supabase
       .from("products")
       .select("*, brands(name, logo_url)")
-      .eq("is_available", true);
+      .eq("is_available", true)
+      .eq("approval_status", "approved");
 
     if (productsError) {
       console.error("Error fetching products:", productsError);
     }
 
-    // Check if we have real products in the database
-    const hasRealProducts = products && products.length >= 15;
+    // Check if we have real products in the database (minimum 1 product)
+    const hasRealProducts = products && products.length >= 1;
     console.log(`Found ${products?.length || 0} products in database. Using ${hasRealProducts ? 'real products' : 'sample fallback'}.`);
 
     // If no real products, return error indicating empty inventory
