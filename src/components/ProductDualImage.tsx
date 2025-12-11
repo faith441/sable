@@ -25,6 +25,7 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
   const [loading, setLoading] = useState(false);
   const [activeView, setActiveView] = useState<'product' | 'tryon'>('tryon');
   const [error, setError] = useState<string | null>(null);
+  const [showThumbnails, setShowThumbnails] = useState(false);
 
   const checkAiDisabled = () => {
     const disabledAt = localStorage.getItem('ai_tryon_disabled_at');
@@ -150,69 +151,74 @@ const ProductDualImage = ({ product, className = "" }: ProductDualImageProps) =>
 
   return (
     <div className={`flex gap-2 ${className}`}>
-      {/* Thumbnail strip - always visible */}
-      <div className="flex flex-col gap-1.5">
-        {/* Product thumbnail */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setActiveView('product');
-          }}
-          className={`relative w-14 h-16 rounded-md overflow-hidden border-2 transition-all ${
-            activeView === 'product' ? 'border-sage ring-1 ring-sage/30' : 'border-border/50 hover:border-sage/50'
-          }`}
-        >
-          {product.image_url ? (
-            <img 
-              src={product.image_url} 
-              alt="Product"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-muted flex items-center justify-center">
-              <span className="text-[9px] text-muted-foreground">N/A</span>
-            </div>
-          )}
-          <span className="absolute bottom-0 left-0 right-0 bg-background/90 text-[8px] text-center py-0.5 font-medium">
-            Product
-          </span>
-        </button>
+      {/* Thumbnail strip - only visible when clicked */}
+      {showThumbnails && (
+        <div className="flex flex-col gap-1.5">
+          {/* Product thumbnail */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveView('product');
+            }}
+            className={`relative w-14 h-16 rounded-md overflow-hidden border-2 transition-all ${
+              activeView === 'product' ? 'border-sage ring-1 ring-sage/30' : 'border-border/50 hover:border-sage/50'
+            }`}
+          >
+            {product.image_url ? (
+              <img 
+                src={product.image_url} 
+                alt="Product"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-muted flex items-center justify-center">
+                <span className="text-[9px] text-muted-foreground">N/A</span>
+              </div>
+            )}
+            <span className="absolute bottom-0 left-0 right-0 bg-background/90 text-[8px] text-center py-0.5 font-medium">
+              Product
+            </span>
+          </button>
 
-        {/* AI Try-on thumbnail */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            if (tryOnImage) setActiveView('tryon');
-          }}
-          disabled={!tryOnImage && !loading}
-          className={`relative w-14 h-16 rounded-md overflow-hidden border-2 transition-all ${
-            activeView === 'tryon' && tryOnImage ? 'border-sage ring-1 ring-sage/30' : 'border-border/50'
-          } ${tryOnImage ? 'hover:border-sage/50 cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}
-        >
-          {loading ? (
-            <div className="w-full h-full bg-muted flex items-center justify-center">
-              <Sparkles className="w-3 h-3 text-primary animate-pulse" />
-            </div>
-          ) : tryOnImage ? (
-            <img 
-              src={tryOnImage} 
-              alt="AI Try-on"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-muted/50 flex flex-col items-center justify-center gap-0.5">
-              <Sparkles className="w-3 h-3 text-muted-foreground/40" />
-              <span className="text-[7px] text-muted-foreground">N/A</span>
-            </div>
-          )}
-          <span className="absolute bottom-0 left-0 right-0 bg-background/90 text-[8px] text-center py-0.5 font-medium">
-            AI Try-On
-          </span>
-        </button>
-      </div>
+          {/* AI Try-on thumbnail */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (tryOnImage) setActiveView('tryon');
+            }}
+            disabled={!tryOnImage && !loading}
+            className={`relative w-14 h-16 rounded-md overflow-hidden border-2 transition-all ${
+              activeView === 'tryon' && tryOnImage ? 'border-sage ring-1 ring-sage/30' : 'border-border/50'
+            } ${tryOnImage ? 'hover:border-sage/50 cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}
+          >
+            {loading ? (
+              <div className="w-full h-full bg-muted flex items-center justify-center">
+                <Sparkles className="w-3 h-3 text-primary animate-pulse" />
+              </div>
+            ) : tryOnImage ? (
+              <img 
+                src={tryOnImage} 
+                alt="AI Try-on"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-muted/50 flex flex-col items-center justify-center gap-0.5">
+                <Sparkles className="w-3 h-3 text-muted-foreground/40" />
+                <span className="text-[7px] text-muted-foreground">N/A</span>
+              </div>
+            )}
+            <span className="absolute bottom-0 left-0 right-0 bg-background/90 text-[8px] text-center py-0.5 font-medium">
+              AI Try-On
+            </span>
+          </button>
+        </div>
+      )}
 
-      {/* Main image */}
-      <div className="relative flex-1 bg-secondary rounded-lg overflow-hidden">
+      {/* Main image - clickable to toggle thumbnails */}
+      <div 
+        className="relative flex-1 bg-secondary rounded-lg overflow-hidden cursor-pointer"
+        onClick={() => setShowThumbnails(!showThumbnails)}
+      >
         {loading && activeView === 'tryon' ? (
           <>
             <Skeleton className="w-full h-full absolute inset-0" />
