@@ -41,7 +41,6 @@ interface BrandApplication {
 interface BrandCredentials {
   email: string;
   temp_password: string | null;
-  api_key: string;
   is_existing_user?: boolean;
 }
 
@@ -107,7 +106,6 @@ export default function BrandApplicationsManager() {
       setNewCredentials({
         email: result.email,
         temp_password: result.temp_password,
-        api_key: result.api_key,
         is_existing_user: result.is_existing_user,
       });
       setShowCredentialsDialog(true);
@@ -232,28 +230,19 @@ export default function BrandApplicationsManager() {
                   </p>
                 </div>
               )}
-              <div>
-                <label className="text-sm font-medium">API Key</label>
-                <div className="flex items-center gap-2 mt-1">
-                  <code className="flex-1 p-2 bg-muted rounded text-sm font-mono truncate">{newCredentials.api_key}</code>
-                  <Button variant="outline" size="icon" onClick={() => copyToClipboard(newCredentials.api_key)}>
-                    <Copy className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
               <Button 
                 className="w-full" 
                 onClick={() => {
                   const passwordLine = newCredentials.temp_password 
                     ? `Temporary Password: ${newCredentials.temp_password}\n`
                     : "(Use your existing password)\n";
-                  const text = `Brand Portal Credentials\n\nLogin URL: ${window.location.origin}/brand/auth\nEmail: ${newCredentials.email}\n${passwordLine}API Key: ${newCredentials.api_key}\n\nPlease change your password after first login.`;
+                  const text = `Brand Portal Credentials\n\nLogin URL: ${window.location.origin}/brand/auth\nEmail: ${newCredentials.email}\n${passwordLine}\nPlease change your password after first login.`;
                   copyToClipboard(text);
-                  toast.success("All credentials copied!");
+                  toast.success("Credentials copied!");
                 }}
               >
                 <Copy className="w-4 h-4 mr-2" />
-                Copy All Credentials
+                Copy Credentials
               </Button>
             </div>
           )}
