@@ -457,16 +457,7 @@ const VideoCard = ({ videoId }: { videoId: number }) => {
   return (
     <div className="flex-shrink-0 snap-center">
       <Card className="overflow-hidden border-border/50 hover-scale w-[280px] h-[500px] bg-card/50">
-        <div className="relative w-full h-full">
-          {/* Placeholder for video - shows message until videos are uploaded */}
-          <div className="absolute inset-0 flex items-center justify-center bg-muted text-muted-foreground text-center p-4">
-            <div>
-              <p className="text-sm font-medium">Upload videos to</p>
-              <p className="text-sm">/public/videos/ugc-{videoId}.mp4</p>
-            </div>
-          </div>
-          
-          {/* Video element (will display when videos are uploaded) */}
+        <div className="relative w-full h-full bg-muted">
           <video
             ref={videoRef}
             src={`/videos/ugc-${videoId}.mp4`}
@@ -474,7 +465,6 @@ const VideoCard = ({ videoId }: { videoId: number }) => {
             muted
             loop
             playsInline
-            poster={`/images/ugc-${videoId}.jpg`}
           />
         </div>
       </Card>
