@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Marketing from "./pages/Marketing";
 import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 import Auth from "./pages/Auth";
 import Survey from "./pages/Survey";
 import Wardrobe from "./pages/Wardrobe";
@@ -42,6 +43,7 @@ const App = () => (
           <Route path="/home" element={<Home />} />
           <Route path="/marketing" element={<Marketing />} />
           <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/survey" element={<Survey />} />
           <Route path="/wardrobe" element={<Wardrobe />} />
