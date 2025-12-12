@@ -9,45 +9,33 @@ import { Label } from "@/components/ui/label";
 import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import heroImage from "@/assets/hero-wardrobe.jpg";
-
 const Marketing = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [waitlistOpen, setWaitlistOpen] = useState(false);
   const [email, setEmail] = useState("");
-
   const handleWaitlistSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    
     toast({
       title: "You're on the waitlist!",
-      description: "We'll notify you when the app is available for download.",
+      description: "We'll notify you when the app is available for download."
     });
     setEmail("");
     setWaitlistOpen(false);
   };
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       {/* Fixed Header with Download Button */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/50">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="text-2xl font-bold gradient-text">Sable</div>
           <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="lg"
-              onClick={() => navigate("/blog")}
-            >
+            <Button variant="ghost" size="lg" onClick={() => navigate("/blog")}>
               Blog
             </Button>
-            <Button 
-              variant="luxury" 
-              size="lg"
-              onClick={() => setWaitlistOpen(true)}
-              className="gap-2"
-            >
+            <Button variant="luxury" size="lg" onClick={() => setWaitlistOpen(true)} className="gap-2">
               <Download className="h-5 w-5" />
               Download App
             </Button>
@@ -67,14 +55,7 @@ const Marketing = () => {
           <form onSubmit={handleWaitlistSubmit} className="space-y-4 pt-4">
             <div className="space-y-2">
               <Label htmlFor="waitlist-email">Email Address</Label>
-              <Input
-                id="waitlist-email"
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+              <Input id="waitlist-email" type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} required />
             </div>
             <Button type="submit" variant="luxury" size="lg" className="w-full">
               Join Waitlist
@@ -85,10 +66,9 @@ const Marketing = () => {
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center px-4 py-20 pt-32 overflow-hidden">
-        <div 
-          className="absolute inset-0 bg-cover bg-center pointer-events-none"
-          style={{ backgroundImage: `url(${heroImage})` }}
-        />
+        <div className="absolute inset-0 bg-cover bg-center pointer-events-none" style={{
+        backgroundImage: `url(${heroImage})`
+      }} />
         <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/80 to-background/95 pointer-events-none" />
         <div className="absolute inset-0 bg-gradient-hero opacity-20 pointer-events-none" />
         
@@ -109,21 +89,11 @@ const Marketing = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-            <Button 
-              variant="luxury" 
-              size="lg"
-              onClick={() => navigate("/survey")}
-              className="text-lg group"
-            >
+            <Button variant="luxury" size="lg" onClick={() => navigate("/survey")} className="text-lg group">
               Take Your Style Quiz
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Button>
-            <Button 
-              variant="outline" 
-              size="lg"
-              onClick={() => navigate("/auth")}
-              className="text-lg"
-            >
+            <Button variant="outline" size="lg" onClick={() => navigate("/auth")} className="text-lg">
               Sign In
             </Button>
           </div>
@@ -312,9 +282,7 @@ const Marketing = () => {
           <div className="grid md:grid-cols-3 gap-6">
             <Card className="p-6 space-y-4 border-sage/20">
               <div className="flex gap-1 text-bronze">
-                {[...Array(5)].map((_, i) => (
-                  <span key={i}>★</span>
-                ))}
+                {[...Array(5)].map((_, i) => <span key={i}>★</span>)}
               </div>
               <p className="text-muted-foreground italic">
                 "Sable solved my 'nothing to wear' problem. Now I have a cohesive wardrobe that actually works together."
@@ -327,9 +295,7 @@ const Marketing = () => {
             
             <Card className="p-6 space-y-4 border-bronze/20">
               <div className="flex gap-1 text-bronze">
-                {[...Array(5)].map((_, i) => (
-                  <span key={i}>★</span>
-                ))}
+                {[...Array(5)].map((_, i) => <span key={i}>★</span>)}
               </div>
               <p className="text-muted-foreground italic">
                 "The AI stylist understands my lifestyle perfectly. Weekly outfit planning saves me hours every morning."
@@ -342,9 +308,7 @@ const Marketing = () => {
             
             <Card className="p-6 space-y-4 border-clay/20">
               <div className="flex gap-1 text-bronze">
-                {[...Array(5)].map((_, i) => (
-                  <span key={i}>★</span>
-                ))}
+                {[...Array(5)].map((_, i) => <span key={i}>★</span>)}
               </div>
               <p className="text-muted-foreground italic">
                 "Finally, a platform that aligns my wardrobe with my identity and lifestyle. It's like having a personal stylist 24/7."
@@ -371,9 +335,7 @@ const Marketing = () => {
           {/* Scrollable Video Feed */}
           <div className="relative overflow-x-auto pb-4">
             <div className="flex gap-4">
-              {[1, 3, 4, 5, 6, 7].map((id) => (
-                <VideoCard key={id} videoId={id} />
-              ))}
+              {[1, 3, 4, 5, 6, 7].map(id => <VideoCard key={id} videoId={id} />)}
             </div>
           </div>
         </div>
@@ -389,12 +351,7 @@ const Marketing = () => {
             Join thousands discovering their signature style with Sable
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-            <Button 
-              variant="luxury" 
-              size="lg"
-              onClick={() => navigate("/survey")}
-              className="text-lg group shadow-elegant"
-            >
+            <Button variant="luxury" size="lg" onClick={() => navigate("/survey")} className="text-lg group shadow-elegant">
               Start Your Style Journey
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Button>
@@ -419,63 +376,44 @@ const Marketing = () => {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
 
 // Video Card Component with loading/error states
-const VideoCard = ({ videoId }: { videoId: number }) => {
+const VideoCard = ({
+  videoId
+}: {
+  videoId: number;
+}) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-
   const handleLoadedData = () => {
     console.log(`[UGC Video ${videoId}] Loaded successfully from /videos/ugc-${videoId}.mp4`);
     setIsLoading(false);
   };
-
   const handleError = () => {
     console.error(`[UGC Video ${videoId}] Failed to load: /videos/ugc-${videoId}.mp4`);
     setIsLoading(false);
     setHasError(true);
   };
-
-  return (
-    <div className="flex-shrink-0 snap-center">
+  return <div className="flex-shrink-0 snap-center">
       <Card className="overflow-hidden border-border/50 hover-scale w-[280px] h-[500px] bg-card/50">
         <div className="relative w-full h-full bg-muted">
-          {isLoading && !hasError && (
-            <div className="absolute inset-0 flex items-center justify-center bg-muted">
+          {isLoading && !hasError && <div className="absolute inset-0 flex items-center justify-center bg-muted">
               <div className="animate-pulse flex flex-col items-center gap-2">
                 <Play className="h-8 w-8 text-muted-foreground/50" />
                 <span className="text-xs text-muted-foreground">Loading...</span>
               </div>
-            </div>
-          )}
-          {hasError ? (
-            <div className="absolute inset-0 flex items-center justify-center bg-muted">
+            </div>}
+          {hasError ? <div className="absolute inset-0 flex items-center justify-center bg-muted">
               <div className="flex flex-col items-center gap-2 text-muted-foreground">
                 <Play className="h-8 w-8 opacity-30" />
                 <span className="text-xs">Video unavailable</span>
               </div>
-            </div>
-          ) : (
-            <video
-              ref={videoRef}
-              src={`/videos/ugc-${videoId}.mp4`}
-              className={`w-full h-full object-cover transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
-              autoPlay
-              muted
-              loop
-              playsInline
-              onLoadedData={handleLoadedData}
-              onError={handleError}
-            />
-          )}
+            </div> : <video ref={videoRef} src={`/videos/ugc-${videoId}.mp4`} className={`w-full h-full object-cover transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`} autoPlay muted loop playsInline onLoadedData={handleLoadedData} onError={handleError} />}
         </div>
       </Card>
-    </div>
-  );
+    </div>;
 };
-
 export default Marketing;
