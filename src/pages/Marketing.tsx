@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, Shirt, Calendar, MessageSquare, Check, ArrowRight, Download } from "lucide-react";
+import { Sparkles, Shirt, Calendar, MessageSquare, Check, ArrowRight, Download, Play } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -423,23 +423,55 @@ const Marketing = () => {
   );
 };
 
-// Video Card Component with simple auto-play
+// Video Card Component with loading/error states
 const VideoCard = ({ videoId }: { videoId: number }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  const handleLoadedData = () => {
+    console.log(`[UGC Video ${videoId}] Loaded successfully`);
+    setIsLoading(false);
+  };
+
+  const handleError = () => {
+    console.error(`[UGC Video ${videoId}] Failed to load: /videos/ugc-${videoId}.mp4`);
+    setIsLoading(false);
+    setHasError(true);
+  };
 
   return (
     <div className="flex-shrink-0 snap-center">
       <Card className="overflow-hidden border-border/50 hover-scale w-[280px] h-[500px] bg-card/50">
         <div className="relative w-full h-full bg-muted">
-          <video
-            ref={videoRef}
-            src={`/videos/ugc-${videoId}.mp4`}
-            className="w-full h-full object-cover"
-            autoPlay
-            muted
-            loop
-            playsInline
-          />
+          {isLoading && !hasError && (
+            <div className="absolute inset-0 flex items-center justify-center bg-muted">
+              <div className="animate-pulse flex flex-col items-center gap-2">
+                <Play className="h-8 w-8 text-muted-foreground/50" />
+                <span className="text-xs text-muted-foreground">Loading...</span>
+              </div>
+            </div>
+          )}
+          {hasError ? (
+            <div className="absolute inset-0 flex items-center justify-center bg-muted">
+              <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                <Play className="h-8 w-8 opacity-30" />
+                <span className="text-xs">Video unavailable</span>
+              </div>
+            </div>
+          ) : (
+            <video
+              ref={videoRef}
+              src={`/videos/ugc-${videoId}.mp4`}
+              className={`w-full h-full object-cover transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+              autoPlay
+              muted
+              loop
+              playsInline
+              onLoadedData={handleLoadedData}
+              onError={handleError}
+            />
+          )}
         </div>
       </Card>
     </div>
