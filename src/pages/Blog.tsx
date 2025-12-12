@@ -1,7 +1,31 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+
+const blogPosts = [
+  {
+    slug: "capsule-wardrobe",
+    title: "How to Build a Capsule Wardrobe That Works",
+    description: "Discover the essential pieces every wardrobe needs and how to make them work together seamlessly.",
+    date: "Coming Soon",
+    borderColor: "border-sage/20",
+  },
+  {
+    slug: "psychology-of-style",
+    title: "The Psychology of Personal Style",
+    description: "Why what you wear matters more than you think, and how to align your wardrobe with your identity.",
+    date: "Coming Soon",
+    borderColor: "border-bronze/20",
+  },
+  {
+    slug: "seasonal-transitions",
+    title: "Seasonal Style Transitions Made Easy",
+    description: "Master the art of transitioning your wardrobe between seasons without buying a whole new closet.",
+    date: "Coming Soon",
+    borderColor: "border-clay/20",
+  },
+];
 
 const Blog = () => {
   const navigate = useNavigate();
@@ -32,46 +56,20 @@ const Blog = () => {
             <h2 className="text-3xl md:text-4xl font-bold">Latest Articles</h2>
           </div>
 
-          {/* Blog posts will be added here */}
+          {/* Blog posts */}
           <div className="space-y-6">
-            <Card className="p-6 hover-scale border-sage/20">
-              <div className="space-y-4">
-                <div className="text-sm text-muted-foreground">Coming Soon</div>
-                <h3 className="text-2xl font-semibold">
-                  How to Build a Capsule Wardrobe That Works
-                </h3>
-                <p className="text-muted-foreground">
-                  Discover the essential pieces every wardrobe needs and how to make them work together seamlessly.
-                </p>
-                <Button variant="outline">Read More</Button>
-              </div>
-            </Card>
-
-            <Card className="p-6 hover-scale border-bronze/20">
-              <div className="space-y-4">
-                <div className="text-sm text-muted-foreground">Coming Soon</div>
-                <h3 className="text-2xl font-semibold">
-                  The Psychology of Personal Style
-                </h3>
-                <p className="text-muted-foreground">
-                  Why what you wear matters more than you think, and how to align your wardrobe with your identity.
-                </p>
-                <Button variant="outline">Read More</Button>
-              </div>
-            </Card>
-
-            <Card className="p-6 hover-scale border-clay/20">
-              <div className="space-y-4">
-                <div className="text-sm text-muted-foreground">Coming Soon</div>
-                <h3 className="text-2xl font-semibold">
-                  Seasonal Style Transitions Made Easy
-                </h3>
-                <p className="text-muted-foreground">
-                  Master the art of transitioning your wardrobe between seasons without buying a whole new closet.
-                </p>
-                <Button variant="outline">Read More</Button>
-              </div>
-            </Card>
+            {blogPosts.map((post) => (
+              <Card key={post.slug} className={`p-6 hover-scale ${post.borderColor}`}>
+                <div className="space-y-4">
+                  <div className="text-sm text-muted-foreground">{post.date}</div>
+                  <h3 className="text-2xl font-semibold">{post.title}</h3>
+                  <p className="text-muted-foreground">{post.description}</p>
+                  <Link to={`/blog/${post.slug}`}>
+                    <Button variant="outline">Read More</Button>
+                  </Link>
+                </div>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
