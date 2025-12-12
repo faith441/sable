@@ -371,7 +371,7 @@ const Marketing = () => {
           {/* Horizontal Scrolling Video Feed */}
           <div className="relative">
             <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-hide">
-              {[1, 2, 3, 4, 5].map((id) => (
+              {[1, 2].map((id) => (
                 <VideoCard key={id} videoId={id} />
               ))}
             </div>
