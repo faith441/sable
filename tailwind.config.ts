@@ -106,6 +106,14 @@ export default {
             transform: "translateX(-50%)",
           },
         },
+        "scroll-left": {
+          "0%": {
+            transform: "translateX(0)",
+          },
+          "100%": {
+            transform: "translateX(-50%)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -114,6 +122,7 @@ export default {
         "slide-up": "slideUp 0.8s ease-out",
         "scale-in": "scaleIn 0.5s ease-out",
         "marquee": "marquee 20s linear infinite",
+        "scroll-left": "scroll-left 30s linear infinite",
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

@@ -332,10 +332,10 @@ const Marketing = () => {
             </p>
           </div>
 
-          {/* Scrollable Video Feed */}
-          <div className="relative overflow-x-auto pb-4">
-            <div className="flex gap-4">
-              {[1, 8, 9, 10].map(id => <VideoCard key={id} videoId={id} />)}
+          {/* Auto-scrolling Video Feed */}
+          <div className="relative overflow-hidden pb-4">
+            <div className="flex gap-4 animate-scroll-left">
+              {[1, 8, 9, 10, 1, 8, 9, 10].map((id, index) => <VideoCard key={`${id}-${index}`} videoId={id} />)}
             </div>
           </div>
         </div>
