@@ -423,19 +423,34 @@ const Marketing = () => {
   );
 };
 
-// Video Card Component with loading/error states
+// Video Card Component with loading/error states and fallback source
 const VideoCard = ({ videoId }: { videoId: number }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [source, setSource] = useState(`/videos/ugc-${videoId}.mp4`);
+  const [hasTriedFallback, setHasTriedFallback] = useState(false);
 
   const handleLoadedData = () => {
-    console.log(`[UGC Video ${videoId}] Loaded successfully`);
+    console.log(`[UGC Video ${videoId}] Loaded successfully from ${source}`);
     setIsLoading(false);
   };
 
   const handleError = () => {
-    console.error(`[UGC Video ${videoId}] Failed to load: /videos/ugc-${videoId}.mp4`);
+    console.error(`[UGC Video ${videoId}] Failed to load: ${source}`);
+
+    // Try a known-good fallback clip once before showing the error state
+    if (!hasTriedFallback) {
+      console.warn(
+        `[UGC Video ${videoId}] Falling back to wardrobe-generation clip due to load error.`
+      );
+      setHasTriedFallback(true);
+      setIsLoading(true);
+      setHasError(false);
+      setSource("/videos/wardrobe-generation.mp4");
+      return;
+    }
+
     setIsLoading(false);
     setHasError(true);
   };
@@ -462,7 +477,7 @@ const VideoCard = ({ videoId }: { videoId: number }) => {
           ) : (
             <video
               ref={videoRef}
-              src={`/videos/ugc-${videoId}.mp4`}
+              src={source}
               className={`w-full h-full object-cover transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
               autoPlay
               muted
