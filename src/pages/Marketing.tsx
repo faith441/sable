@@ -371,7 +371,7 @@ const Marketing = () => {
           {/* Auto-scrolling Video Feed */}
           <div className="relative overflow-hidden">
             <div className="flex gap-4 animate-marquee">
-              {[1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6].map((id, index) => (
+              {[1, 2, 3, 4, 5, 6].map((id, index) => (
                 <VideoCard key={`${id}-${index}`} videoId={id} />
               ))}
             </div>
