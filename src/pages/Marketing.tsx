@@ -462,6 +462,7 @@ const VideoCard = ({ videoId }: { videoId: number }) => {
             ref={videoRef}
             src={`/videos/ugc-${videoId}.mp4`}
             className="w-full h-full object-cover"
+            autoPlay
             muted
             loop
             playsInline
