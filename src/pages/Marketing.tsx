@@ -6,7 +6,7 @@ import { Sparkles, Shirt, Calendar, MessageSquare, Check, ArrowRight, Download }
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import heroImage from "@/assets/hero-wardrobe.jpg";
 
@@ -423,36 +423,9 @@ const Marketing = () => {
   );
 };
 
-// Video Card Component with auto-play
+// Video Card Component with simple auto-play
 const VideoCard = ({ videoId }: { videoId: number }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isInView, setIsInView] = useState(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsInView(entry.isIntersecting);
-        if (entry.isIntersecting && videoRef.current) {
-          videoRef.current.play().catch(() => {
-            // Auto-play was prevented, which is fine
-          });
-        } else if (videoRef.current) {
-          videoRef.current.pause();
-        }
-      },
-      { threshold: 0.5 }
-    );
-
-    if (videoRef.current) {
-      observer.observe(videoRef.current);
-    }
-
-    return () => {
-      if (videoRef.current) {
-        observer.unobserve(videoRef.current);
-      }
-    };
-  }, []);
 
   return (
     <div className="flex-shrink-0 snap-center">
