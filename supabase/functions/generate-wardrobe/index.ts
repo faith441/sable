@@ -56,17 +56,56 @@ serve(async (req) => {
       console.error("Error fetching products:", productsError);
     }
 
-    // Check if we have real products in the database (minimum 1 product)
-    const hasRealProducts = products && products.length >= 1;
-    console.log(`Found ${products?.length || 0} products in database. Using ${hasRealProducts ? 'real products' : 'sample fallback'}.`);
+    // Check if we have real products in the database (minimum 5 products for meaningful capsules)
+    const productCount = products?.length || 0;
+    console.log(`Found ${productCount} products in database.`);
 
-    // If no real products, return error indicating empty inventory
-    if (!hasRealProducts) {
+    // If fewer than 5 products, return a simple recommendation instead of capsules
+    if (productCount < 5) {
+      console.log("Insufficient products for capsule generation, returning available products as simple recommendations");
+      
+      // Return whatever products we have as a simple collection
+      const availableProducts = (products || []).map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        category: p.category,
+        price: p.price,
+        colors: p.colors,
+        tags: p.tags,
+        image_url: p.image_url,
+        product_url: p.product_url,
+        brand: {
+          name: p.brands?.name || 'Brand Partner',
+        },
+      }));
+
+      if (availableProducts.length === 0) {
+        return new Response(
+          JSON.stringify({ 
+            error: "no_inventory",
+            message: "No products available from brand partners yet. Please check back later.",
+            capsules: []
+          }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      // Return available products as a single capsule
       return new Response(
         JSON.stringify({ 
-          error: "no_inventory",
-          message: "No products available from brand partners yet. Please check back later or use sample wardrobes.",
-          capsules: []
+          capsules: [{
+            name: "Available Selections",
+            description: "Current selections from our brand partners. More styles coming soon!",
+            total_pieces: availableProducts.length,
+            total_price: availableProducts.reduce((sum: number, p: any) => sum + (p.price || 0), 0),
+            outfit_count: Math.max(1, Math.floor(availableProducts.length / 3)),
+            products: availableProducts,
+          }],
+          source: "brand_partners",
+          message: "Limited inventory available. Full capsule wardrobes require more products.",
         }),
         {
           status: 200,
@@ -106,7 +145,7 @@ serve(async (req) => {
     console.log("Gender preference:", gender);
 
     // Format products for AI to select from
-    const productCatalog = products.map((p: any) => ({
+    const productCatalog = (products || []).map((p: any) => ({
       id: p.id,
       name: p.name,
       category: p.category,
@@ -226,7 +265,7 @@ IMPORTANT: Only output valid JSON. No markdown, no extra text.`;
 
     // Validate that selected products exist in our catalog
     if (wardrobeData.capsules) {
-      const productIds = new Set(products.map((p: any) => p.id));
+      const productIds = new Set((products || []).map((p: any) => p.id));
       
       wardrobeData.capsules = wardrobeData.capsules.map((capsule: any) => ({
         ...capsule,
