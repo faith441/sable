@@ -1,0 +1,1 @@
+ALTER TABLE public.user_wardrobe ADD COLUMN is_favorite boolean NOT NULL DEFAULT false;

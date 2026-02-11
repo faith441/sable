@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, Plus, Package, Filter, ArrowLeft } from "lucide-react";
+import { Loader2, Plus, Package, Filter, ArrowLeft, Heart } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MobileNav from "@/components/MobileNav";
 import ProfileMenu from "@/components/ProfileMenu";
@@ -21,6 +21,7 @@ interface PurchasedItem {
   purchased_at: string;
   notes?: string;
   is_custom: boolean;
+  is_favorite: boolean;
   product?: {
     id: string;
     name: string;
@@ -164,6 +165,26 @@ const Closet = () => {
     } catch (error: any) {
       console.error("Error adding item:", error);
       toast.error(error.message || "Failed to add item");
+    }
+  };
+
+  const toggleFavorite = async (item: PurchasedItem, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    try {
+      const newValue = !item.is_favorite;
+      const { error } = await supabase
+        .from("user_wardrobe")
+        .update({ is_favorite: newValue })
+        .eq("id", item.id);
+      if (error) throw error;
+      setItems(prev => prev.map(i => i.id === item.id ? { ...i, is_favorite: newValue } : i));
+      if (selectedItem?.id === item.id) {
+        setSelectedItem({ ...selectedItem, is_favorite: newValue });
+      }
+      toast.success(newValue ? "Added to favorites" : "Removed from favorites");
+    } catch (error: any) {
+      console.error("Error toggling favorite:", error);
+      toast.error("Failed to update favorite");
     }
   };
 
@@ -330,6 +351,12 @@ const Closet = () => {
                         />
                       )
                     )}
+                    <button
+                      onClick={(e) => toggleFavorite(item, e)}
+                      className="absolute top-2 right-2 w-8 h-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors"
+                    >
+                      <Heart className={`w-4 h-4 transition-colors ${item.is_favorite ? 'fill-red-500 text-red-500' : 'text-muted-foreground'}`} />
+                    </button>
                   </div>
                   <div className="p-3">
                     <p className="text-xs text-muted-foreground mb-1">
@@ -366,6 +393,7 @@ const Closet = () => {
         onOpenChange={setItemDetailOpen}
         onEdit={handleEdit}
         onDelete={handleDeleteClick}
+        onToggleFavorite={(item) => toggleFavorite(item)}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
