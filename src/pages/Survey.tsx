@@ -85,7 +85,8 @@ const Survey = () => {
     Western: "https://images.unsplash.com/photo-1598522325074-042db73aa4e6?w=400&h=500&fit=crop", // Cowboy boots, denim
     Mountain: "https://images.unsplash.com/photo-1551232864-3f0890e580d9?w=400&h=500&fit=crop", // Outdoor hiking gear
     Beach: "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=400&h=500&fit=crop", // Beachwear, resort style
-    Sexy: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&h=500&fit=crop" // Form-fitting, alluring
+    Sexy: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&h=500&fit=crop", // Form-fitting, alluring
+    Athleisure: "https://images.unsplash.com/photo-1518459031867-a89b944bffe4?w=400&h=500&fit=crop" // Sporty comfortable style
   };
 
   const mensStyleImages = {
@@ -104,7 +105,8 @@ const Survey = () => {
     Western: "https://images.unsplash.com/photo-1608613304899-ea8098577e38?w=400&h=500&fit=crop", // Cowboy hat, boots
     Mountain: "https://images.unsplash.com/photo-1609137144813-7d9921338f24?w=400&h=500&fit=crop", // Outdoor hiking gear
     Beach: "https://images.unsplash.com/photo-1549388604-817d15aa0110?w=400&h=500&fit=crop", // Beachwear, shorts
-    Sexy: "https://images.unsplash.com/photo-1564859228273-274232fdb516?w=400&h=500&fit=crop" // Fitted, attractive style
+    Sexy: "https://images.unsplash.com/photo-1564859228273-274232fdb516?w=400&h=500&fit=crop", // Fitted, attractive style
+    Athleisure: "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=400&h=500&fit=crop" // Sporty casual comfort
   };
 
   const colorImages = {
