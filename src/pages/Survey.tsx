@@ -64,9 +64,9 @@ const Survey = () => {
     hairConcerns: [] as string[],
     shampooPreferences: [] as string[],
     // Photos - can be File (new upload) or string (loaded from localStorage)
-    photos: [null, null, null, null] as (File | string | null)[],
-    fullBodyPhotos: Array(10).fill(null) as (File | string | null)[],
-    swimsuitPhotos: Array(10).fill(null) as (File | string | null)[],
+    photos: [null, null] as (File | string | null)[],
+    fullBodyPhotos: Array(2).fill(null) as (File | string | null)[],
+    swimsuitPhotos: Array(2).fill(null) as (File | string | null)[],
   });
 
   const womensStyleImages = {
@@ -190,9 +190,9 @@ const Survey = () => {
       "Now, let's talk about the occasions you dress for. Select all that apply!",
       "How do you want to feel when you get dressed? What energy are you bringing to the world? Select all moods that resonate!",
       "Great! Now help me understand your body features so I can recommend pieces that will fit and flatter you perfectly!",
-      "Optionally upload up to 4 clear selfie photos of your face without sunglasses. This helps me understand your unique features and provide even more personalized recommendations!",
-      "Share up to 10 photos of yourself that you really like showing your entire body. This helps me understand your style and fit preferences even better!",
-      "Upload up to 10 photos of yourself in swimsuits. This helps me provide perfect swimwear recommendations!",
+      "Optionally upload up to 2 clear selfie photos of your face without sunglasses. This helps me understand your unique features and provide even more personalized recommendations!",
+      "Share up to 2 photos of yourself that you really like showing your entire body. This helps me understand your style and fit preferences even better!",
+      "Upload up to 2 photos of yourself in swimsuits. This helps me provide perfect swimwear recommendations!",
       "Let's talk about fragrance! What scent profiles appeal to you? This helps me recommend the perfect signature scents!",
       "Finally, tell me about your hair! This helps me recommend the perfect shampoo and conditioner for your hair type and goals!"
     ];
@@ -962,12 +962,12 @@ const Survey = () => {
             <div className="text-center space-y-2 mb-6">
               <h3 className="text-lg font-normal">Upload Full Body Photos (Optional)</h3>
               <p className="text-sm text-muted-foreground font-light">
-                Share up to 10 photos that you really like showing your entire body
+                Share up to 2 photos that you really like showing your entire body
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((index) => (
+              {[0, 1].map((index) => (
                 <div key={index} className="space-y-2">
                   <label
                     htmlFor={`full-body-photo-${index}`}
@@ -1046,12 +1046,12 @@ const Survey = () => {
             <div className="text-center space-y-2 mb-6">
               <h3 className="text-lg font-normal">Upload Swimsuit Photos (Optional)</h3>
               <p className="text-sm text-muted-foreground font-light">
-                Share up to 10 photos of yourself in swimsuits for better swimwear recommendations
+                Share up to 2 photos of yourself in swimsuits for better swimwear recommendations
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((index) => (
+              {[0, 1].map((index) => (
                 <div key={index} className="space-y-2">
                   <label
                     htmlFor={`swimsuit-photo-${index}`}
