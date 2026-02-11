@@ -722,7 +722,7 @@ const Survey = () => {
                     <p className="text-xs text-muted-foreground font-light mb-3">
                       This helps us find out what jean size works for you for other brands.
                     </p>
-                    {["Levi's", "Madewell", "AG Jeans", "J Brand", "Citizens of Humanity"].map((brand) => (
+                    {["Levi's", "Madewell", "AG Jeans", "J Brand", "Citizens of Humanity", "American Eagle"].map((brand) => (
                       <div key={brand} className="flex items-center gap-3">
                         <span className="text-sm font-light min-w-[140px]">{brand}</span>
                         <input
