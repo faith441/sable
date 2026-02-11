@@ -1,7 +1,7 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Pencil, Trash2 } from "lucide-react";
+import { ExternalLink, Pencil, Trash2, Heart } from "lucide-react";
 
 interface ClosetItemDialogProps {
   item: any;
@@ -9,9 +9,10 @@ interface ClosetItemDialogProps {
   onOpenChange: (open: boolean) => void;
   onEdit?: (item: any) => void;
   onDelete?: (item: any) => void;
+  onToggleFavorite?: (item: any) => void;
 }
 
-const ClosetItemDialog = ({ item, open, onOpenChange, onEdit, onDelete }: ClosetItemDialogProps) => {
+const ClosetItemDialog = ({ item, open, onOpenChange, onEdit, onDelete, onToggleFavorite }: ClosetItemDialogProps) => {
   if (!item) return null;
 
   const handleEdit = () => {
@@ -146,6 +147,14 @@ const ClosetItemDialog = ({ item, open, onOpenChange, onEdit, onDelete }: Closet
 
           {/* Edit and Delete Buttons */}
           <div className="flex gap-2 pt-4">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => onToggleFavorite?.(item)}
+              className="shrink-0"
+            >
+              <Heart className={`w-4 h-4 ${item.is_favorite ? 'fill-red-500 text-red-500' : ''}`} />
+            </Button>
             <Button 
               variant="outline" 
               className="flex-1"

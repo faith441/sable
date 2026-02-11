@@ -863,6 +863,7 @@ export type Database = {
           custom_size: string | null
           id: string
           is_custom: boolean | null
+          is_favorite: boolean
           notes: string | null
           product_id: string | null
           purchased_at: string
@@ -876,6 +877,7 @@ export type Database = {
           custom_size?: string | null
           id?: string
           is_custom?: boolean | null
+          is_favorite?: boolean
           notes?: string | null
           product_id?: string | null
           purchased_at?: string
@@ -889,6 +891,7 @@ export type Database = {
           custom_size?: string | null
           id?: string
           is_custom?: boolean | null
+          is_favorite?: boolean
           notes?: string | null
           product_id?: string | null
           purchased_at?: string

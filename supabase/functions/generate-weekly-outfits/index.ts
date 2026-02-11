@@ -49,7 +49,8 @@ serve(async (req) => {
           brand: w.custom_brand,
           size: w.custom_size,
           image_url: w.custom_image_url,
-          isCustom: true
+          isCustom: true,
+          isFavorite: w.is_favorite || false
         };
       } else {
         const product = products?.find(p => p.id === w.product_id);
@@ -59,7 +60,8 @@ serve(async (req) => {
           category: product.category,
           colors: product.colors,
           image_url: product.image_url,
-          isCustom: false
+          isCustom: false,
+          isFavorite: w.is_favorite || false
         } : null;
       }
     }).filter(Boolean);
@@ -72,11 +74,15 @@ serve(async (req) => {
       "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
     ];
 
-    // Generate outfits using AI with detailed layering
+    const favoriteItems = items.filter((i: any) => i.isFavorite);
+    const favoriteNote = favoriteItems.length > 0 
+      ? `\n\nFAVORITE ITEMS (use these ~10% more often across outfits, prioritize including them):\n${favoriteItems.map((i: any) => `- ${i.name} (${i.category}, id: ${i.id})`).join('\n')}`
+      : '';
+
     const prompt = `Create ${daysToGenerate.length} outfit combination(s) for ${dayOnly ? dayOnly : "the week"} using items from this wardrobe:
 ${JSON.stringify(items, null, 2)}
 
-${weatherContext}
+${weatherContext}${favoriteNote}
 
 IMPORTANT RULES:
 1. You MUST create at least one outfit for each requested day, even if the wardrobe is limited
