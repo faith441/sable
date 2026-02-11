@@ -879,12 +879,12 @@ const Survey = () => {
             <div className="text-center space-y-2 mb-6">
               <h3 className="text-lg font-normal">Upload Your Selfie Photos (Optional)</h3>
               <p className="text-sm text-muted-foreground font-light">
-                Upload up to 4 clear photos of your face without sunglasses for more personalized recommendations
+                Upload up to 2 clear photos of your face without sunglasses for more personalized recommendations
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              {[0, 1, 2, 3].map((index) => (
+              {[0, 1].map((index) => (
                 <div key={index} className="space-y-2">
                   <label
                     htmlFor={`photo-${index}`}
