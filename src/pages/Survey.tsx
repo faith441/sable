@@ -184,7 +184,7 @@ const Survey = () => {
       "Optionally upload up to 2 clear selfie photos of your face without sunglasses. This helps me understand your unique features and provide even more personalized recommendations!",
       isWomensSelected ? "Upload up to 2 photos of yourself in swimsuits. This helps me provide perfect swimwear recommendations!" : "Share up to 2 photos of yourself that you really like showing your entire body. This helps me understand your style and fit preferences even better!",
       "Let's talk about fragrance! What scent profiles appeal to you? This helps me recommend the perfect signature scents!",
-      "Finally, tell me about your hair! This helps me recommend the perfect shampoo and conditioner for your hair type and goals!"
+      "Let's talk about body care! Tell me about your hair type and preferences so I can recommend the perfect shampoos, conditioners, and lotions for you!"
     ];
     setAiMessage(messages[currentStep - 1] || messages[0]);
   };
