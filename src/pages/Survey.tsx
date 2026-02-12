@@ -107,21 +107,14 @@ const Survey = () => {
 
   const colorImages = {
     Neutral: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400&h=300&fit=crop",
-    Black: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400&h=300&fit=crop",
-    White: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=400&h=300&fit=crop",
     "Earth Tones": "https://images.unsplash.com/photo-1544441893-675973e31985?w=400&h=300&fit=crop",
     Pastels: "https://images.unsplash.com/photo-1558769132-cb1aea588c87?w=400&h=300&fit=crop",
-    "Bold Colors": "https://images.unsplash.com/photo-1525562723836-dca67a71d5f1?w=400&h=300&fit=crop",
-    Navy: "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=400&h=300&fit=crop",
     "Jewel Tones": "https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=400&h=300&fit=crop",
     Monochrome: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=400&h=300&fit=crop",
     "Warm Tones": "https://images.unsplash.com/photo-1581044777550-4cfa60707c03?w=400&h=300&fit=crop",
     "Cool Tones": "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400&h=300&fit=crop",
     Metallics: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&h=300&fit=crop",
-    "Olive & Green": "https://images.unsplash.com/photo-1602810319428-019690571b5b?w=400&h=300&fit=crop",
-    "Burgundy & Wine": "https://images.unsplash.com/photo-1554568218-0f1715e72254?w=400&h=300&fit=crop",
-    "Neon & Bright": "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=400&h=300&fit=crop",
-    "Blush & Rose": "https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?w=400&h=300&fit=crop"
+    "Neon & Bright": "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=400&h=300&fit=crop"
   };
 
   const genderOptions = ["Women's", "Men's"];
