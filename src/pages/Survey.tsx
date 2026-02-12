@@ -74,12 +74,10 @@ const Survey = () => {
     Minimalist: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&h=500&fit=crop", // Clean lines, neutral tones
     Trendy: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400&h=500&fit=crop", // Fashion-forward modern look
     Bohemian: "https://images.unsplash.com/photo-1532453288672-3a27e9be9efd?w=400&h=500&fit=crop", // Flowy boho dress
-    Edgy: "https://images.unsplash.com/photo-1558769132-cb1aea588c87?w=400&h=500&fit=crop", // Leather jacket style
-    Romantic: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400&h=500&fit=crop", // Soft feminine dress
     Vintage: "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=400&h=500&fit=crop", // Retro style clothing
     Military: "https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=400&h=500&fit=crop", // Utility jacket, structured
     Streetwear: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400&h=500&fit=crop", // Urban casual sneakers
-    Bold: "https://images.unsplash.com/photo-1596516109370-29001ec8ec36?w=400&h=500&fit=crop", // Bright colors, statement pieces
+    
     Formal: "https://images.unsplash.com/photo-1562184552-1026b76b1087?w=400&h=500&fit=crop", // Evening gown elegance
     Chic: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&h=500&fit=crop", // Sophisticated tailored look
     Western: "https://images.unsplash.com/photo-1598522325074-042db73aa4e6?w=400&h=500&fit=crop", // Cowboy boots, denim
@@ -94,12 +92,10 @@ const Survey = () => {
     Minimalist: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=500&fit=crop", // Clean simple outfit
     Trendy: "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=400&h=500&fit=crop", // Modern fashion-forward
     Bohemian: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=400&h=500&fit=crop", // Relaxed boho layers
-    Edgy: "https://images.unsplash.com/photo-1622445275463-afa2ab738c34?w=400&h=500&fit=crop", // Dark leather jacket
-    Romantic: "https://images.unsplash.com/photo-1519689373023-dd07c7988603?w=400&h=500&fit=crop", // Soft refined look
     Vintage: "https://images.unsplash.com/photo-1490367532201-b9bc1dc483f6?w=400&h=500&fit=crop", // Retro classic pieces
     Military: "https://images.unsplash.com/photo-1627225924765-552d49cf47ad?w=400&h=500&fit=crop", // Army jacket, cargo
     Streetwear: "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=400&h=500&fit=crop", // Urban hoodie, sneakers
-    Bold: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400&h=500&fit=crop", // Vibrant statement outfit
+    
     Formal: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&h=500&fit=crop", // Tuxedo, black tie
     Chic: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&h=500&fit=crop", // Sophisticated tailored
     Western: "https://images.unsplash.com/photo-1608613304899-ea8098577e38?w=400&h=500&fit=crop", // Cowboy hat, boots
