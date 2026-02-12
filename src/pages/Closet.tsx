@@ -114,6 +114,7 @@ const Closet = () => {
     size: string;
     brand: string;
     category: string;
+    season: string;
   }) => {
     console.log("handleAddCustomItem called with:", itemData);
     try {
@@ -148,6 +149,7 @@ const Closet = () => {
         custom_size: itemData.size,
         custom_brand: itemData.brand,
         custom_category: itemData.category,
+        season: itemData.season,
       };
       
       console.log("Inserting data:", insertData);

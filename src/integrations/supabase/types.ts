@@ -867,6 +867,7 @@ export type Database = {
           notes: string | null
           product_id: string | null
           purchased_at: string
+          season: string | null
           user_id: string
         }
         Insert: {
@@ -881,6 +882,7 @@ export type Database = {
           notes?: string | null
           product_id?: string | null
           purchased_at?: string
+          season?: string | null
           user_id: string
         }
         Update: {
@@ -895,6 +897,7 @@ export type Database = {
           notes?: string | null
           product_id?: string | null
           purchased_at?: string
+          season?: string | null
           user_id?: string
         }
         Relationships: [

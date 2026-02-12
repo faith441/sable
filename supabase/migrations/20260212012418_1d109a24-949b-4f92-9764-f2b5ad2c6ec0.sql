@@ -1,0 +1,1 @@
+ALTER TABLE public.user_wardrobe ADD COLUMN season text DEFAULT 'All';

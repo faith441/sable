@@ -16,6 +16,7 @@ interface AddCustomItemDialogProps {
     size: string;
     brand: string;
     category: string;
+    season: string;
   }) => Promise<void>;
 }
 
@@ -49,7 +50,9 @@ const CATEGORIES = [
   "Sunglasses",
 ];
 
-export { CATEGORIES };
+const SEASONS = ["All", "Spring", "Summer", "Fall", "Winter"];
+
+export { CATEGORIES, SEASONS };
 
 const AddCustomItemDialog = ({ open, onOpenChange, onSubmit }: AddCustomItemDialogProps) => {
   const [loading, setLoading] = useState(false);
@@ -59,6 +62,7 @@ const AddCustomItemDialog = ({ open, onOpenChange, onSubmit }: AddCustomItemDial
   const [size, setSize] = useState("");
   const [brand, setBrand] = useState("");
   const [category, setCategory] = useState("");
+  const [season, setSeason] = useState("All");
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -84,6 +88,7 @@ const AddCustomItemDialog = ({ open, onOpenChange, onSubmit }: AddCustomItemDial
         size,
         brand,
         category,
+        season,
       });
       
       // Reset form
@@ -93,6 +98,7 @@ const AddCustomItemDialog = ({ open, onOpenChange, onSubmit }: AddCustomItemDial
       setSize("");
       setBrand("");
       setCategory("");
+      setSeason("All");
     } catch (error) {
       console.error("Error submitting:", error);
     } finally {
@@ -172,6 +178,23 @@ const AddCustomItemDialog = ({ open, onOpenChange, onSubmit }: AddCustomItemDial
               onChange={(e) => setSize(e.target.value)}
               placeholder="e.g. S, M, L, XL, 32, 10"
             />
+          </div>
+
+          {/* Season */}
+          <div className="space-y-2">
+            <Label htmlFor="season">Season</Label>
+            <Select value={season} onValueChange={setSeason}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select season" />
+              </SelectTrigger>
+              <SelectContent>
+                {SEASONS.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Description */}
