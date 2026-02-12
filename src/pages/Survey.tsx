@@ -518,7 +518,7 @@ const Survey = () => {
                     }`}
                     onClick={() => setFormData({
                       ...formData,
-                      bodyType: toggleArrayItem(formData.bodyType, type)
+                      bodyType: [type]
                     })}
                   >
                     <CardContent className="p-4 text-center">
@@ -590,7 +590,7 @@ const Survey = () => {
                     }`}
                     onClick={() => setFormData({
                       ...formData,
-                      hairColor: toggleArrayItem(formData.hairColor, color)
+                      hairColor: [color]
                     })}
                   >
                     <CardContent className="p-4 text-center">
@@ -618,7 +618,7 @@ const Survey = () => {
                     }`}
                     onClick={() => setFormData({
                       ...formData,
-                      eyeColor: toggleArrayItem(formData.eyeColor, color)
+                      eyeColor: [color]
                     })}
                   >
                     <CardContent className="p-4 text-center">
