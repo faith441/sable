@@ -185,22 +185,11 @@ const ProfileSheet = ({ open, onOpenChange }: ProfileSheetProps) => {
   };
 
   const BadgeOption = ({ item, isSelected, onClick }: { item: string; isSelected: boolean; onClick: () => void }) => {
-    // Rotate between colors for visual variety
-    const getColorClass = () => {
-      const hash = item.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      const colors = [
-        "bg-primary text-primary-foreground",
-        "bg-sage text-sage-foreground", 
-        "bg-accent text-accent-foreground"
-      ];
-      return isSelected ? colors[hash % colors.length] : "";
-    };
-    
     return (
       <Badge
         variant={isSelected ? "default" : "outline"}
         className={`cursor-pointer transition-all text-xs py-1 px-2 ${
-          isSelected ? getColorClass() : "hover:bg-accent"
+          isSelected ? "bg-primary text-primary-foreground" : "hover:bg-accent"
         }`}
         onClick={onClick}
       >
