@@ -1297,7 +1297,7 @@ const Survey = () => {
           )}
           {step < maxStep ? (
             <Button 
-              onClick={() => setStep(step + 1)} 
+              onClick={() => { setStep(step + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }} 
               className="flex-1" 
               variant="luxury"
               disabled={
