@@ -9,7 +9,10 @@ const config: CapacitorConfig = {
     cleartext: true
   },
   ios: {
-    contentInset: 'automatic'
+    contentInset: 'automatic',
+    preferredContentMode: 'mobile',
+    backgroundColor: '#F5F0EB',
+    scrollEnabled: true
   },
   android: {
     backgroundColor: '#1a1a1a'
