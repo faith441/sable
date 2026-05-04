@@ -8,7 +8,6 @@ import Marketing from "./pages/Marketing";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Auth from "./pages/Auth";
-import Survey from "./pages/Survey";
 import Wardrobe from "./pages/Wardrobe";
 import Closet from "./pages/Closet";
 import Cart from "./pages/Cart";
@@ -28,6 +27,7 @@ import BrandAuth from "./pages/BrandAuth";
 import BrandProducts from "./pages/BrandProducts";
 import BrandProductUpload from "./pages/BrandProductUpload";
 import BrandAccount from "./pages/BrandAccount";
+import Shop from "./pages/Shop";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,15 +39,14 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Marketing />} />
+          <Route path="/" element={<Home />} />
           <Route path="/home" element={<Home />} />
-          <Route path="/marketing" element={<Marketing />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/survey" element={<Survey />} />
           <Route path="/wardrobe" element={<Wardrobe />} />
           <Route path="/closet" element={<Closet />} />
+          <Route path="/shop" element={<Shop />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/ai-stylist" element={<AIStyleChat />} />

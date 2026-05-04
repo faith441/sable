@@ -172,9 +172,9 @@ const Home = () => {
             </div>
             
             <div className="space-y-3 text-sm text-muted-foreground font-light leading-relaxed">
-              <p>Your interactive style survey, your AI stylist,<br />
-              your virtual try-on tool, and your shoppable<br />
-              capsule wardrobes — all built uniquely for you.</p>
+              <p>Your AI stylist, virtual try-on tool,<br />
+              and shoppable capsule wardrobes<br />
+              — all in one place.</p>
               
               <p className="text-foreground font-normal pt-3">
                 A single platform that aligns your identity,<br />lifestyle, and aesthetic into one clear direction.
@@ -267,24 +267,24 @@ const Home = () => {
               <div className="flex gap-3 p-4 rounded-lg border border-border bg-card hover-scale">
                 <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center flex-shrink-0 font-light text-sm">1</div>
                 <div>
-                  <h4 className="font-normal text-sm mb-1">Take the visual style survey</h4>
-                  <p className="text-xs text-muted-foreground font-light">Interactive, image-based, fast</p>
+                  <h4 className="font-normal text-sm mb-1">Browse curated capsule wardrobes</h4>
+                  <p className="text-xs text-muted-foreground font-light">Tailored collections for every style</p>
                 </div>
               </div>
-              
+
               <div className="flex gap-3 p-4 rounded-lg border border-border bg-card hover-scale">
                 <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center flex-shrink-0 font-light text-sm">2</div>
                 <div>
-                  <h4 className="font-normal text-sm mb-1">Get your shoppable capsule wardrobes</h4>
-                  <p className="text-xs text-muted-foreground font-light">Tailored to your budget, lifestyle & identity</p>
+                  <h4 className="font-normal text-sm mb-1">Shop from top fashion brands</h4>
+                  <p className="text-xs text-muted-foreground font-light">Discover and purchase pieces you love</p>
                 </div>
               </div>
-              
+
               <div className="flex gap-3 p-4 rounded-lg border border-border bg-card hover-scale">
                 <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center flex-shrink-0 font-light text-sm">3</div>
                 <div>
-                  <h4 className="font-normal text-sm mb-1">Save outfits & check out in minutes</h4>
-                  <p className="text-xs text-muted-foreground font-light">No overwhelming browsing. No guesswork. No stylist fees.</p>
+                  <h4 className="font-normal text-sm mb-1">Build your perfect wardrobe</h4>
+                  <p className="text-xs text-muted-foreground font-light">No overwhelming browsing. No guesswork.</p>
                 </div>
               </div>
             </div>
@@ -312,19 +312,18 @@ const Home = () => {
             
             <div className="space-y-4">
               <p className="text-xs text-muted-foreground font-light">
-                Start your style audit.<br />
-                And see what a curated wardrobe<br />
+                Discover your curated wardrobe<br />
                 — built around you —<br />
-                actually feels like.
+                and start elevating your style today.
               </p>
               
-              <Button 
-                variant="luxury" 
-                size="lg" 
-                onClick={() => navigate("/survey")}
+              <Button
+                variant="luxury"
+                size="lg"
+                onClick={() => navigate("/wardrobe")}
                 className="w-full max-w-xs mx-auto hover-scale"
               >
-                Start Style Survey <ArrowRight className="ml-2" />
+                Browse Wardrobe <ArrowRight className="ml-2" />
               </Button>
             </div>
           </div>

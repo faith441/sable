@@ -258,15 +258,27 @@ const Survey = () => {
       {/* Header with Progress */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border/50">
         <div className="max-w-lg mx-auto px-4 py-4">
-          <div className="h-1 bg-secondary rounded-full overflow-hidden mb-4">
-            <div 
-              className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>Step {step} of {maxStep}</span>
-            <span>{Math.round(progress)}%</span>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex-1">
+              <div className="h-1 bg-secondary rounded-full overflow-hidden mb-2">
+                <div
+                  className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>Step {step} of {maxStep}</span>
+                <span>{Math.round(progress)}%</span>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/wardrobe")}
+              className="ml-4 text-xs"
+            >
+              Skip Survey
+            </Button>
           </div>
         </div>
       </div>
@@ -1296,25 +1308,22 @@ const Survey = () => {
             </Button>
           )}
           {step < maxStep ? (
-            <Button 
-              onClick={() => { setStep(step + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }} 
-              className="flex-1" 
-              variant="luxury"
-              disabled={
-                (step === 1 && !formData.gender) ||
-                (step === 2 && formData.styleType.length === 0) ||
-                (step === 3 && formData.colorPreferences.length === 0) ||
-                (step === 4 && formData.budgetRange.length === 0) ||
-                (step === 5 && formData.lifestyle.length === 0) ||
-                (step === 6 && formData.occasions.length === 0) ||
-                (step === 7 && formData.mood.length === 0) ||
-                (step === 8 && formData.bodyType.length === 0) ||
-                (step === 11 && formData.fragranceTypes.length === 0) ||
-                (step === 12 && formData.hairType.length === 0)
-              }
-            >
-              Continue <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
+            <>
+              <Button
+                variant="ghost"
+                onClick={() => { setStep(step + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                className="flex-1"
+              >
+                Skip
+              </Button>
+              <Button
+                onClick={() => { setStep(step + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                className="flex-1"
+                variant="luxury"
+              >
+                Continue <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </>
           ) : (
             <Button 
               onClick={handleSubmit} 

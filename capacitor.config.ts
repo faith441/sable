@@ -1,13 +1,9 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.f5127a6d261a4196af9d7ec4fa2eebbe',
-  appName: 'Sable',
+  appId: 'ai.getsable.wardrobe',
+  appName: 'Sable.ai',
   webDir: 'dist',
-  server: {
-    url: 'https://f5127a6d-261a-4196-af9d-7ec4fa2eebbe.lovableproject.com?forceHideBadge=true',
-    cleartext: true
-  },
   ios: {
     contentInset: 'automatic',
     preferredContentMode: 'mobile',

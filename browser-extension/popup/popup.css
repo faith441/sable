@@ -1,0 +1,298 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 380px;
+  min-height: 500px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: #ffffff;
+  color: #1a1a1a;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+header {
+  padding: 20px;
+  background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.logo {
+  margin-bottom: 8px;
+}
+
+.logo-text {
+  font-size: 20px;
+  font-weight: 700;
+  color: #FF6B35;
+  font-family: 'Georgia', serif;
+}
+
+h1 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c2c2c;
+}
+
+.loading {
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 16px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #FF6B35;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.no-product {
+  padding: 60px 30px;
+  text-align: center;
+}
+
+.no-product .icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.no-product p {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #2c2c2c;
+}
+
+.no-product small {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.4;
+}
+
+.product-view {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 60px;
+}
+
+.product-image {
+  width: 100%;
+  height: 200px;
+  background: #f9f9f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.product-image img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.product-details {
+  padding: 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.product-details h2 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #2c2c2c;
+  line-height: 1.4;
+}
+
+.product-meta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.brand {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+.price {
+  font-size: 16px;
+  font-weight: 700;
+  color: #FF6B35;
+}
+
+.category {
+  font-size: 13px;
+  color: #888;
+}
+
+.form-section {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2c2c2c;
+  margin-bottom: -8px;
+}
+
+select, input, textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+select:focus, input:focus, textarea:focus {
+  outline: none;
+  border-color: #FF6B35;
+}
+
+textarea {
+  resize: vertical;
+}
+
+.actions {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.btn-primary {
+  background: #FF6B35;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #e55a28;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background: #f5f5f5;
+  color: #2c2c2c;
+  border: 1px solid #e0e0e0;
+}
+
+.btn-secondary:hover {
+  background: #e8e8e8;
+}
+
+.success-view, .error-view {
+  padding: 60px 30px;
+  text-align: center;
+}
+
+.success-icon {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 20px;
+  background: #4CAF50;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: bold;
+}
+
+.error-icon {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 20px;
+  background: #ff5252;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: bold;
+}
+
+.success-view h2, .error-view h2 {
+  font-size: 20px;
+  margin-bottom: 8px;
+  color: #2c2c2c;
+}
+
+.success-view p, .error-view p {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 20px;
+  background: #f9f9f9;
+  border-top: 1px solid #e0e0e0;
+}
+
+.settings {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #888;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #FF6B35;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 0;
+  cursor: pointer;
+}
+
+.link-btn:hover {
+  text-decoration: underline;
+}

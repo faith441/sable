@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sable Closet Companion</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <span class="logo-text">Sable</span>
+      </div>
+      <h1>Add to Closet</h1>
+    </header>
+
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p>Detecting product...</p>
+    </div>
+
+    <div id="no-product" class="no-product" style="display: none;">
+      <div class="icon">👗</div>
+      <p>No fashion item detected on this page.</p>
+      <small>Navigate to a clothing or fashion product page to add items to your closet.</small>
+    </div>
+
+    <div id="product-view" class="product-view" style="display: none;">
+      <div class="product-image">
+        <img id="product-img" src="" alt="Product">
+      </div>
+
+      <div class="product-details">
+        <h2 id="product-title"></h2>
+        <div class="product-meta">
+          <span id="product-brand" class="brand"></span>
+          <span id="product-price" class="price"></span>
+        </div>
+        <p id="product-category" class="category"></p>
+      </div>
+
+      <div class="form-section">
+        <label for="clothing-type">Clothing Type</label>
+        <select id="clothing-type">
+          <option value="">Select type...</option>
+          <option value="tops">Tops</option>
+          <option value="bottoms">Bottoms</option>
+          <option value="dresses">Dresses</option>
+          <option value="outerwear">Outerwear</option>
+          <option value="shoes">Shoes</option>
+          <option value="accessories">Accessories</option>
+          <option value="jewelry">Jewelry</option>
+          <option value="bags">Bags</option>
+        </select>
+
+        <label for="tags">Tags (optional)</label>
+        <input type="text" id="tags" placeholder="e.g., casual, work, summer">
+
+        <label for="notes">Notes (optional)</label>
+        <textarea id="notes" rows="2" placeholder="Add any notes about this item..."></textarea>
+      </div>
+
+      <div class="actions">
+        <button id="add-to-closet" class="btn-primary">
+          Add to Closet
+        </button>
+        <button id="open-app" class="btn-secondary">
+          Open Sable App
+        </button>
+      </div>
+    </div>
+
+    <div id="success-view" class="success-view" style="display: none;">
+      <div class="success-icon">✓</div>
+      <h2>Added to Closet!</h2>
+      <p>This item has been saved to your Sable wardrobe.</p>
+      <div class="actions">
+        <button id="view-closet" class="btn-primary">
+          View My Closet
+        </button>
+        <button id="add-another" class="btn-secondary">
+          Add Another Item
+        </button>
+      </div>
+    </div>
+
+    <div id="error-view" class="error-view" style="display: none;">
+      <div class="error-icon">⚠</div>
+      <h2>Oops!</h2>
+      <p id="error-message"></p>
+      <div class="actions">
+        <button id="try-again" class="btn-secondary">
+          Try Again
+        </button>
+      </div>
+    </div>
+
+    <footer>
+      <div class="settings">
+        <button id="settings-btn" class="link-btn">Settings</button>
+        <span>•</span>
+        <button id="logout-btn" class="link-btn">Logout</button>
+      </div>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
