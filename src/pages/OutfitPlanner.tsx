@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { ArrowLeft, Sparkles, Loader2, Plus, MapPin, Cloud, CloudRain, CloudSnow, Sun, CloudDrizzle, Trash2, RotateCw, Edit2, Check } from "lucide-react";
+import { ArrowLeft, Sparkles, Loader2, Plus, MapPin, Cloud, CloudRain, CloudSnow, Sun, CloudDrizzle, Trash2, RotateCw, Edit2, Check, Calendar, Plane } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,17 @@ interface OutfitPlan {
     description: string;
     reason?: string;
   }>;
+}
+
+interface Trip {
+  id: string;
+  name: string;
+  destination: string;
+  start_date: string;
+  end_date: string;
+  items: any[];
+  weather_forecast?: any[];
+  location?: { lat: number; lon: number };
 }
 
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -57,6 +68,15 @@ const OutfitPlanner = () => {
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
   const [dynamicDays, setDynamicDays] = useState<string[]>([]);
+
+  // Trip planning state
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [tripDialogOpen, setTripDialogOpen] = useState(false);
+  const [tripName, setTripName] = useState("");
+  const [tripDestination, setTripDestination] = useState("");
+  const [tripStartDate, setTripStartDate] = useState("");
+  const [tripEndDate, setTripEndDate] = useState("");
+  const [plannerMode, setPlannerMode] = useState<"weekly" | "trips">("weekly");
 
   useEffect(() => {
     checkAuth();
@@ -598,7 +618,7 @@ const OutfitPlanner = () => {
           <Button variant="ghost" size="sm" onClick={() => navigate("/wardrobe")}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-xl font-light">Outfit Planner</h1>
+          <h1 className="text-xl font-light">Outfit & Trip Planner</h1>
           <div className="w-9" />
         </div>
       </div>
@@ -621,30 +641,44 @@ const OutfitPlanner = () => {
           </Card>
         ) : (
           <>
-            <div className="space-y-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h2 className="text-2xl font-light">Weekly Outfits</h2>
-                  <p className="text-sm text-muted-foreground font-light">
-                    {wardrobe.length} items in wardrobe
-                  </p>
-                </div>
-                <Button 
-                  variant="luxury" 
-                  size="sm"
-                  onClick={generateWeeklyOutfits}
-                  disabled={generating}
-                >
-                  {generating ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Generate Full Week
-                    </>
-                  )}
-                </Button>
-              </div>
+            {/* Main Tabs for Weekly vs Trips */}
+            <Tabs value={plannerMode} onValueChange={(v) => setPlannerMode(v as "weekly" | "trips")} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="weekly">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  This Week
+                </TabsTrigger>
+                <TabsTrigger value="trips">
+                  <Plane className="w-4 h-4 mr-2" />
+                  Trips
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="weekly" className="space-y-4">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h2 className="text-2xl font-light">Weekly Outfits</h2>
+                      <p className="text-sm text-muted-foreground font-light">
+                        {wardrobe.length} items in wardrobe
+                      </p>
+                    </div>
+                    <Button
+                      variant="luxury"
+                      size="sm"
+                      onClick={generateWeeklyOutfits}
+                      disabled={generating}
+                    >
+                      {generating ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4 mr-2" />
+                          Generate Full Week
+                        </>
+                      )}
+                    </Button>
+                  </div>
 
               <Card>
                 <CardContent className="p-4 space-y-3">
@@ -948,9 +982,203 @@ const OutfitPlanner = () => {
                 );
               })}
             </Tabs>
+          </TabsContent>
+
+          {/* Trips Tab */}
+          <TabsContent value="trips" className="space-y-4">
+            <div className="flex justify-between items-start">
+              <div>
+                <h2 className="text-2xl font-light">Trip Planner</h2>
+                <p className="text-sm text-muted-foreground font-light">
+                  Plan outfits for your upcoming trips
+                </p>
+              </div>
+              <Button
+                variant="luxury"
+                size="sm"
+                onClick={() => setTripDialogOpen(true)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                New Trip
+              </Button>
+            </div>
+
+            {trips.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-16 space-y-4">
+                  <Plane className="w-16 h-16 text-muted-foreground" strokeWidth={1} />
+                  <div className="text-center space-y-2">
+                    <h3 className="text-lg font-light">No Trips Planned</h3>
+                    <p className="text-sm text-muted-foreground font-light">
+                      Create a trip to start planning your travel outfits
+                    </p>
+                  </div>
+                  <Button variant="luxury" onClick={() => setTripDialogOpen(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Plan Your First Trip
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {trips.map((trip) => (
+                  <Card key={trip.id}>
+                    <CardContent className="p-6 space-y-4">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="text-xl font-light">{trip.name}</h3>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                            <MapPin className="w-3 h-3" />
+                            <span>{trip.destination}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                            <Calendar className="w-3 h-3" />
+                            <span>{new Date(trip.start_date).toLocaleDateString()} - {new Date(trip.end_date).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            // Delete trip
+                            setTrips(trips.filter(t => t.id !== trip.id));
+                            toast.success("Trip deleted");
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+
+                      <div className="pt-4">
+                        <h4 className="text-sm font-light text-muted-foreground mb-4">Packing List</h4>
+                        {trip.items.length === 0 ? (
+                          <div className="text-center py-8">
+                            <p className="text-sm text-muted-foreground font-light mb-4">
+                              No items packed yet
+                            </p>
+                            <Button variant="outline" size="sm">
+                              <Sparkles className="w-4 h-4 mr-2" />
+                              Generate Packing List
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-2 gap-3">
+                            {trip.items.map((item: any, idx: number) => (
+                              <Card key={idx} className="relative overflow-hidden group hover:shadow-md transition-shadow">
+                                <CardContent className="p-0">
+                                  <div className="aspect-[3/4] bg-secondary/20 cursor-pointer relative">
+                                    {item.image_url && (
+                                      <img
+                                        src={item.image_url}
+                                        alt={item.name}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    )}
+                                    <div className="absolute top-2 right-2">
+                                      <Checkbox
+                                        checked={checkedItems.has(`${trip.id}-${item.id || idx}`)}
+                                        onCheckedChange={() => toggleItemCheck(`${trip.id}-${item.id || idx}`)}
+                                        className="bg-background/90 backdrop-blur-sm"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="p-3">
+                                    <p className="text-sm font-light line-clamp-1">{item.name}</p>
+                                    <p className="text-xs text-muted-foreground">{item.category}</p>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
           </>
         )}
       </div>
+
+      {/* New Trip Dialog */}
+      <Dialog open={tripDialogOpen} onOpenChange={setTripDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Plan a New Trip</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="tripName">Trip Name</Label>
+              <Input
+                id="tripName"
+                placeholder="e.g., Paris Vacation, NYC Business Trip"
+                value={tripName}
+                onChange={(e) => setTripName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tripDestination">Destination</Label>
+              <Input
+                id="tripDestination"
+                placeholder="e.g., Paris, New York, Tokyo"
+                value={tripDestination}
+                onChange={(e) => setTripDestination(e.target.value)}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="startDate">Start Date</Label>
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={tripStartDate}
+                  onChange={(e) => setTripStartDate(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="endDate">End Date</Label>
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={tripEndDate}
+                  onChange={(e) => setTripEndDate(e.target.value)}
+                />
+              </div>
+            </div>
+            <Button
+              className="w-full"
+              onClick={() => {
+                if (!tripName || !tripDestination || !tripStartDate || !tripEndDate) {
+                  toast.error("Please fill in all fields");
+                  return;
+                }
+
+                const newTrip: Trip = {
+                  id: crypto.randomUUID(),
+                  name: tripName,
+                  destination: tripDestination,
+                  start_date: tripStartDate,
+                  end_date: tripEndDate,
+                  items: []
+                };
+
+                setTrips([...trips, newTrip]);
+                setTripName("");
+                setTripDestination("");
+                setTripStartDate("");
+                setTripEndDate("");
+                setTripDialogOpen(false);
+                toast.success("Trip created!");
+              }}
+            >
+              Create Trip
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Item Details Dialog */}
       <Dialog open={itemDialogOpen} onOpenChange={setItemDialogOpen}>
