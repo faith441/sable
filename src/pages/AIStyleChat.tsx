@@ -141,56 +141,65 @@ const AIStyleChat = () => {
     const storedGender = localStorage.getItem('user_gender');
     const userName = preferences ? JSON.parse(preferences).name : null;
     const greeting = userName ? `Good morning, ${userName}` : 'Good morning!';
+    const welcomeText = `${greeting}\nHow can I style you?`;
 
-    // Check if gender is already stored
+    // Load stored gender if available
     if (storedGender) {
       setUserGender(storedGender as 'woman' | 'man');
-      const welcomeText = `${greeting}\nHow can I style you?`;
-
-      setTimeout(() => {
-        setMessages(prev => {
-          if (prev.length === 0) {
-            return [{
-              id: crypto.randomUUID(),
-              role: 'assistant',
-              content: welcomeText
-            }];
-          }
-          return prev;
-        });
-      }, 500);
-    } else {
-      // Ask for gender first
-      const welcomeText = `${greeting}\nLet's get started! Are you shopping for women's or men's fashion?`;
-
-      setTimeout(() => {
-        setMessages(prev => {
-          if (prev.length === 0) {
-            setShowGenderSelection(true);
-            return [{
-              id: crypto.randomUUID(),
-              role: 'assistant',
-              content: welcomeText
-            }];
-          }
-          return prev;
-        });
-      }, 500);
     }
+
+    // Always show the same welcome message
+    setTimeout(() => {
+      setMessages(prev => {
+        if (prev.length === 0) {
+          return [{
+            id: crypto.randomUUID(),
+            role: 'assistant',
+            content: welcomeText
+          }];
+        }
+        return prev;
+      });
+    }, 500);
   };
 
-  const handleGenderSelection = (gender: 'woman' | 'man') => {
+  const handleGenderSelection = async (gender: 'woman' | 'man') => {
     setUserGender(gender);
     localStorage.setItem('user_gender', gender);
     setShowGenderSelection(false);
+    setLoading(true);
 
-    // Add a confirmation message
-    const confirmationText = `Great! I'll show you ${gender === 'woman' ? "women's" : "men's"} fashion. How can I style you today?`;
-    setMessages(prev => [...prev, {
-      id: crypto.randomUUID(),
-      role: 'assistant',
-      content: confirmationText
-    }]);
+    try {
+      // Get the user's original message (second to last message before gender prompt)
+      const userMessages = messages.filter(m => m.role === 'user');
+      const lastUserMessage = userMessages[userMessages.length - 1];
+
+      // Generate outfits based on user's message and gender
+      const outfits = generateMockOutfits(lastUserMessage?.content || "professional style", gender);
+
+      // Add weather data and gender to outfits
+      const outfitsWithWeather = outfits.map(outfit => ({
+        ...outfit,
+        gender: gender,
+        weather: {
+          temp: 61,
+          high: 64,
+          low: 57
+        }
+      }));
+
+      // Store outfits and gender in localStorage
+      localStorage.setItem('outfit_recommendations', JSON.stringify(outfitsWithWeather));
+      localStorage.setItem('user_gender', gender);
+
+      // Navigate immediately to outfit recommendations page
+      navigate('/outfit-recommendations');
+    } catch (error: any) {
+      console.error("Error:", error);
+      toast.error("Failed to generate recommendations");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -313,13 +322,6 @@ const AIStyleChat = () => {
   const sendMessage = async () => {
     if ((!input.trim() && uploadedImages.length === 0) || loading) return;
 
-    // Check if gender is selected
-    if (!userGender) {
-      toast.error("Please select your gender preference first");
-      setShowGenderSelection(true);
-      return;
-    }
-
     const userMessage: Message = {
       id: crypto.randomUUID(),
       role: 'user',
@@ -331,6 +333,20 @@ const AIStyleChat = () => {
     setInput("");
     const imagesToSend = [...uploadedImages];
     setUploadedImages([]);
+
+    // Check if gender is selected after adding user message
+    if (!userGender) {
+      // Show gender selection after user's message
+      const genderPrompt: Message = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: "Before I create your recommendations, are you shopping for women's or men's fashion?"
+      };
+      setMessages(prev => [...prev, genderPrompt]);
+      setShowGenderSelection(true);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -419,11 +435,13 @@ const AIStyleChat = () => {
               // Skip rendering the welcome message if it's the only message
               if (idx === 0 && messages.length === 1) return null;
 
+              const isLastMessage = idx === messages.length - 1;
+
               return (
-                <div
-                  key={message.id}
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
+                <div key={message.id}>
+                  <div
+                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
                   <div className={`max-w-[80%] rounded-3xl px-5 py-3 ${
                     message.role === 'user'
                       ? 'bg-black text-white'
@@ -503,6 +521,29 @@ const AIStyleChat = () => {
                     </div>
                   )}
                   </div>
+                  </div>
+
+                  {/* Show gender selection after assistant's prompt */}
+                  {isLastMessage && showGenderSelection && message.role === 'assistant' && (
+                    <div className="flex justify-center mt-4">
+                      <div className="flex flex-col gap-3 max-w-sm">
+                        <button
+                          onClick={() => handleGenderSelection('woman')}
+                          disabled={loading}
+                          className="bg-black text-white py-3 px-6 rounded-full font-normal text-sm hover:bg-gray-800 transition-colors disabled:opacity-50"
+                        >
+                          Women's Fashion
+                        </button>
+                        <button
+                          onClick={() => handleGenderSelection('man')}
+                          disabled={loading}
+                          className="border-2 border-black text-black py-3 px-6 rounded-full font-normal text-sm hover:bg-gray-50 transition-colors disabled:opacity-50"
+                        >
+                          Men's Fashion
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
