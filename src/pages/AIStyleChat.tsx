@@ -34,6 +34,8 @@ const AIStyleChat = () => {
   const [user, setUser] = useState<any>(null);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [closetMode, setClosetMode] = useState<'general' | 'closet' | 'shopping'>('general');
+  const [userGender, setUserGender] = useState<'woman' | 'man' | null>(null);
+  const [showGenderSelection, setShowGenderSelection] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -46,15 +48,25 @@ const AIStyleChat = () => {
     const autoGenerate = localStorage.getItem('auto_generate_recommendations');
     if (autoGenerate === 'true') {
       localStorage.removeItem('auto_generate_recommendations');
+
+      // Check if gender is selected, otherwise show gender selection
+      const storedGender = localStorage.getItem('user_gender');
+      if (!storedGender) {
+        // Don't auto-generate, let user select gender first
+        setShowGenderSelection(true);
+        return;
+      }
+
       // Auto-generate recommendations and navigate to full-screen view
       setTimeout(() => {
         try {
-          // Generate outfits directly
-          const outfits = generateMockOutfits("professional work outfits");
+          // Generate outfits directly with gender
+          const outfits = generateMockOutfits("professional work outfits", storedGender as 'woman' | 'man');
 
-          // Add weather data to outfits
+          // Add weather data and gender to outfits
           const outfitsWithWeather = outfits.map(outfit => ({
             ...outfit,
+            gender: storedGender,
             weather: {
               temp: 61,
               high: 64,
@@ -125,23 +137,59 @@ const AIStyleChat = () => {
 
   const showWelcomeMessage = () => {
     const preferences = localStorage.getItem('guest_preferences');
+    const storedGender = localStorage.getItem('user_gender');
     const userName = preferences ? JSON.parse(preferences).name : null;
     const greeting = userName ? `Good morning, ${userName}` : 'Good morning!';
-    const welcomeText = `${greeting}\nHow can I style you?`;
 
-    // Only show if no messages exist
-    setTimeout(() => {
-      setMessages(prev => {
-        if (prev.length === 0) {
-          return [{
-            id: crypto.randomUUID(),
-            role: 'assistant',
-            content: welcomeText
-          }];
-        }
-        return prev;
-      });
-    }, 500);
+    // Check if gender is already stored
+    if (storedGender) {
+      setUserGender(storedGender as 'woman' | 'man');
+      const welcomeText = `${greeting}\nHow can I style you?`;
+
+      setTimeout(() => {
+        setMessages(prev => {
+          if (prev.length === 0) {
+            return [{
+              id: crypto.randomUUID(),
+              role: 'assistant',
+              content: welcomeText
+            }];
+          }
+          return prev;
+        });
+      }, 500);
+    } else {
+      // Ask for gender first
+      const welcomeText = `${greeting}\nLet's get started! Are you shopping for women's or men's fashion?`;
+
+      setTimeout(() => {
+        setMessages(prev => {
+          if (prev.length === 0) {
+            setShowGenderSelection(true);
+            return [{
+              id: crypto.randomUUID(),
+              role: 'assistant',
+              content: welcomeText
+            }];
+          }
+          return prev;
+        });
+      }, 500);
+    }
+  };
+
+  const handleGenderSelection = (gender: 'woman' | 'man') => {
+    setUserGender(gender);
+    localStorage.setItem('user_gender', gender);
+    setShowGenderSelection(false);
+
+    // Add a confirmation message
+    const confirmationText = `Great! I'll show you ${gender === 'woman' ? "women's" : "men's"} fashion. How can I style you today?`;
+    setMessages(prev => [...prev, {
+      id: crypto.randomUUID(),
+      role: 'assistant',
+      content: confirmationText
+    }]);
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -177,8 +225,50 @@ const AIStyleChat = () => {
     setUploadedImages(prev => prev.filter((_, i) => i !== index));
   };
 
-  const generateMockOutfits = (query: string): OutfitRecommendation[] => {
-    // Always return a variety of style categories
+  const generateMockOutfits = (query: string, gender: 'woman' | 'man'): OutfitRecommendation[] => {
+    // Return gender-specific outfits
+    if (gender === 'man') {
+      return [
+        {
+          name: "Business Professional",
+          style: "professional",
+          items: [
+            { name: "Navy Suit Jacket", category: "Blazer", image_url: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&h=600&fit=crop" },
+            { name: "White Dress Shirt", category: "Shirt", image_url: "https://images.unsplash.com/photo-1602810318660-d2c46b45a6a1?w=400&h=600&fit=crop" },
+            { name: "Navy Dress Pants", category: "Pants", image_url: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=400&h=600&fit=crop" },
+            { name: "Black Leather Dress Shoes", category: "Shoes", image_url: "https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?w=400&h=600&fit=crop" },
+            { name: "Leather Watch", category: "Accessories", image_url: "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=400&h=600&fit=crop" },
+            { name: "Leather Briefcase", category: "Bag", image_url: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=600&fit=crop" }
+          ]
+        },
+        {
+          name: "Smart Casual",
+          style: "casual",
+          items: [
+            { name: "Charcoal Blazer", category: "Blazer", image_url: "https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?w=400&h=600&fit=crop" },
+            { name: "Polo Shirt", category: "Shirt", image_url: "https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?w=400&h=600&fit=crop" },
+            { name: "Chinos", category: "Pants", image_url: "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=400&h=600&fit=crop" },
+            { name: "Loafers", category: "Shoes", image_url: "https://images.unsplash.com/photo-1533867617858-e7b97e060509?w=400&h=600&fit=crop" },
+            { name: "Minimalist Watch", category: "Accessories", image_url: "https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=400&h=600&fit=crop" },
+            { name: "Messenger Bag", category: "Bag", image_url: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=600&fit=crop" }
+          ]
+        },
+        {
+          name: "Weekend Casual",
+          style: "weekend",
+          items: [
+            { name: "Denim Jacket", category: "Jacket", image_url: "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=400&h=600&fit=crop" },
+            { name: "Henley Shirt", category: "Shirt", image_url: "https://images.unsplash.com/photo-1562157873-818bc0726f68?w=400&h=600&fit=crop" },
+            { name: "Dark Jeans", category: "Jeans", image_url: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&h=600&fit=crop" },
+            { name: "Sneakers", category: "Shoes", image_url: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=600&fit=crop" },
+            { name: "Sunglasses", category: "Accessories", image_url: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&h=600&fit=crop" },
+            { name: "Backpack", category: "Bag", image_url: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=600&fit=crop" }
+          ]
+        }
+      ];
+    }
+
+    // Women's outfits
     return [
       {
         name: "Office Comfort",
@@ -222,6 +312,13 @@ const AIStyleChat = () => {
   const sendMessage = async () => {
     if ((!input.trim() && uploadedImages.length === 0) || loading) return;
 
+    // Check if gender is selected
+    if (!userGender) {
+      toast.error("Please select your gender preference first");
+      setShowGenderSelection(true);
+      return;
+    }
+
     const userMessage: Message = {
       id: crypto.randomUUID(),
       role: 'user',
@@ -247,12 +344,13 @@ const AIStyleChat = () => {
         content: userMessage.content + (imagesToSend.length > 0 ? ' [IMAGE]' : '')
       });
 
-      // Generate outfits based on user's message and navigate to recommendations page
-      const outfits = generateMockOutfits(userMessage.content);
+      // Generate outfits based on user's message and gender
+      const outfits = generateMockOutfits(userMessage.content, userGender);
 
-      // Add weather data to outfits
+      // Add weather data and gender to outfits
       const outfitsWithWeather = outfits.map(outfit => ({
         ...outfit,
+        gender: userGender,
         weather: {
           temp: 61,
           high: 64,
@@ -260,8 +358,9 @@ const AIStyleChat = () => {
         }
       }));
 
-      // Store outfits in localStorage
+      // Store outfits and gender in localStorage
       localStorage.setItem('outfit_recommendations', JSON.stringify(outfitsWithWeather));
+      localStorage.setItem('user_gender', userGender);
 
       // Navigate immediately to outfit recommendations page (no chat reply)
       navigate('/outfit-recommendations');
@@ -289,10 +388,28 @@ const AIStyleChat = () => {
       <div className="flex-1 overflow-y-auto px-4 py-6 max-w-lg mx-auto w-full">
         {messages.length <= 1 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="space-y-2">
-              <h1 className="text-3xl font-normal leading-tight">
+            <div className="space-y-6">
+              <h1 className="text-3xl font-normal leading-tight whitespace-pre-line">
                 {messages[0]?.content || "Good morning!\nHow can I style you?"}
               </h1>
+
+              {/* Gender Selection Buttons */}
+              {showGenderSelection && (
+                <div className="flex flex-col gap-3 mt-8 max-w-sm mx-auto">
+                  <button
+                    onClick={() => handleGenderSelection('woman')}
+                    className="bg-black text-white py-4 px-6 rounded-full font-normal text-base hover:bg-gray-800 transition-colors"
+                  >
+                    Women's Fashion
+                  </button>
+                  <button
+                    onClick={() => handleGenderSelection('man')}
+                    className="border-2 border-black text-black py-4 px-6 rounded-full font-normal text-base hover:bg-gray-50 transition-colors"
+                  >
+                    Men's Fashion
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         ) : (
