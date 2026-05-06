@@ -43,7 +43,6 @@ const Auth = () => {
           password,
         });
         if (error) throw error;
-        toast.success("Welcome back!");
       } else {
         const { error } = await supabase.auth.signUp({
           email,
