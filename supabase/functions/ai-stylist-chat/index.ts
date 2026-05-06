@@ -14,7 +14,7 @@ serve(async (req) => {
   try {
     const { message, userId, sessionId, userPreferences, images } = await req.json();
     
-    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
+    const googleApiKey = Deno.env.get("GOOGLE_AI_API_KEY")!;
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     
@@ -188,26 +188,35 @@ ${hasImages ? '- When analyzing outfit photos, be specific about what you see an
         ]
       : message;
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    // Convert to Gemini format
+    const geminiContents = [
+      {
+        role: "user",
+        parts: hasImages
+          ? [
+              { text: `${systemPrompt}\n\nUser: ${message}` },
+              ...images.map((img: string) => ({
+                inlineData: {
+                  mimeType: "image/jpeg",
+                  data: img.split(',')[1] || img // Extract base64 if data URL
+                }
+              }))
+            ]
+          : [{ text: `${systemPrompt}\n\nUser: ${message}` }]
+      }
+    ];
+
+    const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${googleApiKey}`, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${lovableApiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
-            content: systemPrompt,
-          },
-          {
-            role: "user",
-            content: userMessageContent,
-          },
-        ],
-        tools,
-        tool_choice: "auto"
+        contents: geminiContents,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1024,
+        }
       }),
     });
 
@@ -218,100 +227,9 @@ ${hasImages ? '- When analyzing outfit photos, be specific about what you see an
     }
 
     const aiData = await aiResponse.json();
-    const responseMessage = aiData.choices[0].message;
 
-    // Handle tool calls if any
-    if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
-      const toolCall = responseMessage.tool_calls[0];
-      const toolName = toolCall.function.name;
-      const toolArgs = JSON.parse(toolCall.function.arguments);
-
-      let toolResult = "";
-
-      if (toolName === "search_fashion_trends") {
-        // Search web for fashion trends
-        const searchQuery = toolArgs.query + " fashion trends 2025";
-        // For now, return a placeholder - in production, integrate with a web search API
-        toolResult = `Current trends for "${toolArgs.query}": Trends show a focus on sustainable materials, versatile pieces, and personal expression. Consider incorporating these elements into recommendations.`;
-      } else if (toolName === "find_products") {
-        // Search products in database
-        let query = supabase
-          .from("products")
-          .select(`
-            id,
-            name,
-            category,
-            price,
-            colors,
-            image_url,
-            brands (name)
-          `)
-          .eq("is_available", true)
-          .limit(5);
-
-        if (toolArgs.category) {
-          query = query.ilike("category", `%${toolArgs.category}%`);
-        }
-        if (toolArgs.maxPrice) {
-          query = query.lte("price", toolArgs.maxPrice);
-        }
-
-        const { data: products } = await query;
-
-        if (products && products.length > 0) {
-          toolResult = `Found ${products.length} products:\n${products
-            .filter(p => p && p.name)
-            .map(p => {
-              const brandName = p.brands?.name || 'Unknown Brand';
-              const colors = p.colors?.join(', ') || 'No color specified';
-              return `- ${p.name} by ${brandName} (${p.category}, ${colors}, $${p.price})`;
-            })
-            .join('\n')}`;
-        } else {
-          toolResult = "No products found matching those criteria. Consider broadening the search.";
-        }
-      }
-
-      // Make second API call with tool results
-      const followUpResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${lovableApiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            {
-              role: "system",
-              content: systemPrompt,
-            },
-            {
-              role: "user",
-              content: userMessageContent,
-            },
-            responseMessage,
-            {
-              role: "tool",
-              tool_call_id: toolCall.id,
-              content: toolResult
-            }
-          ],
-        }),
-      });
-
-      const followUpData = await followUpResponse.json();
-      const reply = followUpData.choices[0].message.content;
-
-      return new Response(
-        JSON.stringify({ reply }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    const reply = responseMessage.content;
+    // Gemini response format
+    const reply = aiData.candidates?.[0]?.content?.parts?.[0]?.text || "I apologize, but I couldn't generate a response. Please try again.";
 
     return new Response(
       JSON.stringify({ reply }),

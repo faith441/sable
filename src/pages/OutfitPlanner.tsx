@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { User } from "@supabase/supabase-js";
 
 interface OutfitPlan {
   id: string;
@@ -40,6 +41,8 @@ const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
 
 const OutfitPlanner = () => {
   const navigate = useNavigate();
+  const [user, setUser] = useState<User | null>(null);
+  const [hasSubscription, setHasSubscription] = useState(false);
   const [outfits, setOutfits] = useState<OutfitPlan[]>([]);
   const [wardrobe, setWardrobe] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -103,6 +106,8 @@ const OutfitPlanner = () => {
 
   const checkAuth = async () => {
     const { data: { user } } = await supabase.auth.getUser();
+    setUser(user);
+
     if (!user) {
       toast("Please sign in to access your outfit planner", {
         action: {
@@ -113,7 +118,23 @@ const OutfitPlanner = () => {
       navigate("/");
       return;
     }
-    loadData();
+
+    // Check subscription status
+    const { data: subData } = await supabase
+      .from('user_subscriptions')
+      .select('status, plan_type')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .single();
+
+    const hasActiveSubscription = subData && (subData.plan_type === 'planner' || subData.plan_type === 'premium');
+    setHasSubscription(hasActiveSubscription);
+
+    if (hasActiveSubscription) {
+      loadData();
+    } else {
+      setLoading(false);
+    }
   };
 
   const loadData = async () => {
@@ -611,6 +632,65 @@ const OutfitPlanner = () => {
     );
   }
 
+  // Show upgrade prompt if user doesn't have subscription
+  if (user && !hasSubscription) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border/50 px-4 py-4">
+          <div className="flex items-center justify-between max-w-lg mx-auto">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/wardrobe")}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <h1 className="text-xl font-light">Outfit & Trip Planner</h1>
+            <div className="w-9" />
+          </div>
+        </div>
+
+        <div className="max-w-lg mx-auto px-4 py-12">
+          <Card className="border-primary/20">
+            <CardContent className="flex flex-col items-center justify-center py-16 space-y-6">
+              <Calendar className="w-20 h-20 text-primary" strokeWidth={1} />
+              <div className="text-center space-y-3">
+                <h2 className="text-2xl font-light">Upgrade to Access Outfit Planner</h2>
+                <p className="text-sm text-muted-foreground font-light max-w-md">
+                  Plan your weekly outfits and organize trip packing lists. Get AI-powered outfit recommendations based on weather and your schedule.
+                </p>
+              </div>
+              <div className="w-full max-w-sm space-y-3 pt-4">
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-start gap-2">
+                    <span className="text-primary">✓</span>
+                    <span className="font-light">AI-generated weekly outfit plans</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-primary">✓</span>
+                    <span className="font-light">Weather-based outfit recommendations</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-primary">✓</span>
+                    <span className="font-light">Trip planning and packing lists</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-primary">✓</span>
+                    <span className="font-light">Mix and match from your wardrobe</span>
+                  </div>
+                </div>
+                <Button
+                  variant="luxury"
+                  size="lg"
+                  className="w-full"
+                  onClick={() => navigate("/pricing")}
+                >
+                  Upgrade Now
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background pb-20">
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border/50 px-4 py-4">
@@ -634,7 +714,11 @@ const OutfitPlanner = () => {
                   Purchase items from your recommendations to start planning outfits
                 </p>
               </div>
-              <Button variant="luxury" onClick={() => navigate("/wardrobe")}>
+              <Button variant="luxury" onClick={() => {
+                // Set flag for auto-generating recommendations
+                localStorage.setItem('auto_generate_recommendations', 'true');
+                navigate("/ai-style-chat");
+              }}>
                 Browse Recommendations
               </Button>
             </CardContent>

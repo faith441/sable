@@ -5,15 +5,48 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { ShoppingBag, Loader2, Heart, Package, AlertCircle } from "lucide-react";
+import { ShoppingBag, Loader2, Heart, Package, AlertCircle, Sparkles, RefreshCw, Sun, Cloud } from "lucide-react";
 import MobileNav from "@/components/MobileNav";
-import VideoGuide from "@/components/VideoGuide";
 import ProfileMenu from "@/components/ProfileMenu";
 import ProfileSheet from "@/components/ProfileSheet";
 import ProductDetailDialog from "@/components/ProductDetailDialog";
 import ProductDualImage from "@/components/ProductDualImage";
 import ProductImageGallery from "@/components/ProductImageGallery";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
+// Sample daily outfits for demo
+const sampleOutfits = [
+  {
+    name: "Elevated Casual",
+    weather: { temp: 72, condition: "sunny" },
+    items: [
+      { name: "White Cotton T-Shirt", category: "Top", color: "#FFFFFF" },
+      { name: "Light Blue Jeans", category: "Bottom", color: "#5B9BD5" },
+      { name: "Tan Leather Sneakers", category: "Shoes", color: "#D4A574" },
+      { name: "Minimalist Watch", category: "Accessory", color: "#C0C0C0" }
+    ]
+  },
+  {
+    name: "Business Casual",
+    weather: { temp: 68, condition: "partly cloudy" },
+    items: [
+      { name: "Navy Blazer", category: "Outerwear", color: "#1E3A5F" },
+      { name: "White Button-Down Shirt", category: "Top", color: "#FFFFFF" },
+      { name: "Beige Chinos", category: "Bottom", color: "#D4C4A8" },
+      { name: "Brown Leather Loafers", category: "Shoes", color: "#8B4513" }
+    ]
+  },
+  {
+    name: "Weekend Comfort",
+    weather: { temp: 75, condition: "sunny" },
+    items: [
+      { name: "Gray Crewneck Sweatshirt", category: "Top", color: "#808080" },
+      { name: "Black Joggers", category: "Bottom", color: "#000000" },
+      { name: "White Sneakers", category: "Shoes", color: "#FFFFFF" },
+      { name: "Baseball Cap", category: "Accessory", color: "#2C3E50" }
+    ]
+  }
+];
 
 interface Product {
   id: string;
@@ -106,6 +139,7 @@ const Wardrobe = () => {
   const [preGeneratingTryOn, setPreGeneratingTryOn] = useState(false);
   const [tryOnProgress, setTryOnProgress] = useState({ current: 0, total: 0 });
   const [completedTryOns, setCompletedTryOns] = useState<CompletedTryOn[]>([]);
+  const [dailyOutfit, setDailyOutfit] = useState(sampleOutfits[0]);
 
   // Pre-generate try-on images for all products in capsules
   // showVideoGuide = false for background generation (when returning to cached wardrobe)
@@ -218,19 +252,30 @@ const Wardrobe = () => {
   };
 
   useEffect(() => {
-    // Manage AI disabled flag in localStorage
-    if (AI_DISABLED) {
-      localStorage.setItem('ai_tryon_disabled', 'true');
-    } else {
-      // Clear any stale AI disabled flags when AI is enabled
-      localStorage.removeItem('ai_tryon_disabled');
-      localStorage.removeItem('ai_tryon_disabled_at');
-    }
-    loadWardrobe();
-    // Load favorites from localStorage
-    const savedFavorites = JSON.parse(localStorage.getItem('favorite_products') || '[]');
-    setFavorites(savedFavorites);
-  }, []);
+    // Check authentication first
+    const checkAuthAndLoad = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/auth");
+        return;
+      }
+
+      // Manage AI disabled flag in localStorage
+      if (AI_DISABLED) {
+        localStorage.setItem('ai_tryon_disabled', 'true');
+      } else {
+        // Clear any stale AI disabled flags when AI is enabled
+        localStorage.removeItem('ai_tryon_disabled');
+        localStorage.removeItem('ai_tryon_disabled_at');
+      }
+      loadWardrobe();
+      // Load favorites from localStorage
+      const savedFavorites = JSON.parse(localStorage.getItem('favorite_products') || '[]');
+      setFavorites(savedFavorites);
+    };
+
+    checkAuthAndLoad();
+  }, [navigate]);
 
   // Helper function to check if a string is a valid UUID
   const isValidUUID = (str: string) => {
@@ -240,13 +285,6 @@ const Wardrobe = () => {
 
   const loadWardrobe = async () => {
     try {
-      const preferences = localStorage.getItem('guest_preferences');
-      if (!preferences) {
-        toast.error("Please complete the style survey first");
-        navigate("/survey");
-        return;
-      }
-
       // Check if we have cached capsules with valid UUIDs
       const cachedCapsules = localStorage.getItem('cached_capsules');
       if (cachedCapsules) {
@@ -471,7 +509,7 @@ const Wardrobe = () => {
 
   const toggleFavorite = (product: Product) => {
     const isFavorited = favorites.some(f => f.id === product.id);
-    
+
     let updatedFavorites: Product[];
     if (isFavorited) {
       updatedFavorites = favorites.filter(f => f.id !== product.id);
@@ -480,23 +518,17 @@ const Wardrobe = () => {
       updatedFavorites = [...favorites, product];
       toast.success("Added to favorites");
     }
-    
+
     setFavorites(updatedFavorites);
     localStorage.setItem('favorite_products', JSON.stringify(updatedFavorites));
   };
 
-  if (generating || preGeneratingTryOn) {
-    const preferences = JSON.parse(localStorage.getItem('guest_preferences') || '{}');
-    return (
-      <VideoGuide 
-        gender={preferences.gender || []} 
-        tryOnProgress={preGeneratingTryOn ? tryOnProgress : undefined}
-        completedTryOns={preGeneratingTryOn ? completedTryOns : undefined}
-      />
-    );
-  }
+  const refreshDailyOutfit = () => {
+    const randomIndex = Math.floor(Math.random() * sampleOutfits.length);
+    setDailyOutfit(sampleOutfits[randomIndex]);
+  };
 
-  if (loading) {
+  if (loading || generating || preGeneratingTryOn) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -521,6 +553,65 @@ const Wardrobe = () => {
           <ProfileMenu 
             onProfileClick={() => setProfileOpen(true)}
           />
+        </div>
+      </div>
+
+      {/* Daily Outfit Recommendation */}
+      <div className="px-4 pb-4">
+        <div className="max-w-lg mx-auto">
+          <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20 shadow-lg backdrop-blur-sm">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 flex-1">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-medium text-sm">Today's Outfit</h3>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        {dailyOutfit.weather.condition === "sunny" ? (
+                          <Sun className="w-3 h-3" />
+                        ) : (
+                          <Cloud className="w-3 h-3" />
+                        )}
+                        <span>{dailyOutfit.weather.temp}°F</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground font-light">{dailyOutfit.name}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="hidden sm:flex items-center gap-1">
+                    {dailyOutfit.items.slice(0, 4).map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="w-6 h-6 rounded-full border-2 border-background"
+                        style={{ backgroundColor: item.color }}
+                        title={item.name}
+                      />
+                    ))}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={refreshDailyOutfit}
+                    className="h-8 w-8 p-0"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => navigate("/outfit-planner")}
+                    className="h-8 text-xs"
+                  >
+                    View Details
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 

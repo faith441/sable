@@ -16,7 +16,7 @@ serve(async (req) => {
     
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const googleApiKey = Deno.env.get("GOOGLE_AI_API_KEY")!;
+    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -123,22 +123,24 @@ Each outfit object MUST have this structure:
 
 CRITICAL: Even with a small wardrobe, you MUST return ${daysToGenerate.length} outfit(s). Never return an empty array.`;
 
-    const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${googleApiKey}`, {
+    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
+        "Authorization": `Bearer ${lovableApiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        contents: [
+        model: "google/gemini-2.5-flash",
+        messages: [
+          {
+            role: "system",
+            content: "You are a professional stylist. Return only valid JSON, no markdown.",
+          },
           {
             role: "user",
-            parts: [{ text: "You are a professional stylist. Return only valid JSON, no markdown.\n\n" + prompt }]
-          }
+            content: prompt,
+          },
         ],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 4096,
-        }
       }),
     });
 
@@ -147,7 +149,7 @@ CRITICAL: Even with a small wardrobe, you MUST return ${daysToGenerate.length} o
     }
 
     const aiData = await aiResponse.json();
-    let content = aiData.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
+    let content = aiData.choices[0].message.content;
     
     console.log("AI Response content:", content);
     

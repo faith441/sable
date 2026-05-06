@@ -2,43 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, Sparkles, RefreshCw, Sun, Cloud } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import heroImage from "@/assets/hero-wardrobe.jpg";
-
-// Sample daily outfits for demo
-const sampleOutfits = [
-  {
-    name: "Elevated Casual",
-    weather: { temp: 72, condition: "sunny" },
-    items: [
-      { name: "White Cotton T-Shirt", category: "Top", color: "#FFFFFF" },
-      { name: "Light Blue Jeans", category: "Bottom", color: "#5B9BD5" },
-      { name: "Tan Leather Sneakers", category: "Shoes", color: "#D4A574" },
-      { name: "Minimalist Watch", category: "Accessory", color: "#C0C0C0" }
-    ]
-  },
-  {
-    name: "Business Casual",
-    weather: { temp: 68, condition: "partly cloudy" },
-    items: [
-      { name: "Navy Blazer", category: "Outerwear", color: "#1E3A5F" },
-      { name: "White Button-Down Shirt", category: "Top", color: "#FFFFFF" },
-      { name: "Beige Chinos", category: "Bottom", color: "#D4C4A8" },
-      { name: "Brown Leather Loafers", category: "Shoes", color: "#8B4513" }
-    ]
-  },
-  {
-    name: "Weekend Comfort",
-    weather: { temp: 75, condition: "sunny" },
-    items: [
-      { name: "Gray Crewneck Sweatshirt", category: "Top", color: "#808080" },
-      { name: "Black Joggers", category: "Bottom", color: "#000000" },
-      { name: "White Sneakers", category: "Shoes", color: "#FFFFFF" },
-      { name: "Baseball Cap", category: "Accessory", color: "#2C3E50" }
-    ]
-  }
-];
 
 const Home = () => {
   const navigate = useNavigate();
@@ -46,29 +11,20 @@ const Home = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const totalSlides = 7;
-  const [dailyOutfit, setDailyOutfit] = useState(sampleOutfits[0]);
-  const [showDailyOutfit, setShowDailyOutfit] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
-      setShowDailyOutfit(!!currentUser);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
-      setShowDailyOutfit(!!currentUser);
     });
 
     return () => subscription.unsubscribe();
   }, []);
-
-  const refreshDailyOutfit = () => {
-    const randomIndex = Math.floor(Math.random() * sampleOutfits.length);
-    setDailyOutfit(sampleOutfits[randomIndex]);
-  };
 
   useEffect(() => {
     const container = scrollContainerRef.current;
@@ -129,69 +85,8 @@ const Home = () => {
         </div>
       </nav>
 
-      {/* Daily Outfit Recommendation - Only for authenticated users */}
-      {showDailyOutfit && (
-        <div className="fixed top-20 left-0 right-0 z-50 px-4">
-          <div className="max-w-7xl mx-auto">
-            <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20 shadow-lg backdrop-blur-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3 flex-1">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10">
-                      <Sparkles className="w-5 h-5 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-medium text-sm">Today's Outfit</h3>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          {dailyOutfit.weather.condition === "sunny" ? (
-                            <Sun className="w-3 h-3" />
-                          ) : (
-                            <Cloud className="w-3 h-3" />
-                          )}
-                          <span>{dailyOutfit.weather.temp}°F</span>
-                        </div>
-                      </div>
-                      <p className="text-xs text-muted-foreground font-light">{dailyOutfit.name}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="hidden sm:flex items-center gap-1">
-                      {dailyOutfit.items.slice(0, 4).map((item, idx) => (
-                        <div
-                          key={idx}
-                          className="w-6 h-6 rounded-full border-2 border-background"
-                          style={{ backgroundColor: item.color }}
-                          title={item.name}
-                        />
-                      ))}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={refreshDailyOutfit}
-                      className="h-8 w-8 p-0"
-                    >
-                      <RefreshCw className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={() => navigate("/outfit-planner")}
-                      className="h-8 text-xs"
-                    >
-                      View Details
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      )}
-
       {/* Slide Indicators */}
-      <div className={`fixed ${showDailyOutfit ? 'top-40' : 'top-20'} left-0 right-0 z-40 flex justify-center gap-2 px-4`}>
+      <div className="fixed top-20 left-0 right-0 z-40 flex justify-center gap-2 px-4">
         {Array.from({ length: totalSlides }).map((_, index) => (
           <button
             key={index}
@@ -209,7 +104,7 @@ const Home = () => {
       {/* Horizontal Scroll Container */}
       <div
         ref={scrollContainerRef}
-        className={`flex h-full overflow-x-scroll overflow-y-hidden snap-x snap-mandatory hide-scrollbar ${showDailyOutfit ? 'pt-44' : 'pt-24'}`}
+        className="flex h-full overflow-x-scroll overflow-y-hidden snap-x snap-mandatory hide-scrollbar pt-24"
         style={{
           scrollbarWidth: 'none',
           msOverflowStyle: 'none'
@@ -427,10 +322,13 @@ const Home = () => {
               <Button
                 variant="luxury"
                 size="lg"
-                onClick={() => navigate("/wardrobe")}
+                onClick={() => {
+                  localStorage.setItem('auto_generate_recommendations', 'true');
+                  navigate("/ai-style-chat");
+                }}
                 className="w-full max-w-xs mx-auto hover-scale"
               >
-                Browse Wardrobe <ArrowRight className="ml-2" />
+                Browse Recommendations <ArrowRight className="ml-2" />
               </Button>
             </div>
           </div>

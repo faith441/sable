@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Menu, User, FileText, Package, History, Heart, HelpCircle, LogIn, LogOut } from "lucide-react";
+import { Menu, User, FileText, Package, History, Heart, HelpCircle, LogIn, LogOut, ShoppingBag, Shield, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,6 +8,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +31,7 @@ interface ProfileMenuProps {
 const ProfileMenu = ({ onProfileClick }: ProfileMenuProps) => {
   const navigate = useNavigate();
   const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -44,7 +55,29 @@ const ProfileMenu = ({ onProfileClick }: ProfileMenuProps) => {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    try {
+      // Delete user from Supabase Auth
+      const { error } = await supabase.rpc('delete_user');
+
+      if (error) {
+        // Fallback: sign out user if RPC doesn't exist
+        console.error("Error deleting account:", error);
+        await supabase.auth.signOut();
+        toast.error("Unable to delete account. Please contact support.");
+        return;
+      }
+
+      toast.success("Account deleted successfully");
+      navigate("/");
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      toast.error("An error occurred while deleting your account");
+    }
+  };
+
   return (
+    <>
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm">
@@ -67,6 +100,10 @@ const ProfileMenu = ({ onProfileClick }: ProfileMenuProps) => {
               <Heart className="mr-2 h-4 w-4" />
               <span className="font-light">Favorites</span>
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate("/shop")} className="cursor-pointer">
+              <ShoppingBag className="mr-2 h-4 w-4" />
+              <span className="font-light">Shop</span>
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate("/orders")} className="cursor-pointer">
               <Package className="mr-2 h-4 w-4" />
               <span className="font-light">Orders</span>
@@ -84,10 +121,21 @@ const ProfileMenu = ({ onProfileClick }: ProfileMenuProps) => {
               <FileText className="mr-2 h-4 w-4" />
               <span className="font-light">Terms & Conditions</span>
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate("/privacy")} className="cursor-pointer">
+              <Shield className="mr-2 h-4 w-4" />
+              <span className="font-light">Privacy Policy</span>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
+            <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
               <LogOut className="mr-2 h-4 w-4" />
               <span className="font-light">Sign Out</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setShowDeleteDialog(true)}
+              className="cursor-pointer text-destructive"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              <span className="font-light">Delete Account</span>
             </DropdownMenuItem>
           </>
         ) : (
@@ -109,6 +157,28 @@ const ProfileMenu = ({ onProfileClick }: ProfileMenuProps) => {
         )}
       </DropdownMenuContent>
     </DropdownMenu>
+
+    <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. This will permanently delete your account
+            and remove all your data including your wardrobe, favorites, and order history.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDeleteAccount}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            Delete Account
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 };
 

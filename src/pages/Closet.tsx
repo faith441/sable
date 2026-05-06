@@ -54,6 +54,7 @@ const Closet = () => {
   const [itemToDelete, setItemToDelete] = useState<PurchasedItem | null>(null);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [hasSubscription, setHasSubscription] = useState(false);
 
   useEffect(() => {
     // Set up auth state listener
@@ -65,10 +66,25 @@ const Closet = () => {
     });
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        loadCloset(session.user.id);
+        // Check subscription status
+        const { data: subData } = await supabase
+          .from('user_subscriptions')
+          .select('status, plan_type')
+          .eq('user_id', session.user.id)
+          .eq('status', 'active')
+          .single();
+
+        const hasActiveSubscription = subData && (subData.plan_type === 'closet' || subData.plan_type === 'premium');
+        setHasSubscription(hasActiveSubscription);
+
+        if (hasActiveSubscription) {
+          loadCloset(session.user.id);
+        } else {
+          setLoading(false);
+        }
       } else {
         setLoading(false);
       }
@@ -237,6 +253,82 @@ const Closet = () => {
           <Loader2 className="w-12 h-12 animate-spin mx-auto text-primary" />
           <p className="text-lg font-light text-muted-foreground">Loading your closet...</p>
         </div>
+      </div>
+    );
+  }
+
+  // Show upgrade prompt if user doesn't have subscription
+  if (user && !hasSubscription) {
+    return (
+      <div className="min-h-screen bg-background pb-24">
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border/50 px-4 py-4">
+          <div className="flex items-center justify-between max-w-lg mx-auto">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/wardrobe")}
+              className="hover:bg-accent"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <h1 className="text-xl font-light">
+              Closet
+            </h1>
+            <ProfileMenu
+              onProfileClick={() => setProfileOpen(true)}
+            />
+          </div>
+        </div>
+
+        <div className="max-w-lg mx-auto px-4 py-12">
+          <Card className="border-primary/20">
+            <CardContent className="flex flex-col items-center justify-center py-16 space-y-6">
+              <Package className="w-20 h-20 text-primary" strokeWidth={1} />
+              <div className="text-center space-y-3">
+                <h2 className="text-2xl font-light">Upgrade to Access Your Closet</h2>
+                <p className="text-sm text-muted-foreground font-light max-w-md">
+                  Store and organize all your wardrobe items in one place. Upload photos of clothing you own, track purchases, and never forget what's in your closet.
+                </p>
+              </div>
+              <div className="w-full max-w-sm space-y-3 pt-4">
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-start gap-2">
+                    <span className="text-primary">✓</span>
+                    <span className="font-light">Upload unlimited clothing items</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-primary">✓</span>
+                    <span className="font-light">Organize by category and season</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-primary">✓</span>
+                    <span className="font-light">Track what you own and wear</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-primary">✓</span>
+                    <span className="font-light">Mark favorites and add notes</span>
+                  </div>
+                </div>
+                <Button
+                  variant="luxury"
+                  size="lg"
+                  className="w-full"
+                  onClick={() => navigate("/pricing")}
+                >
+                  Upgrade Now
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <ProfileSheet open={profileOpen} onOpenChange={setProfileOpen} />
+        <AuthRequiredDialog
+          open={authDialogOpen}
+          onOpenChange={setAuthDialogOpen}
+          action="add items to your closet"
+        />
+        <MobileNav />
       </div>
     );
   }
