@@ -41,7 +41,8 @@ const AIStyleChat = () => {
 
   useEffect(() => {
     checkUser();
-    loadMessages();
+    // Don't load old messages - start fresh each time
+    // loadMessages();
     showWelcomeMessage();
 
     // Check if we should auto-generate recommendations
@@ -336,13 +337,13 @@ const AIStyleChat = () => {
       const { data: { user } } = await supabase.auth.getUser();
       const sessionId = getSessionId();
 
-      // Save user message
-      await supabase.from("chat_messages").insert({
-        user_id: user?.id,
-        session_id: !user ? sessionId : null,
-        role: 'user',
-        content: userMessage.content + (imagesToSend.length > 0 ? ' [IMAGE]' : '')
-      });
+      // Don't save messages to database - fresh conversations each time
+      // await supabase.from("chat_messages").insert({
+      //   user_id: user?.id,
+      //   session_id: !user ? sessionId : null,
+      //   role: 'user',
+      //   content: userMessage.content + (imagesToSend.length > 0 ? ' [IMAGE]' : '')
+      // });
 
       // Generate outfits based on user's message and gender
       const outfits = generateMockOutfits(userMessage.content, userGender);
