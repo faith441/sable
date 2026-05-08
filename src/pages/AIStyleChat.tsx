@@ -326,56 +326,33 @@ const AIStyleChat = () => {
 
     const outfits: OutfitRecommendation[] = [];
 
-    // Create multiple style sections from available products
-    // This ensures products always show, organized by different styles
+    // Create outfits matching the number of available products
     if (genderProducts.length > 0) {
-      // Create different style outfits from all available products
-      const styles = [
+      // Define all possible styles
+      const allStyles = [
         { name: "Casual Style", style: "casual" },
         { name: "Professional Look", style: "professional" },
         { name: "Street Style", style: "streetwear" }
       ];
 
-      // For each style, create an outfit with available products
+      // Only create as many outfits as we have unique products
+      const maxOutfits = Math.min(genderProducts.length, allStyles.length);
+      const styles = allStyles.slice(0, maxOutfits);
+
+      // For each style, create an outfit with a unique product
       styles.forEach((styleInfo, idx) => {
-        // Get a different subset of products for each style
-        const startIdx = idx;
-        const styleProducts = [];
+        // Use the product at this index
+        const product = genderProducts[idx];
 
-        // Add products in this order: bottoms, tops, outerwear, shoes, accessories
-        const productOrder = [bottoms, tops, outerwear, shoes, accessories];
-
-        productOrder.forEach(category => {
-          if (category.length > 0) {
-            const productIdx = startIdx % category.length;
-            styleProducts.push({
-              name: category[productIdx].name,
-              category: category[productIdx].category,
-              image_url: category[productIdx].image_url
-            });
-          }
+        outfits.push({
+          name: styleInfo.name,
+          style: styleInfo.style,
+          items: [{
+            name: product.name,
+            category: product.category,
+            image_url: product.image_url
+          }]
         });
-
-        // If we still don't have products, use any available
-        if (styleProducts.length === 0) {
-          const allAvailable = genderProducts.slice(startIdx, startIdx + 3);
-          allAvailable.forEach(p => {
-            styleProducts.push({
-              name: p.name,
-              category: p.category,
-              image_url: p.image_url
-            });
-          });
-        }
-
-        // Only create outfit if we have at least one product
-        if (styleProducts.length > 0) {
-          outfits.push({
-            name: styleInfo.name,
-            style: styleInfo.style,
-            items: styleProducts
-          });
-        }
       });
     }
 
