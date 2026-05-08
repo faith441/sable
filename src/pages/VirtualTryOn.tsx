@@ -45,11 +45,19 @@ const VirtualTryOn = () => {
 
   const toggleItemSelection = (item: OutfitItem) => {
     setSelectedItems(prev => {
-      const isSelected = prev.some(i => i.name === item.name);
+      const isSelected = prev.some(i => i.name === item.name && i.category === item.category);
       if (isSelected) {
-        return prev.filter(i => i.name !== item.name);
+        // Deselect this item
+        const newSelection = prev.filter(i => !(i.name === item.name && i.category === item.category));
+        console.log('Deselected:', item.name, 'Remaining:', newSelection.length);
+        toast.info(`Deselected: ${item.category}`);
+        return newSelection;
       } else {
-        return [...prev, item];
+        // Select this item
+        const newSelection = [...prev, item];
+        console.log('Selected:', item.name, 'Total:', newSelection.length);
+        toast.success(`Selected: ${item.category}`);
+        return newSelection;
       }
     });
   };
@@ -306,16 +314,24 @@ const VirtualTryOn = () => {
         {outfit && (
           <Card>
             <CardContent className="p-6">
-              <div className="text-sm font-light mb-4">Select Items to Try On</div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-sm font-light">Select Items to Try On</div>
+                <div className="text-xs text-muted-foreground bg-secondary px-3 py-1 rounded-full">
+                  {selectedItems.length} of {outfit.items.length} selected
+                </div>
+              </div>
+              <div className="text-xs text-muted-foreground mb-3">
+                Tap items to select/deselect them individually
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 {outfit.items.map((item, idx) => {
-                  const isSelected = selectedItems.some(i => i.name === item.name);
+                  const isSelected = selectedItems.some(i => i.name === item.name && i.category === item.category);
                   return (
                     <div
                       key={idx}
                       onClick={() => toggleItemSelection(item)}
-                      className={`relative aspect-square rounded-lg overflow-hidden cursor-pointer transition-all ${
-                        isSelected ? 'ring-2 ring-primary' : 'opacity-60'
+                      className={`relative aspect-square rounded-lg overflow-hidden cursor-pointer transition-all hover:scale-105 ${
+                        isSelected ? 'ring-4 ring-primary scale-100' : 'opacity-50 grayscale'
                       }`}
                     >
                       {item.image_url ? (
@@ -330,8 +346,13 @@ const VirtualTryOn = () => {
                         </div>
                       )}
                       {isSelected && (
-                        <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
-                          <Check className="w-3 h-3" />
+                        <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1.5 shadow-lg">
+                          <Check className="w-4 h-4" strokeWidth={3} />
+                        </div>
+                      )}
+                      {!isSelected && (
+                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                          <span className="text-white text-xs font-light">Tap to select</span>
                         </div>
                       )}
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
