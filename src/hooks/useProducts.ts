@@ -36,15 +36,17 @@ export function useProducts() {
     try {
       setLoading(true);
       const { data, error: fetchError } = await supabase
-        .from('affiliate_products')
+        .from('products')
         .select('*')
         .eq('in_stock', true)
         .order('created_at', { ascending: false });
 
       if (fetchError) {
+        console.error('Supabase error:', fetchError);
         throw fetchError;
       }
 
+      console.log('Loaded products:', data?.length || 0);
       setProducts(data || []);
       setError(null);
     } catch (err) {

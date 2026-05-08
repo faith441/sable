@@ -171,7 +171,14 @@ export default function Shop() {
           </div>
         ) : filteredProducts.length === 0 ? (
           <div className="text-center py-20">
-            <p className="text-gray-500 text-lg">No products found. Try a different search.</p>
+            <p className="text-gray-500 text-lg mb-2">No products found.</p>
+            {allProducts.length === 0 ? (
+              <p className="text-gray-400 text-sm">
+                Add products to your "products" table in Supabase to see them here.
+              </p>
+            ) : (
+              <p className="text-gray-400 text-sm">Try a different search or category.</p>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
