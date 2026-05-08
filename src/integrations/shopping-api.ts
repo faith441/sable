@@ -361,6 +361,29 @@ export class ShoppingAPIManager {
     const query = category ? trendingQueries[category] || 'fashion' : 'trending fashion';
     return this.searchProducts(query, { category }, limit);
   }
+
+  /**
+   * Enhance products with affiliate links from CSV
+   * Call this after loading products to inject affiliate URLs
+   */
+  enhanceWithAffiliateLinks(products: Product[], affiliateLinks: any[]): Product[] {
+    return products.map(product => {
+      // Try to find matching affiliate link by category or retailer
+      const matchingLink = affiliateLinks.find(link =>
+        link.category.toLowerCase().includes(product.category?.toLowerCase() || '') ||
+        link.retailer.toLowerCase() === product.retailer?.toLowerCase()
+      );
+
+      if (matchingLink) {
+        return {
+          ...product,
+          affiliateUrl: matchingLink.affiliateLink
+        };
+      }
+
+      return product;
+    });
+  }
 }
 
 // Export singleton instance

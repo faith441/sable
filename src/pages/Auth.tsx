@@ -17,15 +17,23 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
 
   useEffect(() => {
+    // Check for existing session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
+        console.log('Existing session found, navigating to chat');
         navigate("/ai-style-chat");
       }
     });
 
+    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
+      console.log('Auth state change:', event, session?.user?.id);
+
+      if (event === 'SIGNED_IN' && session) {
+        console.log('User signed in, navigating to chat');
         navigate("/ai-style-chat");
+      } else if (event === 'SIGNED_OUT') {
+        console.log('User signed out');
       }
     });
 
@@ -38,26 +46,49 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
+
         if (error) throw error;
+
+        if (data.session) {
+          console.log('Login successful, session created:', data.session.user.id);
+          toast.success("Welcome back!");
+          // Navigation will be handled by the auth state change listener
+        }
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/`,
+            emailRedirectTo: `${window.location.origin}/ai-style-chat`,
             data: {
               full_name: fullName,
             },
           },
         });
+
         if (error) throw error;
-        toast.success("Account created successfully!");
+
+        console.log('Sign up response:', data);
+
+        // Check if email confirmation is required
+        if (data.user && !data.session) {
+          toast.success("Please check your email to confirm your account", {
+            description: "We've sent you a confirmation link",
+            duration: 5000,
+          });
+        } else if (data.session) {
+          // Session created immediately (email confirmation disabled)
+          console.log('Account created with session:', data.session.user.id);
+          toast.success("Account created successfully!");
+          // Navigation will be handled by the auth state change listener
+        }
       }
     } catch (error: any) {
+      console.error('Auth error:', error);
       toast.error(error.message || "An error occurred");
     } finally {
       setLoading(false);

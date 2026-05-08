@@ -323,8 +323,13 @@ const Home = () => {
                 variant="luxury"
                 size="lg"
                 onClick={() => {
-                  localStorage.setItem('auto_generate_recommendations', 'true');
-                  navigate("/ai-style-chat");
+                  if (user) {
+                    localStorage.setItem('auto_generate_recommendations', 'true');
+                    navigate("/ai-style-chat");
+                  } else {
+                    // Redirect to auth page if not signed in
+                    navigate("/auth");
+                  }
                 }}
                 className="w-full max-w-xs mx-auto hover-scale"
               >

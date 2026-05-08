@@ -1,0 +1,11 @@
+id,retailer,affiliate_link,product_name,category,date_added,notes
+1,Amazon,https://amzn.to/42kh8Gw,Men's Slim Fit Business Suit,Men's Suits,2026-05-07,Update with actual product details
+2,Amazon,https://amzn.to/48L4P9E,Women's Professional Blazer,Women's Outerwear,2026-05-07,Update with actual product details
+3,Amazon,https://amzn.to/example3,Men's Dress Shoes,Men's Shoes,2026-05-07,Classic leather oxford shoes
+4,Amazon,https://amzn.to/example4,Women's Heeled Pumps,Women's Shoes,2026-05-07,3-inch heel professional shoes
+5,Amazon,https://amzn.to/example5,Men's Cotton Dress Shirt,Men's Shirts,2026-05-07,White button-down classic fit
+6,Amazon,https://amzn.to/example6,Women's Silk Blouse,Women's Tops,2026-05-07,Professional elegant blouse
+7,Amazon,https://amzn.to/example7,Men's Casual Chinos,Men's Pants,2026-05-07,Khaki slim fit chinos
+8,Amazon,https://amzn.to/example8,Women's Pencil Skirt,Women's Skirts,2026-05-07,Black knee-length professional
+9,Amazon,https://amzn.to/example9,Men's Leather Belt,Men's Accessories,2026-05-07,Reversible black/brown belt
+10,Amazon,https://amzn.to/example10,Women's Structured Handbag,Women's Accessories,2026-05-07,Professional work bag

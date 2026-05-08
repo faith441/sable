@@ -44,15 +44,23 @@ serve(async (req) => {
     let prompt: string;
     let messageContent: any;
 
+    console.log("=== CODE PATH DECISION ===");
+    console.log("Has customPrompt:", !!customPrompt);
+    console.log("Has userImage:", !!userImage, "length:", userImage?.length || 0);
+    console.log("Has primaryGarmentImage:", !!primaryGarmentImage, "url:", primaryGarmentImage);
+
     if (customPrompt) {
+      console.log("Taking path: CUSTOM PROMPT");
       prompt = customPrompt;
       messageContent = prompt;
     } else if (userImage && primaryGarmentImage) {
+      console.log("Taking path: USER IMAGE + GARMENT (HF or Gemini fallback)");
       // User has uploaded their own image AND we have the garment image
       // Use Hugging Face IDM-VTON for identity-preserving virtual try-on
       console.log("Using Hugging Face IDM-VTON for virtual try-on");
 
       const hfToken = Deno.env.get("HUGGINGFACE_API_TOKEN");
+      console.log("HF Token available:", !!hfToken);
 
       if (!hfToken) {
         console.warn("No Hugging Face token found, falling back to Gemini");
@@ -65,151 +73,236 @@ serve(async (req) => {
           { type: "image_url", image_url: { url: primaryGarmentImage } }
         ];
       } else {
-        // Use Hugging Face IDM-VTON
+        // Use Hugging Face Gradio Space ONLY - NO REPLICATE
         try {
-          console.log("Calling Hugging Face IDM-VTON API");
+          console.log("=== STEP 1: RECEIVED REQUEST ===");
+          console.log("User image size:", userImage?.length || 0, "chars");
+          console.log("Garment image URL:", primaryGarmentImage);
 
-          // Try Replicate API for better results
-          if (replicateToken) {
-            console.log("Using Replicate API for virtual try-on");
+          // STEP 2: Download garment image from Unsplash
+          console.log("=== STEP 2: DOWNLOADING GARMENT IMAGE ===");
+          let garmentImageBase64 = primaryGarmentImage;
 
+          if (primaryGarmentImage.startsWith('http')) {
             try {
-              const replicateResponse = await fetch(
-                "https://api.replicate.com/v1/predictions",
-                {
-                  method: "POST",
-                  headers: {
-                    "Authorization": `Token ${replicateToken}`,
-                    "Content-Type": "application/json"
-                  },
-                  body: JSON.stringify({
-                    version: "c871bb9b046607b680449ecbae55fd8c6d945e0a1948644bf2361b3d021d3ff4",
-                    input: {
-                      garm_img: primaryGarmentImage,
-                      human_img: userImage,
-                      garment_des: "clothing item"
-                    }
-                  })
-                }
-              );
-
-              if (replicateResponse.ok) {
-                const prediction = await replicateResponse.json();
-                console.log("Replicate prediction created:", prediction.id, "status:", prediction.status);
-
-                // Poll for result if not immediately available
-                if (prediction.status === "succeeded" && prediction.output) {
-                  console.log("Replicate virtual try-on succeeded immediately");
-                  return new Response(
-                    JSON.stringify({
-                      result: prediction.output,
-                      viewType,
-                      source: "replicate"
-                    }),
-                    { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-                  );
-                } else if (prediction.status === "starting" || prediction.status === "processing") {
-                  // Return a message to try again
-                  return new Response(
-                    JSON.stringify({
-                      result: null,
-                      error: "Virtual try-on is processing. Please try again in a few seconds.",
-                      retry: true,
-                      predictionId: prediction.id
-                    }),
-                    {
-                      status: 202,
-                      headers: { ...corsHeaders, "Content-Type": "application/json" }
-                    }
-                  );
-                }
-              } else {
-                const errorText = await replicateResponse.text();
-                console.error("Replicate API error:", replicateResponse.status, errorText);
+              // Modify Unsplash URL to request smaller image (max 512x768) to reduce payload
+              let optimizedUrl = primaryGarmentImage;
+              if (primaryGarmentImage.includes('unsplash.com')) {
+                const url = new URL(primaryGarmentImage);
+                url.searchParams.set('w', '512');
+                url.searchParams.set('h', '768');
+                url.searchParams.set('fit', 'crop');
+                url.searchParams.set('q', '75'); // Quality 75%
+                optimizedUrl = url.toString();
+                console.log("Optimized Unsplash URL:", optimizedUrl);
               }
-            } catch (replicateError) {
-              console.error("Replicate error:", replicateError);
+
+              console.log("Fetching garment from URL:", optimizedUrl.substring(0, 100));
+              const garmentResponse = await fetch(optimizedUrl);
+              if (!garmentResponse.ok) {
+                throw new Error(`Failed to fetch garment: ${garmentResponse.status}`);
+              }
+              const garmentBlob = await garmentResponse.blob();
+              console.log("Garment blob size:", garmentBlob.size, "bytes");
+              const garmentBuffer = await garmentBlob.arrayBuffer();
+              const garmentBase64 = btoa(String.fromCharCode(...new Uint8Array(garmentBuffer)));
+              garmentImageBase64 = `data:image/jpeg;base64,${garmentBase64}`;
+              console.log("Garment image downloaded and converted, base64 size:", garmentImageBase64.length, "chars");
+            } catch (downloadError) {
+              console.error("Failed to download garment image:", downloadError);
+              throw new Error(`Could not download garment image: ${downloadError}`);
             }
-          } else {
-            console.warn("No Replicate token found");
           }
 
-          // If Replicate didn't work, try simple HF API
-          const hfResponse = await fetch(
-            "https://api-inference.huggingface.co/models/yisol/IDM-VTON",
-            {
-              method: "POST",
-              headers: {
-                "Authorization": `Bearer ${hfToken}`,
-                "Content-Type": "application/json"
+          console.log("=== STEP 3: PREPARING PAYLOAD ===");
+
+          // Keep data URI format for Gradio FileData
+          const userImageData = userImage;
+          const garmentImageData = garmentImageBase64;
+
+          console.log("User image length:", userImageData.length);
+          console.log("Garment image length:", garmentImageData.length);
+
+          console.log("=== STEP 4: CALLING HUGGING FACE GRADIO SPACE ===");
+          const gradioBaseUrl = "https://yisol-idm-vton.hf.space";
+          const sessionHash = Math.random().toString(36).substring(2);
+          console.log("Base URL:", gradioBaseUrl);
+          console.log("Session hash:", sessionHash);
+
+          // Use Gradio /run API format with proper FileData structure
+          const inferencePayload = {
+            data: [
+              // dict parameter - EditorData with background image
+              {
+                background: {
+                  path: userImageData,
+                  url: null,
+                  orig_name: "user.jpg",
+                  meta: { _type: "gradio.FileData" }
+                },
+                layers: [],
+                composite: null
               },
-              body: JSON.stringify({
-                inputs: userImage,
-                parameters: {
-                  garment_image: primaryGarmentImage
-                }
-              })
-            }
-          );
+              // garm_img parameter - FileData for garment
+              {
+                path: garmentImageData,
+                url: null,
+                orig_name: "garment.jpg",
+                meta: { _type: "gradio.FileData" }
+              },
+              // garment_des
+              "clothing item",
+              // is_checked
+              true,
+              // is_checked_crop
+              false,
+              // denoise_steps
+              30,
+              // seed
+              42
+            ]
+          };
 
-          if (!hfResponse.ok) {
-            const errorText = await hfResponse.text();
-            console.error("HF API error:", hfResponse.status, errorText);
+          const payloadSize = JSON.stringify(inferencePayload).length;
+          console.log("Payload size:", payloadSize, "chars");
+          console.log("Payload structure:", {
+            dict_type: typeof inferencePayload.data[0],
+            garm_img_type: typeof inferencePayload.data[1],
+            params: inferencePayload.data.slice(2)
+          });
 
-            // Check if model is loading
-            if (hfResponse.status === 503) {
-              const errorJson = JSON.parse(errorText);
-              if (errorJson.error?.includes("loading")) {
-                return new Response(
-                  JSON.stringify({
-                    error: "Virtual try-on model is starting up. Please wait a moment and try again.",
-                    retry: true
-                  }),
-                  {
-                    status: 503,
-                    headers: { ...corsHeaders, "Content-Type": "application/json" }
-                  }
-                );
-              }
-            }
-
-            throw new Error(`HF API error: ${hfResponse.status}`);
+          if (payloadSize > 10000000) {
+            console.warn("⚠️ WARNING: Payload is very large (>10MB), may fail");
           }
 
-          // Get the image blob from response
-          const imageBlob = await hfResponse.blob();
-          const arrayBuffer = await imageBlob.arrayBuffer();
-          const base64Image = btoa(
-            String.fromCharCode(...new Uint8Array(arrayBuffer))
-          );
-          const resultImage = `data:image/jpeg;base64,${base64Image}`;
+          // Join Gradio queue
+          console.log("Joining queue...");
+          const queueJoinPayload = {
+            ...inferencePayload,
+            session_hash: sessionHash,
+            fn_index: 0  // Index of the /tryon function
+          };
 
-          console.log("HF virtual try-on succeeded");
-          return new Response(
-            JSON.stringify({
-              result: resultImage,
-              viewType
-            }),
-            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
+          const joinResponse = await fetch(`${gradioBaseUrl}/queue/join`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(queueJoinPayload)
+          });
+
+          if (!joinResponse.ok) {
+            const errorText = await joinResponse.text();
+            console.error("Failed to join queue:", joinResponse.status, errorText);
+            throw new Error(`Failed to join queue: ${joinResponse.status}`);
+          }
+
+          const joinData = await joinResponse.json();
+          console.log("Queue join response:", joinData);
+
+          // Poll for results using event stream
+          console.log("Polling for results...");
+          const eventUrl = `${gradioBaseUrl}/queue/data?session_hash=${sessionHash}`;
+
+          let hfResponse;
+          let resultData;
+
+          try {
+            const eventResponse = await fetch(eventUrl);
+            const reader = eventResponse.body?.getReader();
+            const decoder = new TextDecoder();
+
+            while (true) {
+              const { done, value } = await reader!.read();
+              if (done) break;
+
+              const chunk = decoder.decode(value);
+              const lines = chunk.split('\n');
+
+              for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                  const data = JSON.parse(line.slice(6));
+                  console.log("Event:", data.msg, data);
+
+                  if (data.msg === 'process_completed') {
+                    resultData = data.output?.data;
+                    console.log("✓ Processing complete!");
+                    break;
+                  } else if (data.msg === 'estimation') {
+                    console.log(`⏳ Queue position: ${data.rank}, estimated time: ${data.estimation}s`);
+                  } else if (data.msg === 'error') {
+                    throw new Error(`Gradio error: ${data.error || 'Unknown error'}`);
+                  }
+                }
+              }
+
+              if (resultData) break;
+            }
+
+            hfResponse = { ok: true, status: 200 };
+          } catch (fetchError) {
+            console.error("✗ Fetch error:", fetchError);
+            throw new Error(`Failed to get results: ${fetchError}`);
+          }
+
+          console.log("=== STEP 5: PROCESSING RESPONSE ===");
+
+          if (!resultData) {
+            throw new Error("No result data received from Gradio queue");
+          }
+
+          console.log("Result data:", JSON.stringify(resultData).substring(0, 500));
+
+          // Gradio queue returns data array with result images
+          // Result is typically at index 0 (output image) and index 1 (masked image)
+          if (resultData && resultData[0]) {
+            const resultImage = resultData[0];
+            console.log("✓ Got result image from Gradio queue");
+            console.log("Result type:", typeof resultImage);
+
+            // Extract URL from FileData object if needed
+            let imageUrl = resultImage;
+            if (typeof resultImage === 'object' && resultImage.url) {
+              imageUrl = resultImage.url;
+            } else if (typeof resultImage === 'object' && resultImage.path) {
+              imageUrl = resultImage.path;
+            }
+
+            console.log("Image URL:", String(imageUrl).substring(0, 100));
+
+            return new Response(
+              JSON.stringify({
+                result: imageUrl,
+                viewType,
+                source: "gradio-queue"
+              }),
+              { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+
+          throw new Error("Unexpected response format from Gradio queue");
 
         } catch (hfError) {
-          console.error("HF virtual try-on failed:", hfError);
-          console.log("All virtual try-on APIs failed, returning placeholder");
+          console.error("=== GRADIO ERROR ===");
+          console.error("Error type:", typeof hfError);
+          console.error("Error:", hfError);
+          console.error("Error message:", hfError instanceof Error ? hfError.message : String(hfError));
+          console.error("Error stack:", hfError instanceof Error ? hfError.stack : "No stack");
 
-          // Return user's photo as placeholder with message
           return new Response(
             JSON.stringify({
-              result: userImage,
-              viewType,
-              placeholder: true,
-              message: "Virtual try-on service is temporarily unavailable. Showing your uploaded photo as a placeholder."
+              error: "Gradio API failed",
+              details: hfError instanceof Error ? hfError.message : String(hfError),
+              errorType: typeof hfError,
+              viewType
             }),
-            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            {
+              status: 500,
+              headers: { ...corsHeaders, "Content-Type": "application/json" }
+            }
           );
         }
       }
     } else if (primaryGarmentImage) {
+      console.log("Taking path: GARMENT ONLY (no user image) - Gemini generation");
       // No user image - generate a fashion model wearing the garment
       // This path uses Gemini since we're generating a new image, not preserving identity
       prompt = `Create a fashion photography image showing a ${genderTerm} model wearing the EXACT clothing item shown in the provided product image. Same color, pattern, style, design details, fabric appearance. Professional fashion catalog photography, clean studio background, perfect lighting.`;
@@ -219,6 +312,7 @@ serve(async (req) => {
         { type: "image_url", image_url: { url: primaryGarmentImage } }
       ];
     } else {
+      console.log("Taking path: FALLBACK (no images)");
       // Fallback - no garment image available (shouldn't happen normally)
       prompt = `Create a high-quality fashion photography image of a stylish ${genderTerm} model wearing luxury ${garmentDescriptions}. 
 
