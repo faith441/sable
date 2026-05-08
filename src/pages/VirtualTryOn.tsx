@@ -294,14 +294,14 @@ const VirtualTryOn = () => {
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
-        <Card>
+        <Card className="bg-[#8B7355] border-[#8B7355]">
           <CardContent className="p-6 text-center space-y-4">
-            <Sparkles className="w-12 h-12 mx-auto text-primary" strokeWidth={1.5} />
+            <Sparkles className="w-12 h-12 mx-auto text-white" strokeWidth={1.5} />
             <div className="space-y-2">
-              <h2 className="text-2xl font-light">
+              <h2 className="text-2xl font-light text-white">
                 {outfit ? `Try On: ${outfit.name}` : 'See How It Looks'}
               </h2>
-              <p className="text-sm text-muted-foreground font-light">
+              <p className="text-sm text-white/90 font-light">
                 {outfit
                   ? 'Upload your photo to see yourself in this outfit'
                   : 'Upload a photo of yourself and the garment you want to try on'}
