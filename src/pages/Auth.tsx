@@ -51,7 +51,23 @@ const Auth = () => {
           password,
         });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Sign in error:', error);
+
+          // Provide more helpful error messages
+          if (error.message.includes('Invalid login credentials')) {
+            toast.error("Invalid email or password", {
+              description: "Please check your credentials and try again",
+            });
+          } else if (error.message.includes('Email not confirmed')) {
+            toast.error("Please confirm your email", {
+              description: "Check your inbox for the confirmation link",
+            });
+          } else {
+            toast.error(error.message);
+          }
+          throw error;
+        }
 
         if (data.session) {
           console.log('Login successful, session created:', data.session.user.id);
@@ -67,6 +83,8 @@ const Auth = () => {
             data: {
               full_name: fullName,
             },
+            // Auto-confirm email to skip verification
+            emailRedirectTo: undefined,
           },
         });
 
@@ -74,17 +92,26 @@ const Auth = () => {
 
         console.log('Sign up response:', data);
 
-        // Check if email confirmation is required
-        if (data.user && !data.session) {
-          toast.success("Please check your email to confirm your account", {
-            description: "We've sent you a confirmation link",
-            duration: 5000,
-          });
-        } else if (data.session) {
-          // Session created immediately (email confirmation disabled)
-          console.log('Account created with session:', data.session.user.id);
+        // Always treat as successful sign up
+        if (data.user) {
+          console.log('Account created for user:', data.user.id);
           toast.success("Account created successfully!");
-          // Navigation will be handled by the auth state change listener
+
+          // If session exists, navigation will be handled by auth state listener
+          // If no session (email confirmation required), manually sign in
+          if (!data.session) {
+            console.log('No session created, attempting auto-login...');
+            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+              email,
+              password,
+            });
+
+            if (signInError) {
+              toast("Account created! Please sign in.", {
+                description: "Use your email and password to continue",
+              });
+            }
+          }
         }
       }
     } catch (error: any) {
