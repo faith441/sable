@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { saveOutfitRecommendations } from "@/utils/outfitStorage";
 import { useProducts } from "@/hooks/useProducts";
+import MobileNav from "@/components/MobileNav";
 
 interface OutfitRecommendation {
   name: string;
@@ -730,6 +731,9 @@ const AIStyleChat = () => {
           </div>
         </div>
       </div>
+
+      {/* Mobile Navigation */}
+      <MobileNav />
     </div>
   );
 };

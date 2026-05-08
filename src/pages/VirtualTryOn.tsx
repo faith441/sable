@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Upload, Loader2, Sparkles, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getSessionId } from "@/utils/outfitStorage";
+import { useProducts } from "@/hooks/useProducts";
 
 interface OutfitItem {
   name: string;
@@ -27,11 +28,17 @@ interface TryOnResult {
 const VirtualTryOn = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { products: allProducts, loading: productsLoading, getByGender } = useProducts();
   const [userImage, setUserImage] = useState<string | null>(null);
   const [results, setResults] = useState<TryOnResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [outfit, setOutfit] = useState<OutfitRecommendation | null>(null);
   const [selectedItems, setSelectedItems] = useState<OutfitItem[]>([]);
+
+  // Get user's gender preference and filter products
+  const preferences = JSON.parse(localStorage.getItem('guest_preferences') || '{}');
+  const userGender = preferences.gender as 'men' | 'women' | 'unisex' | undefined;
+  const affiliateProducts = userGender ? getByGender(userGender) : allProducts;
 
   // Load outfit from navigation state if provided
   useEffect(() => {
@@ -121,7 +128,7 @@ const VirtualTryOn = () => {
   };
 
   const handleAddToCart = async () => {
-    if (!outfit || selectedItems.length === 0) {
+    if (selectedItems.length === 0) {
       toast.error("No items to add to cart");
       return;
     }
@@ -193,7 +200,7 @@ const VirtualTryOn = () => {
       return;
     }
 
-    if (!outfit || selectedItems.length === 0) {
+    if (selectedItems.length === 0) {
       toast.error("Please select items to try on");
       return;
     }
@@ -310,21 +317,29 @@ const VirtualTryOn = () => {
           </CardContent>
         </Card>
 
-        {/* Outfit Items Selection */}
-        {outfit && (
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="text-sm font-light">Select Items to Try On</div>
-                <div className="text-xs text-muted-foreground bg-secondary px-3 py-1 rounded-full">
-                  {selectedItems.length} of {outfit.items.length} selected
-                </div>
+        {/* Garment Selection */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-sm font-light">Select Items to Try On</div>
+              <div className="text-xs text-muted-foreground bg-secondary px-3 py-1 rounded-full">
+                {selectedItems.length} selected
               </div>
-              <div className="text-xs text-muted-foreground mb-3">
-                Tap items to select/deselect them individually
+            </div>
+            <div className="text-xs text-muted-foreground mb-3">
+              Tap items to select/deselect them individually
+            </div>
+            {productsLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
               </div>
+            ) : (
               <div className="grid grid-cols-2 gap-3">
-                {outfit.items.map((item, idx) => {
+                {(outfit ? outfit.items : affiliateProducts.slice(0, 8).map((p: any) => ({
+                  name: p.name,
+                  category: p.category,
+                  image_url: p.image_url
+                }))).map((item: any, idx: number) => {
                   const isSelected = selectedItems.some(i => i.name === item.name && i.category === item.category);
                   return (
                     <div
@@ -362,9 +377,9 @@ const VirtualTryOn = () => {
                   );
                 })}
               </div>
-            </CardContent>
-          </Card>
-        )}
+            )}
+          </CardContent>
+        </Card>
 
         {/* User Photo Upload */}
         <Card>
@@ -400,7 +415,7 @@ const VirtualTryOn = () => {
         </Card>
 
         {/* Try On Button */}
-        {userImage && outfit && selectedItems.length > 0 && results.length === 0 && (
+        {userImage && selectedItems.length > 0 && results.length === 0 && (
           <Button
             variant="luxury"
             size="lg"

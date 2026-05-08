@@ -231,10 +231,17 @@ const Checkout = () => {
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border/30">
         <div className="max-w-2xl mx-auto px-5 py-4">
           <div className="flex items-center justify-between">
-            <button 
-              onClick={() => step === 'shipping' ? navigate("/cart") : setStep('shipping')}
+            <button
+              onClick={() => {
+                if (step === 'confirmation') {
+                  navigate("/orders");
+                } else if (step === 'shipping') {
+                  navigate("/cart");
+                } else {
+                  setStep('shipping');
+                }
+              }}
               className="p-2 -ml-2 hover:bg-secondary/50 rounded-full transition-colors"
-              disabled={step === 'confirmation'}
             >
               <ArrowLeft className="h-5 w-5 text-foreground/70" strokeWidth={1.5} />
             </button>

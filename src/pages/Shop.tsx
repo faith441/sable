@@ -18,6 +18,7 @@ import MobileNav from '@/components/MobileNav';
 import ProfileMenu from '@/components/ProfileMenu';
 import ProfileSheet from '@/components/ProfileSheet';
 import { useProducts } from '@/hooks/useProducts';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Shop() {
   const navigate = useNavigate();
@@ -25,23 +26,52 @@ export default function Shop() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [profileOpen, setProfileOpen] = useState(false);
+  const [filters, setFilters] = useState<{
+    sortBy?: 'relevance' | 'price-asc' | 'price-desc' | 'newest';
+    brand?: string;
+  }>({});
 
-  // Filter products based on search and category
-  const filteredProducts = allProducts.filter(product => {
-    const matchesSearch = !searchQuery ||
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchQuery.toLowerCase());
+  // Filter products based on search, category, and brand
+  const filteredProducts = allProducts
+    .filter(product => {
+      const matchesSearch = !searchQuery ||
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.category.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesCategory = selectedCategory === 'all' ||
-      product.category.toLowerCase().includes(selectedCategory.toLowerCase()) ||
-      product.gender?.toLowerCase().includes(selectedCategory.toLowerCase());
+      const matchesCategory = selectedCategory === 'all' ||
+        product.category.toLowerCase().includes(selectedCategory.toLowerCase()) ||
+        product.gender?.toLowerCase().includes(selectedCategory.toLowerCase());
 
-    return matchesSearch && matchesCategory;
-  });
+      const matchesBrand = !filters.brand ||
+        product.brand?.toLowerCase() === filters.brand.toLowerCase();
+
+      return matchesSearch && matchesCategory && matchesBrand;
+    })
+    .sort((a, b) => {
+      switch (filters.sortBy) {
+        case 'price-asc':
+          return a.price - b.price;
+        case 'price-desc':
+          return b.price - a.price;
+        case 'newest':
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        default:
+          return 0;
+      }
+    });
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     // Search is handled by filteredProducts
+  };
+
+  const getSessionId = () => {
+    let sessionId = localStorage.getItem('guest_session_id');
+    if (!sessionId) {
+      sessionId = crypto.randomUUID();
+      localStorage.setItem('guest_session_id', sessionId);
+    }
+    return sessionId;
   };
 
   const handleAddToCloset = async (product: any) => {
@@ -52,12 +82,70 @@ export default function Shop() {
     });
   };
 
-  const handleBuyNow = (product: any) => {
-    // Open affiliate link in new tab
-    window.open(product.affiliate_link, '_blank');
+  const handleBuyNow = async (product: any) => {
+    try {
+      // Get user or session ID
+      const { data: { user } } = await supabase.auth.getUser();
+      const sessionId = getSessionId();
 
-    // Track affiliate click
-    // TODO: Implement analytics tracking
+      // Prepare product data for cart
+      const productData = {
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image_url: product.image_url,
+        brand: { name: product.brand || 'Brand' }
+      };
+
+      // Check if item already exists in cart
+      let query = supabase
+        .from('cart_items')
+        .select('id, quantity');
+
+      if (user) {
+        query = query.eq('user_id', user.id).eq('product_data->>id', product.id);
+      } else {
+        query = query.eq('session_id', sessionId).eq('product_data->>id', product.id);
+      }
+
+      const { data: existingItems } = await query;
+
+      if (existingItems && existingItems.length > 0) {
+        // Update quantity if item exists
+        const existingItem = existingItems[0];
+        const { error } = await supabase
+          .from('cart_items')
+          .update({ quantity: existingItem.quantity + 1 })
+          .eq('id', existingItem.id);
+
+        if (error) throw error;
+      } else {
+        // Insert new item
+        const { error } = await supabase
+          .from('cart_items')
+          .insert({
+            product_id: product.id,
+            user_id: user?.id,
+            session_id: !user ? sessionId : null,
+            product_data: productData,
+            quantity: 1
+          });
+
+        if (error) throw error;
+      }
+
+      toast({
+        title: 'Added to Cart!',
+        description: `${product.name} has been added to your cart.`
+      });
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to add item to cart. Please try again.',
+        variant: 'destructive'
+      });
+    }
   };
 
   return (
@@ -158,7 +246,7 @@ export default function Shop() {
 
         {/* Products Grid */}
         {productsLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 gap-4">
             {[...Array(8)].map((_, i) => (
               <Card key={i} className="animate-pulse">
                 <div className="aspect-[3/4] bg-gray-200 rounded-t-lg" />
@@ -174,14 +262,14 @@ export default function Shop() {
             <p className="text-gray-500 text-lg mb-2">No products found.</p>
             {allProducts.length === 0 ? (
               <p className="text-gray-400 text-sm">
-                Add products to your "products" table in Supabase to see them here.
+                Add products to your "affiliate_products" table in Supabase to see them here.
               </p>
             ) : (
               <p className="text-gray-400 text-sm">Try a different search or category.</p>
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 gap-4">
             {filteredProducts.map((product) => (
               <Card key={product.id} className="group hover:shadow-xl transition-shadow duration-300">
                 <div className="aspect-[3/4] overflow-hidden rounded-t-lg bg-gray-100 relative">

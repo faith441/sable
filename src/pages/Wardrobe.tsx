@@ -13,6 +13,7 @@ import ProductDetailDialog from "@/components/ProductDetailDialog";
 import ProductDualImage from "@/components/ProductDualImage";
 import ProductImageGallery from "@/components/ProductImageGallery";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useProducts } from "@/hooks/useProducts";
 
 // Sample daily outfits for demo
 const sampleOutfits = [
@@ -90,6 +91,49 @@ const getTryOnCache = (): Map<string, string> => {
   return new Map();
 };
 
+const loadTryOnsFromDatabase = async (): Promise<Map<string, string>> => {
+  const cache = new Map<string, string>();
+
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    const sessionId = localStorage.getItem('guest_session_id');
+
+    if (!user && !sessionId) {
+      return cache;
+    }
+
+    // Build query based on user or session
+    let query = supabase
+      .from('virtual_tryons')
+      .select('product_image_url, tryon_image_url')
+      .order('created_at', { ascending: false });
+
+    if (user) {
+      query = query.eq('user_id', user.id);
+    } else if (sessionId) {
+      query = query.eq('session_id', sessionId);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Failed to load try-ons from database:', error);
+      return cache;
+    }
+
+    if (data) {
+      data.forEach((tryon: any) => {
+        cache.set(tryon.product_image_url, tryon.tryon_image_url);
+      });
+    }
+
+    return cache;
+  } catch (e) {
+    console.error('Error loading try-ons from database:', e);
+    return cache;
+  }
+};
+
 const saveTryOnCache = (cache: Map<string, string>) => {
   try {
     // Limit cache size
@@ -125,6 +169,7 @@ interface CompletedTryOn {
 
 const Wardrobe = () => {
   const navigate = useNavigate();
+  const { products: affiliateProducts, loading: productsLoading } = useProducts();
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [capsules, setCapsules] = useState<Capsule[]>([]);
@@ -140,6 +185,22 @@ const Wardrobe = () => {
   const [tryOnProgress, setTryOnProgress] = useState({ current: 0, total: 0 });
   const [completedTryOns, setCompletedTryOns] = useState<CompletedTryOn[]>([]);
   const [dailyOutfit, setDailyOutfit] = useState(sampleOutfits[0]);
+
+  // Load try-ons from database on mount
+  useEffect(() => {
+    const loadDatabaseTryOns = async () => {
+      const dbCache = await loadTryOnsFromDatabase();
+      if (dbCache.size > 0) {
+        // Merge with localStorage cache
+        const localCache = getTryOnCache();
+        dbCache.forEach((value, key) => {
+          localCache.set(key, value);
+        });
+        saveTryOnCache(localCache);
+      }
+    };
+    loadDatabaseTryOns();
+  }, []);
 
   // Pre-generate try-on images for all products in capsules
   // showVideoGuide = false for background generation (when returning to cached wardrobe)
@@ -343,7 +404,6 @@ const Wardrobe = () => {
     // Check if AI is disabled - show empty state
     if (AI_DISABLED || creditsExhausted) {
       await fallbackToEmptyState();
-      toast.info("No wardrobe available. Please check back later.");
       return;
     }
     
@@ -362,21 +422,18 @@ const Wardrobe = () => {
         const errorMsg = error.message || error.toString();
         if (errorMsg.includes("402") || errorMsg.includes("credits") || errorMsg.includes("payment") || errorMsg.includes("non-2xx")) {
           await fallbackToEmptyState('credits');
-          toast.info("AI unavailable. Please check back later.");
           return;
         }
         throw error;
       }
-      
+
       if (data?.error) {
         if (data.error === "no_inventory") {
           await fallbackToEmptyState('inventory');
-          toast.info("No brand partner products available yet.");
           return;
         }
         if (data.error.includes("credits") || data.error.includes("payment")) {
           await fallbackToEmptyState('credits');
-          toast.info("AI unavailable. Please check back later.");
           return;
         }
         throw new Error(data.error);
@@ -397,11 +454,9 @@ const Wardrobe = () => {
       const errorMsg = error?.message || error?.toString() || '';
       if (errorMsg.includes("credits") || errorMsg.includes("payment") || errorMsg.includes("402") || errorMsg.includes("non-2xx")) {
         await fallbackToEmptyState('credits');
-        toast.info("AI unavailable. Please check back later.");
       } else {
         // For other errors, show empty state
         await fallbackToEmptyState('error');
-        toast.error("Failed to generate wardrobe. Please try again.");
       }
     } finally {
       setGenerating(false);
@@ -616,19 +671,8 @@ const Wardrobe = () => {
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-6">
-        {/* No Inventory Alert */}
-        {noInventory && (
-          <Alert className="mb-6 border-sage/50 bg-sage/10">
-            <Package className="h-4 w-4 text-sage" />
-            <AlertTitle className="text-foreground">Coming Soon</AlertTitle>
-            <AlertDescription className="text-muted-foreground">
-              Brand partner products are coming soon! Check back later for personalized wardrobe recommendations.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* AI Credits Alert - only show if credits exhausted but not inventory issue */}
-        {creditsExhausted && !noInventory && (
+        {/* AI Credits Alert - only show if credits exhausted */}
+        {creditsExhausted && (
           <Alert className="mb-6 border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
             <AlertCircle className="h-4 w-4 text-amber-600" />
             <AlertTitle className="text-amber-800 dark:text-amber-200">AI Features Temporarily Unavailable</AlertTitle>
@@ -639,20 +683,129 @@ const Wardrobe = () => {
         )}
 
         {capsules.length === 0 ? (
-          <Card className="mt-8">
-            <CardContent className="flex flex-col items-center justify-center py-16 space-y-4">
-              <Package className="w-16 h-16 text-muted-foreground" strokeWidth={1} />
-              <div className="text-center space-y-2">
-                <h3 className="text-lg font-light">No Capsules Yet</h3>
-                <p className="text-sm text-muted-foreground font-light">
-                  Complete the survey to get personalized capsule wardrobes
-                </p>
+          <div className="space-y-6">
+            {/* Show AI try-on results or products */}
+            {productsLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
               </div>
-              <Button variant="luxury" onClick={() => navigate("/survey")}>
-                Take Survey
-              </Button>
-            </CardContent>
-          </Card>
+            ) : (() => {
+              // Get try-on cache from localStorage
+              const localCache = getTryOnCache();
+
+              // Note: Database try-ons will be loaded asynchronously
+              // For now, we'll use localStorage cache for immediate display
+              const productsWithTryOn = affiliateProducts
+                .map((product: any) => ({
+                  ...product,
+                  tryOnImage: localCache.get(product.image_url) || localCache.get(product.id)
+                }))
+                .filter((p: any) => p.tryOnImage); // Only show products with try-on results
+
+              return productsWithTryOn.length > 0 ? (
+                <>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-light">Your Virtual Try-Ons</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate("/ai-stylist")}
+                    >
+                      Try More
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    {productsWithTryOn.slice(0, 6).map((product: any) => (
+                      <Card
+                        key={product.id}
+                        className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                      >
+                        <div className="aspect-[3/4] overflow-hidden bg-gray-100 relative">
+                          <img
+                            src={product.tryOnImage}
+                            alt={`${product.name} - Try On`}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute top-2 left-2 bg-primary/90 text-primary-foreground px-2 py-1 rounded text-xs">
+                            AI Try-On
+                          </div>
+                        </div>
+                        <CardContent className="p-3 space-y-1">
+                          <p className="text-xs text-muted-foreground">{product.brand || 'Brand'}</p>
+                          <h4 className="font-light text-sm line-clamp-2">{product.name}</h4>
+                          <p className="text-lg font-light">{product.currency} {product.price}</p>
+                          <Button
+                            size="sm"
+                            className="w-full mt-2"
+                            onClick={() => navigate("/shop")}
+                          >
+                            Shop Now
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </>
+              ) : affiliateProducts.length > 0 ? (
+                <>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-light">Available Products</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate("/ai-stylist")}
+                    >
+                      Try On
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    {affiliateProducts.slice(0, 6).map((product: any) => (
+                      <Card
+                        key={product.id}
+                        className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                        onClick={() => navigate("/ai-stylist")}
+                      >
+                        <div className="aspect-[3/4] overflow-hidden bg-gray-100">
+                          <img
+                            src={product.image_url}
+                            alt={product.name}
+                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
+                        <CardContent className="p-3 space-y-1">
+                          <p className="text-xs text-muted-foreground">{product.brand || 'Brand'}</p>
+                          <h4 className="font-light text-sm line-clamp-2">{product.name}</h4>
+                          <p className="text-lg font-light">{product.currency} {product.price}</p>
+                          <Button
+                            size="sm"
+                            className="w-full mt-2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate("/ai-stylist");
+                            }}
+                          >
+                            Try On
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <Card className="mt-8">
+                  <CardContent className="flex flex-col items-center justify-center py-16 space-y-4">
+                    <Package className="w-16 h-16 text-muted-foreground" strokeWidth={1} />
+                    <div className="text-center space-y-2">
+                      <h3 className="text-lg font-light">No Products Yet</h3>
+                      <p className="text-sm text-muted-foreground font-light">
+                        Check back later for new arrivals
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })()}
+          </div>
         ) : (
           <Tabs defaultValue="0" className="space-y-6">
           <TabsList className="w-full justify-start overflow-x-auto">

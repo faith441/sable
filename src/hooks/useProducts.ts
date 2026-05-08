@@ -36,7 +36,7 @@ export function useProducts() {
     try {
       setLoading(true);
       const { data, error: fetchError } = await supabase
-        .from('products')
+        .from('affiliate_products')
         .select('*')
         .eq('in_stock', true)
         .order('created_at', { ascending: false });

@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ArrowLeft, X, Heart, Link as LinkIcon, ThumbsDown, Share2, Sun, ExternalLink } from "lucide-react";
+import { ArrowLeft, X, Heart, Link as LinkIcon, ThumbsDown, Share2, Sun, ExternalLink, Upload, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useAffiliateLinks } from "../hooks/useAffiliateLinks";
 import { useOutfitRecommendations } from "../hooks/useOutfitRecommendations";
+import { getSessionId } from "@/utils/outfitStorage";
+import { supabase } from "@/integrations/supabase/client";
 
 interface OutfitItem {
   name: string;
@@ -29,7 +31,13 @@ const OutfitRecommendations = () => {
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
   const { links: affiliateLinks, getByCategory } = useAffiliateLinks();
-  const { outfits: dbOutfits, loading, getSessionId } = useOutfitRecommendations();
+  const { outfits: dbOutfits, loading, getSessionId: getDbSessionId } = useOutfitRecommendations();
+
+  // Try-on states
+  const [userImage, setUserImage] = useState<string | null>(null);
+  const [showUpload, setShowUpload] = useState(false);
+  const [processingTryOn, setProcessingTryOn] = useState(false);
+  const [tryOnResult, setTryOnResult] = useState<string | null>(null);
 
   // Use outfits from navigation state if available, otherwise from database
   const stateOutfits = location.state?.outfits || [];
@@ -69,6 +77,178 @@ const OutfitRecommendations = () => {
       if (currentIndex > 0) {
         setCurrentIndex(currentIndex - 1);
       }
+    }
+  };
+
+  const resizeImage = (file: File, maxWidth: number, maxHeight: number): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxWidth) {
+              height = (height * maxWidth) / width;
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width = (width * maxHeight) / height;
+              height = maxHeight;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+
+          const resizedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+          resolve(resizedBase64);
+        };
+        img.onerror = reject;
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleUserImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        toast.loading("Optimizing image...");
+        const resizedImage = await resizeImage(file, 768, 1024);
+        setUserImage(resizedImage);
+        toast.dismiss();
+        toast.success("Image uploaded!");
+      } catch (error) {
+        console.error("Error resizing image:", error);
+        toast.error("Failed to process image");
+      }
+    }
+  };
+
+  const handleTryOn = async () => {
+    if (!userImage) {
+      toast.error("Please upload your photo");
+      return;
+    }
+
+    setProcessingTryOn(true);
+
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const functionUrl = `${supabaseUrl}/functions/v1/virtual-tryon-idm`;
+
+      const garmentSets = currentOutfit.items.map((item) => ({
+        label: item.name,
+        garments: [{
+          image_url: item.image_url,
+          name: item.name,
+          category: item.category
+        }]
+      }));
+
+      const response = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userPhoto: userImage,
+          garmentSets,
+          sessionId: getSessionId()
+        })
+      });
+
+      if (!response.ok) {
+        if (response.status === 429) {
+          throw new Error("Rate limited. Please try again later.");
+        } else if (response.status === 402) {
+          throw new Error("AI credits exhausted. Please contact support.");
+        } else if (response.status === 502) {
+          throw new Error("Try-on failed. Please try again.");
+        }
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // Get the first successful result
+      if (data.results && data.results.length > 0) {
+        const firstSuccess = data.results.find((r: any) => r.success && r.image);
+        if (firstSuccess) {
+          setTryOnResult(firstSuccess.image);
+
+          // Get user ID or session ID
+          const { data: { user } } = await supabase.auth.getUser();
+          const sessionId = !user ? (localStorage.getItem('guest_session_id') || crypto.randomUUID()) : null;
+          if (!user && sessionId) {
+            localStorage.setItem('guest_session_id', sessionId);
+          }
+
+          // Save try-on results to localStorage for immediate display
+          const TRYON_CACHE_KEY = 'ai_tryon_image_cache';
+          let tryOnCache: Map<string, string>;
+          try {
+            const stored = localStorage.getItem(TRYON_CACHE_KEY);
+            tryOnCache = stored ? new Map<string, string>(JSON.parse(stored)) : new Map();
+          } catch (e) {
+            tryOnCache = new Map();
+          }
+
+          // Save each successful result to database and localStorage
+          for (let idx = 0; idx < currentOutfit.items.length; idx++) {
+            const item = currentOutfit.items[idx];
+            const result = data.results[idx];
+
+            if (result?.success && result?.image && item.image_url) {
+              // Save to localStorage cache
+              tryOnCache.set(item.image_url, result.image);
+
+              // Save to database
+              try {
+                await supabase.from('virtual_tryons').insert({
+                  user_id: user?.id || null,
+                  session_id: sessionId,
+                  product_id: null, // Can be added if outfit items have IDs
+                  product_name: item.name,
+                  product_image_url: item.image_url,
+                  product_category: item.category,
+                  tryon_image_url: result.image
+                });
+              } catch (dbError) {
+                console.error('Failed to save try-on to database:', dbError);
+              }
+            }
+          }
+
+          // Save localStorage cache
+          try {
+            localStorage.setItem(TRYON_CACHE_KEY, JSON.stringify(Array.from(tryOnCache.entries())));
+          } catch (e) {
+            console.error('Failed to save try-on cache:', e);
+          }
+
+          toast.success("Try-on complete and saved!");
+        } else {
+          throw new Error("No successful try-on results");
+        }
+      } else {
+        throw new Error("No results generated");
+      }
+
+    } catch (error: any) {
+      console.error("Virtual try-on error:", error);
+      toast.error(error.message || "Failed to process try-on");
+    } finally {
+      setProcessingTryOn(false);
     }
   };
 
@@ -151,57 +331,6 @@ const OutfitRecommendations = () => {
             ))}
           </div>
 
-          {/* Action Buttons Row - Mobile Optimized */}
-          <div className="flex items-center justify-between py-4 gap-2 border-b border-gray-100">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <button
-                onClick={() => toast.success("Added to favorites!")}
-                className="p-2 active:bg-gray-100 rounded-full transition-colors touch-manipulation"
-                aria-label="Like"
-              >
-                <Heart className="w-5 h-5 sm:w-6 sm:h-6" />
-              </button>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(window.location.href);
-                  toast.success("Link copied!");
-                }}
-                className="p-2 active:bg-gray-100 rounded-full transition-colors touch-manipulation"
-                aria-label="Copy link"
-              >
-                <LinkIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-              </button>
-              <button
-                onClick={() => toast("Thanks for feedback!")}
-                className="p-2 active:bg-gray-100 rounded-full transition-colors touch-manipulation"
-                aria-label="Dislike"
-              >
-                <ThumbsDown className="w-5 h-5 sm:w-6 sm:h-6" />
-              </button>
-              <button
-                onClick={() => {
-                  if (navigator.share) {
-                    navigator.share({ title: currentOutfit.name, url: window.location.href });
-                  } else {
-                    toast("Share feature not available");
-                  }
-                }}
-                className="p-2 active:bg-gray-100 rounded-full transition-colors touch-manipulation"
-                aria-label="Share"
-              >
-                <Share2 className="w-5 h-5 sm:w-6 sm:h-6" />
-              </button>
-            </div>
-
-            {/* Try On Button - Mobile Optimized */}
-            <button
-              onClick={() => navigate('/virtual-tryon', { state: { outfit: currentOutfit } })}
-              className="bg-black text-white px-4 sm:px-6 py-2.5 rounded-full font-normal text-xs sm:text-sm hover:bg-gray-800 active:scale-95 transition-all touch-manipulation whitespace-nowrap"
-            >
-              Try On
-            </button>
-          </div>
-
           {/* Outfit Name & Count */}
           <div className="flex items-center justify-between py-5">
             <h2 className="text-xl sm:text-2xl font-normal">{currentOutfit.name}</h2>
@@ -211,7 +340,7 @@ const OutfitRecommendations = () => {
           </div>
 
           {/* Individual Items Grid - Mobile Optimized */}
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 pb-safe">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
             {currentOutfit.items.map((item, idx) => {
               const affiliateLink = getAffiliateLink(item);
               return (
@@ -256,6 +385,86 @@ const OutfitRecommendations = () => {
               );
             })}
           </div>
+
+          {/* Photo Upload Card - Below Items */}
+          {!tryOnResult && (
+            <div className="mt-6 bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+              <h3 className="text-lg font-normal mb-4">Try On This Outfit</h3>
+              {!userImage ? (
+                <label className="block cursor-pointer">
+                  <div className="aspect-[3/4] border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-black transition-colors bg-gray-50">
+                    <Upload className="w-12 h-12 text-gray-400 mb-3" />
+                    <p className="text-sm font-medium text-gray-700">Upload Your Photo</p>
+                    <p className="text-xs text-gray-500 mt-1">Tap to select from your device</p>
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleUserImageUpload}
+                  />
+                </label>
+              ) : (
+                <div className="space-y-4">
+                  <div className="aspect-[3/4] rounded-lg overflow-hidden bg-gray-100">
+                    <img src={userImage} alt="Your photo" className="w-full h-full object-cover" />
+                  </div>
+                  <button
+                    onClick={handleTryOn}
+                    disabled={processingTryOn}
+                    className="w-full bg-black text-white px-4 py-3 rounded-full font-normal text-sm hover:bg-gray-800 active:scale-95 transition-all touch-manipulation flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {processingTryOn ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Processing Try-On...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        Process Try-On
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setUserImage(null)}
+                    className="w-full text-gray-600 text-sm hover:text-gray-800"
+                  >
+                    Change Photo
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Try-On Result */}
+          {tryOnResult && (
+            <div className="mt-6 bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-4">
+              <h3 className="text-lg font-normal">Your Try-On Result</h3>
+              <div className="aspect-[3/4] rounded-lg overflow-hidden bg-gray-50">
+                <img src={tryOnResult} alt="Try-on result" className="w-full h-full object-cover" />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 sm:gap-3 pt-2">
+                <button
+                  onClick={() => {
+                    toast.success("Items added to cart!");
+                    setTimeout(() => navigate('/cart'), 800);
+                  }}
+                  className="flex-1 bg-black text-white px-4 py-3 rounded-full font-normal text-sm hover:bg-gray-800 active:scale-95 transition-all touch-manipulation"
+                >
+                  Add to Cart
+                </button>
+                <button
+                  onClick={() => navigate('/wardrobe')}
+                  className="flex-1 bg-gray-100 text-black px-4 py-3 rounded-full font-normal text-sm hover:bg-gray-200 active:scale-95 transition-all touch-manipulation"
+                >
+                  Go Back Home
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
