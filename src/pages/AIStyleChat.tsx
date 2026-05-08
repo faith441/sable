@@ -281,12 +281,20 @@ const AIStyleChat = () => {
 
     console.log('All products:', products.map(p => ({ name: p.name, gender: p.gender, category: p.category })));
 
-    // Use ALL products - don't filter by gender
-    // This ensures we always show products no matter what
-    const genderProducts = products;
+    // Filter products by gender - flexible matching
+    const targetGender = gender === 'man' ? 'men' : 'women';
+    const genderProducts = products.filter(p => {
+      if (!p.gender) return false; // Exclude products without gender
+      const pg = p.gender.toLowerCase();
+      return pg === targetGender ||
+             pg === gender ||
+             pg === 'unisex' ||
+             pg.includes(targetGender) ||
+             pg.includes(gender);
+    });
 
-    console.log(`Using all ${genderProducts.length} products`);
-    console.log('Products:', genderProducts);
+    console.log(`Found ${genderProducts.length} ${targetGender}'s products`);
+    console.log('Filtered products:', genderProducts);
 
     // Group products by category type
     const tops = genderProducts.filter(p =>
