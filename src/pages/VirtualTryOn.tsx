@@ -19,11 +19,16 @@ interface OutfitRecommendation {
   style: string;
 }
 
+interface TryOnResult {
+  item: OutfitItem;
+  image: string;
+}
+
 const VirtualTryOn = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [userImage, setUserImage] = useState<string | null>(null);
-  const [result, setResult] = useState<string | null>(null);
+  const [results, setResults] = useState<TryOnResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [outfit, setOutfit] = useState<OutfitRecommendation | null>(null);
   const [selectedItems, setSelectedItems] = useState<OutfitItem[]>([]);
@@ -186,17 +191,25 @@ const VirtualTryOn = () => {
     }
 
     setLoading(true);
+
     try {
-      console.log("=== SENDING TO SUPABASE EDGE FUNCTION ===");
+      console.log("=== PROCESSING PARALLEL TRY-ONS ===");
       console.log("User image length:", userImage?.length);
       console.log("Selected items:", selectedItems.length);
       console.log("Session ID:", getSessionId());
 
-      // Get Supabase configuration
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-
-      // Call Supabase edge function for virtual try-on (no auth required - verify_jwt = false)
       const functionUrl = `${supabaseUrl}/functions/v1/virtual-tryon-idm`;
+
+      // Use new multi-set mode for parallel processing
+      const garmentSets = selectedItems.map((item, idx) => ({
+        label: item.name,
+        garments: [{
+          image_url: item.image_url,
+          name: item.name,
+          category: item.category
+        }]
+      }));
 
       const response = await fetch(functionUrl, {
         method: 'POST',
@@ -205,48 +218,52 @@ const VirtualTryOn = () => {
         },
         body: JSON.stringify({
           userPhoto: userImage,
-          garments: selectedItems.map(item => ({
-            image_url: item.image_url,
-            name: item.name,
-            category: item.category
-          })),
+          garmentSets,
           sessionId: getSessionId()
         })
       });
 
-      console.log("=== EDGE FUNCTION RESPONSE ===");
+      console.log("=== MULTI-SET RESPONSE ===");
       console.log("Status:", response.status);
-      console.log("Content-Type:", response.headers.get('content-type'));
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Error response:", errorText);
-
         if (response.status === 429) {
           throw new Error("Rate limited. Please try again later.");
         } else if (response.status === 402) {
           throw new Error("AI credits exhausted. Please contact support.");
-        } else if (response.status === 400) {
-          throw new Error("Invalid request. Please check your photo and selections.");
+        } else if (response.status === 502) {
+          throw new Error("All try-ons failed. Please try again.");
+        }
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log("Results received:", data.results?.length);
+
+      // Process results
+      const tryOnResults: TryOnResult[] = [];
+      for (const result of data.results || []) {
+        if (result.success && result.image) {
+          // Find corresponding item by index
+          const item = selectedItems[result.index];
+          if (item) {
+            tryOnResults.push({
+              item,
+              image: result.image
+            });
+            console.log(`✓ ${item.name} completed`);
+          }
         } else {
-          throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
+          console.warn(`✗ Set ${result.index} (${result.label}) failed:`, result.error);
         }
       }
 
-      // Response is binary image/png, convert to data URL
-      const imageBlob = await response.blob();
-      console.log("Image blob size:", imageBlob.size, "type:", imageBlob.type);
+      if (tryOnResults.length === 0) {
+        throw new Error("Failed to generate any try-on results");
+      }
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const dataUrl = reader.result as string;
-        setResult(dataUrl);
-        toast.success("Try-on complete!");
-      };
-      reader.onerror = () => {
-        throw new Error("Failed to process result image");
-      };
-      reader.readAsDataURL(imageBlob);
+      setResults(tryOnResults);
+      toast.success(`Generated ${tryOnResults.length} try-on result${tryOnResults.length !== 1 ? 's' : ''}!`);
 
     } catch (error: any) {
       console.error("Virtual try-on error:", error);
@@ -362,7 +379,7 @@ const VirtualTryOn = () => {
         </Card>
 
         {/* Try On Button */}
-        {userImage && outfit && selectedItems.length > 0 && !result && (
+        {userImage && outfit && selectedItems.length > 0 && results.length === 0 && (
           <Button
             variant="luxury"
             size="lg"
@@ -384,37 +401,44 @@ const VirtualTryOn = () => {
           </Button>
         )}
 
-        {/* Result */}
-        {result && (
-          <Card>
-            <CardContent className="p-6">
-              <div className="text-sm font-light mb-3">Result</div>
-              <div className="aspect-[3/4] rounded-lg overflow-hidden">
-                <img src={result} alt="Try-on result" className="w-full h-full object-cover" />
-              </div>
-              <div className="flex gap-2 mt-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => {
-                    setUserImage(null);
-                    setResult(null);
-                  }}
-                >
-                  Try Another
-                </Button>
-                <Button
-                  variant="luxury"
-                  size="sm"
-                  className="flex-1"
-                  onClick={handleAddToCart}
-                >
-                  Add to Cart
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Results */}
+        {results.length > 0 && (
+          <div className="space-y-4">
+            <div className="text-sm font-light">
+              {results.length} Result{results.length !== 1 ? 's' : ''}
+            </div>
+            {results.map((result, idx) => (
+              <Card key={idx}>
+                <CardContent className="p-6">
+                  <div className="text-sm font-light mb-3">{result.item.name}</div>
+                  <div className="aspect-[3/4] rounded-lg overflow-hidden">
+                    <img src={result.image} alt={`${result.item.name} try-on`} className="w-full h-full object-cover" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1"
+                onClick={() => {
+                  setUserImage(null);
+                  setResults([]);
+                }}
+              >
+                Try Another
+              </Button>
+              <Button
+                variant="luxury"
+                size="sm"
+                className="flex-1"
+                onClick={handleAddToCart}
+              >
+                Add to Cart
+              </Button>
+            </div>
+          </div>
         )}
       </div>
     </div>
