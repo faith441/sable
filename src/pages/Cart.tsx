@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ArrowLeft, Trash2, ShoppingBag, Loader2, Plus, Minus } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import MobileNav from "@/components/MobileNav";
 
 interface CartItem {
   id: string;
@@ -301,6 +302,9 @@ const Cart = () => {
           </div>
         )}
       </main>
+
+      {/* Mobile Navigation */}
+      <MobileNav />
     </div>
   );
 };

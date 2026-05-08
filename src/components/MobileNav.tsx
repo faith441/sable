@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Shirt, Sparkles, ShoppingBag, Calendar, MessageCircle } from "lucide-react";
+import { Shirt, Sparkles, ShoppingBag, Calendar, MessageCircle, Store } from "lucide-react";
 
 const MobileNav = () => {
   const navigate = useNavigate();
@@ -11,6 +11,7 @@ const MobileNav = () => {
     { path: "/closet", icon: Shirt, label: "Closet", onClick: () => navigate("/closet") },
     { path: "/outfit-planner", icon: Calendar, label: "Planner", onClick: () => navigate("/outfit-planner") },
     { path: "/wardrobe", icon: Sparkles, label: "Wardrobe", onClick: () => navigate("/wardrobe") },
+    { path: "/shop", icon: Store, label: "Shop", onClick: () => navigate("/shop") },
     { path: "/ai-stylist", icon: MessageCircle, label: "Stylist", onClick: () => navigate("/ai-stylist") },
     { path: "/cart", icon: ShoppingBag, label: "Cart", onClick: () => navigate("/cart") },
   ];
