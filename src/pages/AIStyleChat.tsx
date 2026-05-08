@@ -58,8 +58,9 @@ const AIStyleChat = () => {
       // Check if gender is selected, otherwise show gender selection
       if (!storedGender) {
         // Don't auto-generate, let user select gender first
+        // Show welcome message but DON'T show gender buttons yet
+        // Gender will be asked after user sends their first message
         showWelcomeMessage();
-        setShowGenderSelection(true);
         return;
       }
 
@@ -201,14 +202,22 @@ const AIStyleChat = () => {
 
       console.log('Generated outfits:', outfitsWithWeather.length);
 
+      // Always navigate even if no outfits were generated
+      if (outfitsWithWeather.length === 0) {
+        console.warn('No outfits generated - this may be due to products not loading or gender mismatch');
+        toast.error("No matching products found. Please add more products to your database.");
+      }
+
       // Store outfits - if this fails, still navigate
-      try {
-        await saveOutfitRecommendations(outfitsWithWeather);
-        console.log('✅ Outfits saved successfully');
-      } catch (saveError) {
-        console.warn('Failed to save outfits to Supabase, but continuing:', saveError);
-        // Still store in localStorage as fallback
-        localStorage.setItem('current_outfits', JSON.stringify(outfitsWithWeather));
+      if (outfitsWithWeather.length > 0) {
+        try {
+          await saveOutfitRecommendations(outfitsWithWeather);
+          console.log('✅ Outfits saved successfully');
+        } catch (saveError) {
+          console.warn('Failed to save outfits to Supabase, but continuing:', saveError);
+          // Still store in localStorage as fallback
+          localStorage.setItem('current_outfits', JSON.stringify(outfitsWithWeather));
+        }
       }
 
       console.log('Navigating to outfit recommendations...');
@@ -265,15 +274,27 @@ const AIStyleChat = () => {
     // Return empty if products not loaded yet
     if (!products || products.length === 0) {
       console.log('Products not loaded yet');
+      console.log('Products:', products);
+      console.log('Products loading:', productsLoading);
       return [];
     }
 
-    // Filter products by gender
-    const genderProducts = products.filter(p =>
-      p.gender === (gender === 'man' ? 'men' : 'women') || p.gender === 'unisex'
-    );
+    console.log('All products:', products.map(p => ({ name: p.name, gender: p.gender, category: p.category })));
 
-    console.log(`Found ${genderProducts.length} products for ${gender === 'man' ? 'men' : 'women'}`);
+    // Filter products by gender - more flexible matching
+    const targetGender = gender === 'man' ? 'men' : 'women';
+    const genderProducts = products.filter(p => {
+      if (!p.gender) return true; // Include products without gender
+      const pg = p.gender.toLowerCase();
+      return pg === targetGender ||
+             pg === gender ||
+             pg === 'unisex' ||
+             pg.includes(targetGender) ||
+             pg.includes(gender);
+    });
+
+    console.log(`Found ${genderProducts.length} products for ${targetGender}`);
+    console.log('Filtered products:', genderProducts);
 
     // Group products by category type
     const tops = genderProducts.filter(p =>
