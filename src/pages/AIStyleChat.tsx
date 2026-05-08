@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Send, Sparkles, Loader2, Image as ImageIcon, X, Heart, ShoppingBag, Mic, ShirtIcon, ChevronDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { saveOutfitRecommendations } from "@/utils/outfitStorage";
 
 interface OutfitRecommendation {
   name: string;
@@ -43,7 +44,9 @@ const AIStyleChat = () => {
     checkUser();
     // Don't load old messages - start fresh each time
     // loadMessages();
-    showWelcomeMessage();
+
+    // Check if gender is already stored
+    const storedGender = localStorage.getItem('user_gender');
 
     // Check if we should auto-generate recommendations
     const autoGenerate = localStorage.getItem('auto_generate_recommendations');
@@ -51,15 +54,18 @@ const AIStyleChat = () => {
       localStorage.removeItem('auto_generate_recommendations');
 
       // Check if gender is selected, otherwise show gender selection
-      const storedGender = localStorage.getItem('user_gender');
       if (!storedGender) {
         // Don't auto-generate, let user select gender first
+        showWelcomeMessage();
         setShowGenderSelection(true);
         return;
       }
 
+      // Load the stored gender for auto-generate flow
+      setUserGender(storedGender as 'woman' | 'man');
+
       // Auto-generate recommendations and navigate to full-screen view
-      setTimeout(() => {
+      setTimeout(async () => {
         try {
           // Generate outfits directly with gender
           const outfits = generateMockOutfits("professional work outfits", storedGender as 'woman' | 'man');
@@ -75,8 +81,8 @@ const AIStyleChat = () => {
             }
           }));
 
-          // Store outfits in localStorage
-          localStorage.setItem('outfit_recommendations', JSON.stringify(outfitsWithWeather));
+          // Store outfits in both Supabase and localStorage
+          await saveOutfitRecommendations(outfitsWithWeather);
 
           // Navigate to full-screen outfit recommendations page
           navigate('/outfit-recommendations');
@@ -85,6 +91,12 @@ const AIStyleChat = () => {
           toast.error("Failed to get recommendations");
         }
       }, 1000);
+    } else {
+      // Normal chat flow - always clear stored gender for fresh selection
+      localStorage.removeItem('user_gender');
+      setUserGender(null);
+      showWelcomeMessage();
+      console.log('Normal chat flow - gender cleared, will prompt after first message');
     }
   }, []);
 
@@ -138,15 +150,9 @@ const AIStyleChat = () => {
 
   const showWelcomeMessage = () => {
     const preferences = localStorage.getItem('guest_preferences');
-    const storedGender = localStorage.getItem('user_gender');
     const userName = preferences ? JSON.parse(preferences).name : null;
     const greeting = userName ? `Good morning, ${userName}` : 'Good morning!';
     const welcomeText = `${greeting}\nHow can I style you?`;
-
-    // Load stored gender if available
-    if (storedGender) {
-      setUserGender(storedGender as 'woman' | 'man');
-    }
 
     // Always show the same welcome message
     setTimeout(() => {
@@ -164,6 +170,7 @@ const AIStyleChat = () => {
   };
 
   const handleGenderSelection = async (gender: 'woman' | 'man') => {
+    console.log('=== GENDER SELECTED ===', gender);
     setUserGender(gender);
     localStorage.setItem('user_gender', gender);
     setShowGenderSelection(false);
@@ -173,6 +180,8 @@ const AIStyleChat = () => {
       // Get the user's original message (second to last message before gender prompt)
       const userMessages = messages.filter(m => m.role === 'user');
       const lastUserMessage = userMessages[userMessages.length - 1];
+
+      console.log('Generating outfits for:', lastUserMessage?.content);
 
       // Generate outfits based on user's message and gender
       const outfits = generateMockOutfits(lastUserMessage?.content || "professional style", gender);
@@ -188,16 +197,31 @@ const AIStyleChat = () => {
         }
       }));
 
-      // Store outfits and gender in localStorage
-      localStorage.setItem('outfit_recommendations', JSON.stringify(outfitsWithWeather));
-      localStorage.setItem('user_gender', gender);
+      console.log('Generated outfits:', outfitsWithWeather.length);
 
-      // Navigate immediately to outfit recommendations page
-      navigate('/outfit-recommendations');
+      // Store outfits - if this fails, still navigate
+      try {
+        await saveOutfitRecommendations(outfitsWithWeather);
+        console.log('✅ Outfits saved successfully');
+      } catch (saveError) {
+        console.warn('Failed to save outfits to Supabase, but continuing:', saveError);
+        // Still store in localStorage as fallback
+        localStorage.setItem('current_outfits', JSON.stringify(outfitsWithWeather));
+      }
+
+      console.log('Navigating to outfit recommendations...');
+
+      // Navigate immediately to outfit recommendations page with outfits in state
+      navigate('/outfit-recommendations', {
+        state: { outfits: outfitsWithWeather },
+        replace: true
+      });
+
+      // Reset loading state after navigation
+      setLoading(false);
     } catch (error: any) {
-      console.error("Error:", error);
+      console.error("Error generating outfits:", error);
       toast.error("Failed to generate recommendations");
-    } finally {
       setLoading(false);
     }
   };
@@ -246,9 +270,7 @@ const AIStyleChat = () => {
             { name: "Navy Suit Jacket", category: "Blazer", image_url: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&h=600&fit=crop" },
             { name: "White Dress Shirt", category: "Shirt", image_url: "https://images.unsplash.com/photo-1602810318660-d2c46b45a6a1?w=400&h=600&fit=crop" },
             { name: "Navy Dress Pants", category: "Pants", image_url: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=400&h=600&fit=crop" },
-            { name: "Black Leather Dress Shoes", category: "Shoes", image_url: "https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?w=400&h=600&fit=crop" },
-            { name: "Leather Watch", category: "Accessories", image_url: "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=400&h=600&fit=crop" },
-            { name: "Leather Briefcase", category: "Bag", image_url: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=600&fit=crop" }
+            { name: "Black Leather Dress Shoes", category: "Shoes", image_url: "https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?w=400&h=600&fit=crop" }
           ]
         },
         {
@@ -258,9 +280,7 @@ const AIStyleChat = () => {
             { name: "Charcoal Blazer", category: "Blazer", image_url: "https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?w=400&h=600&fit=crop" },
             { name: "Polo Shirt", category: "Shirt", image_url: "https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?w=400&h=600&fit=crop" },
             { name: "Chinos", category: "Pants", image_url: "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=400&h=600&fit=crop" },
-            { name: "Loafers", category: "Shoes", image_url: "https://images.unsplash.com/photo-1533867617858-e7b97e060509?w=400&h=600&fit=crop" },
-            { name: "Minimalist Watch", category: "Accessories", image_url: "https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=400&h=600&fit=crop" },
-            { name: "Messenger Bag", category: "Bag", image_url: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=600&fit=crop" }
+            { name: "Loafers", category: "Shoes", image_url: "https://images.unsplash.com/photo-1533867617858-e7b97e060509?w=400&h=600&fit=crop" }
           ]
         },
         {
@@ -270,9 +290,7 @@ const AIStyleChat = () => {
             { name: "Denim Jacket", category: "Jacket", image_url: "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=400&h=600&fit=crop" },
             { name: "Henley Shirt", category: "Shirt", image_url: "https://images.unsplash.com/photo-1562157873-818bc0726f68?w=400&h=600&fit=crop" },
             { name: "Dark Jeans", category: "Jeans", image_url: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&h=600&fit=crop" },
-            { name: "Sneakers", category: "Shoes", image_url: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=600&fit=crop" },
-            { name: "Sunglasses", category: "Accessories", image_url: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&h=600&fit=crop" },
-            { name: "Backpack", category: "Bag", image_url: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=600&fit=crop" }
+            { name: "Sneakers", category: "Shoes", image_url: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=600&fit=crop" }
           ]
         }
       ];
@@ -287,9 +305,7 @@ const AIStyleChat = () => {
           { name: "Classic Black Blazer", category: "Blazer", image_url: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400&h=600&fit=crop" },
           { name: "Brown Cashmere Sweater", category: "Sweater", image_url: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400&h=600&fit=crop" },
           { name: "Olive Wide-Leg Trousers", category: "Pants", image_url: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&h=600&fit=crop" },
-          { name: "Black Heeled Pumps", category: "Shoes", image_url: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400&h=600&fit=crop" },
-          { name: "Sunglasses", category: "Accessories", image_url: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&h=600&fit=crop" },
-          { name: "Structured Handbag", category: "Bag", image_url: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&h=600&fit=crop" }
+          { name: "Black Heeled Pumps", category: "Shoes", image_url: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400&h=600&fit=crop" }
         ]
       },
       {
@@ -299,9 +315,7 @@ const AIStyleChat = () => {
           { name: "Navy Tailored Blazer", category: "Blazer", image_url: "https://images.unsplash.com/photo-1594938291221-94f18cbb5660?w=400&h=600&fit=crop" },
           { name: "White Silk Blouse", category: "Top", image_url: "https://images.unsplash.com/photo-1618932260643-eee4a2f652a6?w=400&h=600&fit=crop" },
           { name: "Black Pencil Skirt", category: "Skirt", image_url: "https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?w=400&h=600&fit=crop" },
-          { name: "Nude Pointed Heels", category: "Shoes", image_url: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400&h=600&fit=crop" },
-          { name: "Gold Watch", category: "Accessories", image_url: "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=400&h=600&fit=crop" },
-          { name: "Leather Tote", category: "Bag", image_url: "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=400&h=600&fit=crop" }
+          { name: "Nude Pointed Heels", category: "Shoes", image_url: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400&h=600&fit=crop" }
         ]
       },
       {
@@ -311,16 +325,22 @@ const AIStyleChat = () => {
           { name: "Camel Trench Coat", category: "Coat", image_url: "https://images.unsplash.com/photo-1539533113208-f6df8cc8b543?w=400&h=600&fit=crop" },
           { name: "Striped Button-Down", category: "Top", image_url: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400&h=600&fit=crop" },
           { name: "Dark Wash Jeans", category: "Jeans", image_url: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&h=600&fit=crop" },
-          { name: "Loafers", category: "Shoes", image_url: "https://images.unsplash.com/photo-1533867617858-e7b97e060509?w=400&h=600&fit=crop" },
-          { name: "Minimalist Watch", category: "Accessories", image_url: "https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=400&h=600&fit=crop" },
-          { name: "Canvas Tote", category: "Bag", image_url: "https://images.unsplash.com/photo-1564422170194-896b89110ef8?w=400&h=600&fit=crop" }
+          { name: "Loafers", category: "Shoes", image_url: "https://images.unsplash.com/photo-1533867617858-e7b97e060509?w=400&h=600&fit=crop" }
         ]
       }
     ];
   };
 
   const sendMessage = async () => {
-    if ((!input.trim() && uploadedImages.length === 0) || loading) return;
+    console.log('=== SEND MESSAGE CALLED ===');
+    console.log('Input:', input);
+    console.log('User Gender:', userGender);
+    console.log('Loading:', loading);
+
+    if ((!input.trim() && uploadedImages.length === 0) || loading) {
+      console.log('Returning early - empty input or loading');
+      return;
+    }
 
     const userMessage: Message = {
       id: crypto.randomUUID(),
@@ -329,6 +349,7 @@ const AIStyleChat = () => {
       images: uploadedImages.length > 0 ? [...uploadedImages] : undefined
     };
 
+    console.log('Adding user message to chat');
     setMessages(prev => [...prev, userMessage]);
     setInput("");
     const imagesToSend = [...uploadedImages];
@@ -336,6 +357,7 @@ const AIStyleChat = () => {
 
     // Check if gender is selected after adding user message
     if (!userGender) {
+      console.log('No gender selected - showing gender prompt');
       // Show gender selection after user's message
       const genderPrompt: Message = {
         id: crypto.randomUUID(),
@@ -344,8 +366,11 @@ const AIStyleChat = () => {
       };
       setMessages(prev => [...prev, genderPrompt]);
       setShowGenderSelection(true);
+      console.log('Gender selection should now be visible');
       return;
     }
+
+    console.log('Gender already selected - generating outfits');
 
     setLoading(true);
 
@@ -375,8 +400,8 @@ const AIStyleChat = () => {
         }
       }));
 
-      // Store outfits and gender in localStorage
-      localStorage.setItem('outfit_recommendations', JSON.stringify(outfitsWithWeather));
+      // Store outfits and gender in both Supabase and localStorage
+      await saveOutfitRecommendations(outfitsWithWeather);
       localStorage.setItem('user_gender', userGender);
 
       // Navigate immediately to outfit recommendations page (no chat reply)
@@ -646,7 +671,12 @@ const AIStyleChat = () => {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  sendMessage();
+                }
+              }}
               placeholder="I want to look professional and sty"
               className="flex-1 bg-transparent border-none outline-none text-base placeholder:text-gray-400"
               disabled={loading}

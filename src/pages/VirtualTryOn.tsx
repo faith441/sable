@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { ArrowLeft, Upload, Loader2, Sparkles, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { getSessionId } from "@/utils/outfitStorage";
 
 interface OutfitItem {
   name: string;
@@ -20,28 +21,22 @@ interface OutfitRecommendation {
 
 const VirtualTryOn = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [userImage, setUserImage] = useState<string | null>(null);
   const [result, setResult] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [outfit, setOutfit] = useState<OutfitRecommendation | null>(null);
   const [selectedItems, setSelectedItems] = useState<OutfitItem[]>([]);
 
+  // Load outfit from navigation state if provided
   useEffect(() => {
-    // Load outfit from localStorage if coming from AI chat
-    const savedOutfit = localStorage.getItem('virtual-tryon-outfit');
-    if (savedOutfit) {
-      try {
-        const outfitData = JSON.parse(savedOutfit);
-        setOutfit(outfitData);
-        // Select all items by default
-        setSelectedItems(outfitData.items || []);
-        // Clear from localStorage
-        localStorage.removeItem('virtual-tryon-outfit');
-      } catch (error) {
-        console.error('Error loading outfit:', error);
-      }
+    const stateOutfit = location.state?.outfit;
+    if (stateOutfit) {
+      setOutfit(stateOutfit);
+      // Auto-select all items from the outfit
+      setSelectedItems(stateOutfit.items || []);
     }
-  }, []);
+  }, [location]);
 
   const toggleItemSelection = (item: OutfitItem) => {
     setSelectedItems(prev => {
@@ -54,14 +49,128 @@ const VirtualTryOn = () => {
     });
   };
 
-  const handleUserImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const resizeImage = (file: File, maxWidth: number, maxHeight: number): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          // Calculate new dimensions while maintaining aspect ratio
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxWidth) {
+              height = (height * maxWidth) / width;
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width = (width * maxHeight) / height;
+              height = maxHeight;
+            }
+          }
+
+          // Create canvas and resize
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+
+          // Convert to base64 with compression
+          const resizedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+          resolve(resizedBase64);
+        };
+        img.onerror = reject;
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleUserImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setUserImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        toast.loading("Optimizing image...");
+        // Resize to max 768x1024 to reduce payload size
+        const resizedImage = await resizeImage(file, 768, 1024);
+        setUserImage(resizedImage);
+        toast.dismiss();
+        toast.success("Image uploaded!");
+      } catch (error) {
+        console.error("Error resizing image:", error);
+        toast.error("Failed to process image");
+      }
+    }
+  };
+
+  const handleAddToCart = async () => {
+    if (!outfit || selectedItems.length === 0) {
+      toast.error("No items to add to cart");
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const sessionId = localStorage.getItem('guest_session_id') || crypto.randomUUID();
+
+      if (!user) {
+        localStorage.setItem('guest_session_id', sessionId);
+      }
+
+      // Add each selected item to cart
+      for (const item of selectedItems) {
+        // Create a temporary product ID based on the item name
+        const productId = `virtual-tryon-${item.name.toLowerCase().replace(/\s+/g, '-')}`;
+
+        // Check if item already exists in cart
+        const query = supabase
+          .from("cart_items")
+          .select("id, quantity")
+          .eq("product_id", productId);
+
+        if (user) {
+          query.eq("user_id", user.id);
+        } else {
+          query.eq("session_id", sessionId);
+        }
+
+        const { data: existing } = await query.maybeSingle();
+
+        if (existing) {
+          // Update quantity if item exists
+          await supabase
+            .from("cart_items")
+            .update({ quantity: existing.quantity + 1 })
+            .eq("id", existing.id);
+        } else {
+          // Insert new item
+          await supabase.from("cart_items").insert({
+            user_id: user?.id || null,
+            session_id: user ? null : sessionId,
+            product_id: productId,
+            quantity: 1,
+            product_data: {
+              id: productId,
+              name: item.name,
+              price: 0, // Virtual try-on items don't have prices yet
+              image_url: item.image_url || '',
+              brand: { name: 'Sable' },
+            },
+          });
+        }
+      }
+
+      toast.success(`${selectedItems.length} item${selectedItems.length !== 1 ? 's' : ''} added to cart!`);
+
+      // Redirect to cart after a brief delay
+      setTimeout(() => navigate("/cart"), 800);
+    } catch (error: any) {
+      console.error("Error adding to cart:", error);
+      toast.error("Failed to add items to cart");
     }
   };
 
@@ -78,44 +187,70 @@ const VirtualTryOn = () => {
 
     setLoading(true);
     try {
-      console.log("=== VIRTUAL TRY-ON REQUEST ===");
-      console.log("Sending user image length:", userImage?.length);
-      console.log("Sending garment URL:", selectedItems[0]?.image_url);
+      console.log("=== SENDING TO SUPABASE EDGE FUNCTION ===");
+      console.log("User image length:", userImage?.length);
+      console.log("Selected items:", selectedItems.length);
+      console.log("Session ID:", getSessionId());
 
-      const { data, error } = await supabase.functions.invoke("virtual-tryon", {
-        body: {
-          userImage,
-          garmentImage: selectedItems[0]?.image_url,
-          outfit: selectedItems.map(item => ({
+      // Get Supabase configuration
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+
+      // Call Supabase edge function for virtual try-on (no auth required - verify_jwt = false)
+      const functionUrl = `${supabaseUrl}/functions/v1/virtual-tryon-idm`;
+
+      const response = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userPhoto: userImage,
+          garments: selectedItems.map(item => ({
+            image_url: item.image_url,
             name: item.name,
-            category: item.category,
-            image_url: item.image_url
+            category: item.category
           })),
-          viewType: "fullBody",
-          userGender: "Women's"
-        }
+          sessionId: getSessionId()
+        })
       });
 
-      console.log("=== VIRTUAL TRY-ON RESPONSE ===");
-      console.log("Error:", error);
-      console.log("Data:", data);
-      console.log("Result type:", typeof data?.result);
-      console.log("Result preview:", data?.result?.substring(0, 100));
+      console.log("=== EDGE FUNCTION RESPONSE ===");
+      console.log("Status:", response.status);
+      console.log("Content-Type:", response.headers.get('content-type'));
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
 
-      if (data.result) {
-        setResult(data.result);
-        toast.success("Try-on complete!");
-      } else {
-        console.error("No result in response data:", data);
-        toast.error("Could not generate try-on image. Please try again.");
+        if (response.status === 429) {
+          throw new Error("Rate limited. Please try again later.");
+        } else if (response.status === 402) {
+          throw new Error("AI credits exhausted. Please contact support.");
+        } else if (response.status === 400) {
+          throw new Error("Invalid request. Please check your photo and selections.");
+        } else {
+          throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
+        }
       }
+
+      // Response is binary image/png, convert to data URL
+      const imageBlob = await response.blob();
+      console.log("Image blob size:", imageBlob.size, "type:", imageBlob.type);
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const dataUrl = reader.result as string;
+        setResult(dataUrl);
+        toast.success("Try-on complete!");
+      };
+      reader.onerror = () => {
+        throw new Error("Failed to process result image");
+      };
+      reader.readAsDataURL(imageBlob);
+
     } catch (error: any) {
-      console.error("Error:", error);
-      toast.error(error.message || "Failed to process try-on. This is a preview feature.");
-      // For demo purposes, show a mock result
-      setResult(userImage); // In production, this would be the AI-generated result
+      console.error("Virtual try-on error:", error);
+      toast.error(error.message || "Failed to process try-on");
     } finally {
       setLoading(false);
     }
@@ -269,7 +404,12 @@ const VirtualTryOn = () => {
                 >
                   Try Another
                 </Button>
-                <Button variant="luxury" size="sm" className="flex-1">
+                <Button
+                  variant="luxury"
+                  size="sm"
+                  className="flex-1"
+                  onClick={handleAddToCart}
+                >
                   Add to Cart
                 </Button>
               </div>
