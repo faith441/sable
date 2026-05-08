@@ -204,8 +204,8 @@ const AIStyleChat = () => {
 
       // Always navigate even if no outfits were generated
       if (outfitsWithWeather.length === 0) {
-        console.warn('No outfits generated - this may be due to products not loading or gender mismatch');
-        toast.error("No matching products found. Please add more products to your database.");
+        console.warn('No outfits generated - products may not be loaded yet');
+        toast.error("No products found. Please make sure products are added to your database.");
       }
 
       // Store outfits - if this fails, still navigate
@@ -281,20 +281,12 @@ const AIStyleChat = () => {
 
     console.log('All products:', products.map(p => ({ name: p.name, gender: p.gender, category: p.category })));
 
-    // Filter products by gender - more flexible matching
-    const targetGender = gender === 'man' ? 'men' : 'women';
-    const genderProducts = products.filter(p => {
-      if (!p.gender) return true; // Include products without gender
-      const pg = p.gender.toLowerCase();
-      return pg === targetGender ||
-             pg === gender ||
-             pg === 'unisex' ||
-             pg.includes(targetGender) ||
-             pg.includes(gender);
-    });
+    // Use ALL products - don't filter by gender
+    // This ensures we always show products no matter what
+    const genderProducts = products;
 
-    console.log(`Found ${genderProducts.length} products for ${targetGender}`);
-    console.log('Filtered products:', genderProducts);
+    console.log(`Using all ${genderProducts.length} products`);
+    console.log('Products:', genderProducts);
 
     // Group products by category type
     const tops = genderProducts.filter(p =>
@@ -326,98 +318,57 @@ const AIStyleChat = () => {
 
     const outfits: OutfitRecommendation[] = [];
 
-    // Create outfit combinations from available products
+    // Create multiple style sections from available products
+    // This ensures products always show, organized by different styles
     if (genderProducts.length > 0) {
-      // Outfit 1: If we have tops and bottoms
-      if (tops.length > 0 && bottoms.length > 0) {
-        const outfit1Items = [
-          {
-            name: tops[0].name,
-            category: tops[0].category,
-            image_url: tops[0].image_url
-          },
-          {
-            name: bottoms[0].name,
-            category: bottoms[0].category,
-            image_url: bottoms[0].image_url
+      // Create different style outfits from all available products
+      const styles = [
+        { name: "Casual Style", style: "casual" },
+        { name: "Professional Look", style: "professional" },
+        { name: "Street Style", style: "streetwear" }
+      ];
+
+      // For each style, create an outfit with available products
+      styles.forEach((styleInfo, idx) => {
+        // Get a different subset of products for each style
+        const startIdx = idx;
+        const styleProducts = [];
+
+        // Add products in this order: bottoms, tops, outerwear, shoes, accessories
+        const productOrder = [bottoms, tops, outerwear, shoes, accessories];
+
+        productOrder.forEach(category => {
+          if (category.length > 0) {
+            const productIdx = startIdx % category.length;
+            styleProducts.push({
+              name: category[productIdx].name,
+              category: category[productIdx].category,
+              image_url: category[productIdx].image_url
+            });
           }
-        ];
+        });
 
-        // Add shoes if available
-        if (shoes.length > 0) {
-          outfit1Items.push({
-            name: shoes[0].name,
-            category: shoes[0].category,
-            image_url: shoes[0].image_url
+        // If we still don't have products, use any available
+        if (styleProducts.length === 0) {
+          const allAvailable = genderProducts.slice(startIdx, startIdx + 3);
+          allAvailable.forEach(p => {
+            styleProducts.push({
+              name: p.name,
+              category: p.category,
+              image_url: p.image_url
+            });
           });
         }
 
-        // Add accessories if available
-        if (accessories.length > 0) {
-          outfit1Items.push({
-            name: accessories[0].name,
-            category: accessories[0].category,
-            image_url: accessories[0].image_url
+        // Only create outfit if we have at least one product
+        if (styleProducts.length > 0) {
+          outfits.push({
+            name: styleInfo.name,
+            style: styleInfo.style,
+            items: styleProducts
           });
         }
-
-        outfits.push({
-          name: "Casual Chic",
-          style: "casual",
-          items: outfit1Items
-        });
-      }
-
-      // Outfit 2: With outerwear if available
-      if (outerwear.length > 0 && tops.length > 0 && bottoms.length > 0) {
-        const outfit2Items = [
-          {
-            name: outerwear[0].name,
-            category: outerwear[0].category,
-            image_url: outerwear[0].image_url
-          },
-          {
-            name: tops[0].name,
-            category: tops[0].category,
-            image_url: tops[0].image_url
-          },
-          {
-            name: bottoms[0].name,
-            category: bottoms[0].category,
-            image_url: bottoms[0].image_url
-          }
-        ];
-
-        if (shoes.length > 0) {
-          outfit2Items.push({
-            name: shoes[0].name,
-            category: shoes[0].category,
-            image_url: shoes[0].image_url
-          });
-        }
-
-        outfits.push({
-          name: "Professional Style",
-          style: "professional",
-          items: outfit2Items
-        });
-      }
-
-      // Fallback: Create a simple outfit from any available products
-      if (outfits.length === 0) {
-        console.warn('Creating basic outfit from available products');
-        const availableItems = genderProducts.slice(0, 3).map(p => ({
-          name: p.name,
-          category: p.category,
-          image_url: p.image_url
-        }));
-
-        outfits.push({
-          name: "Curated Selection",
-          style: "casual",
-          items: availableItems
-        });
-      }
+      });
     }
 
     console.log(`Created ${outfits.length} outfits from ${genderProducts.length} products`);
