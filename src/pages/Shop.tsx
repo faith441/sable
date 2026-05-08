@@ -14,57 +14,37 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { shoppingAPI, Product, SearchFilters } from '@/integrations/shopping-api';
 import MobileNav from '@/components/MobileNav';
 import ProfileMenu from '@/components/ProfileMenu';
 import ProfileSheet from '@/components/ProfileSheet';
+import { useProducts } from '@/hooks/useProducts';
 
 export default function Shop() {
   const navigate = useNavigate();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { products: allProducts, loading: productsLoading } = useProducts();
   const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState<SearchFilters>({});
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [profileOpen, setProfileOpen] = useState(false);
 
-  // Load products on mount and when filters change
-  useEffect(() => {
-    loadProducts();
-  }, [selectedCategory, filters]);
+  // Filter products based on search and category
+  const filteredProducts = allProducts.filter(product => {
+    const matchesSearch = !searchQuery ||
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.category.toLowerCase().includes(searchQuery.toLowerCase());
 
-  const loadProducts = async () => {
-    setLoading(true);
-    try {
-      let products: Product[] = [];
+    const matchesCategory = selectedCategory === 'all' ||
+      product.category.toLowerCase().includes(selectedCategory.toLowerCase()) ||
+      product.gender?.toLowerCase().includes(selectedCategory.toLowerCase());
 
-      if (searchQuery) {
-        products = await shoppingAPI.searchProducts(searchQuery, filters, 50);
-      } else if (selectedCategory && selectedCategory !== 'all') {
-        products = await shoppingAPI.getTrendingProducts(selectedCategory, 50);
-      } else {
-        products = await shoppingAPI.getTrendingProducts(undefined, 50);
-      }
-
-      setProducts(products);
-    } catch (error) {
-      console.error('Error loading products:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load products. Please try again.',
-        variant: 'destructive'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+    return matchesSearch && matchesCategory;
+  });
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    loadProducts();
+    // Search is handled by filteredProducts
   };
 
-  const handleAddToCloset = async (product: Product) => {
+  const handleAddToCloset = async (product: any) => {
     // TODO: Implement add to closet functionality
     toast({
       title: 'Added to Closet!',
@@ -72,9 +52,9 @@ export default function Shop() {
     });
   };
 
-  const handleBuyNow = (product: Product) => {
+  const handleBuyNow = (product: any) => {
     // Open affiliate link in new tab
-    window.open(product.affiliateUrl || product.url, '_blank');
+    window.open(product.affiliate_link, '_blank');
 
     // Track affiliate click
     // TODO: Implement analytics tracking
@@ -177,7 +157,7 @@ export default function Shop() {
         </div>
 
         {/* Products Grid */}
-        {loading ? (
+        {productsLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {[...Array(8)].map((_, i) => (
               <Card key={i} className="animate-pulse">
@@ -189,25 +169,20 @@ export default function Shop() {
               </Card>
             ))}
           </div>
-        ) : products.length === 0 ? (
+        ) : filteredProducts.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-gray-500 text-lg">No products found. Try a different search.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product) => (
+            {filteredProducts.map((product) => (
               <Card key={product.id} className="group hover:shadow-xl transition-shadow duration-300">
                 <div className="aspect-[3/4] overflow-hidden rounded-t-lg bg-gray-100 relative">
                   <img
-                    src={product.image}
+                    src={product.image_url}
                     alt={product.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  {product.originalPrice && product.originalPrice > product.price && (
-                    <Badge className="absolute top-2 right-2 bg-red-500">
-                      -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
-                    </Badge>
-                  )}
                   <Button
                     size="icon"
                     variant="secondary"
@@ -220,7 +195,7 @@ export default function Shop() {
 
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start mb-1">
-                    <span className="text-xs text-gray-500 uppercase tracking-wide">{product.brand}</span>
+                    <span className="text-xs text-gray-500 uppercase tracking-wide">{product.brand || 'Brand'}</span>
                     <Button
                       size="icon"
                       variant="ghost"
@@ -231,18 +206,10 @@ export default function Shop() {
                   </div>
                   <h3 className="font-semibold text-sm mb-2 line-clamp-2">{product.name}</h3>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-lg font-bold">${product.price}</span>
-                    {product.originalPrice && product.originalPrice > product.price && (
-                      <span className="text-sm text-gray-400 line-through">${product.originalPrice}</span>
-                    )}
+                    <span className="text-lg font-bold">{product.currency} {product.price}</span>
                   </div>
-                  {product.rating && (
-                    <div className="flex items-center gap-1 mt-2 text-sm text-gray-500">
-                      <span>⭐ {product.rating.toFixed(1)}</span>
-                      <span>({product.reviewCount})</span>
-                    </div>
-                  )}
                   <p className="text-xs text-gray-500 mt-1">{product.retailer}</p>
+                  <p className="text-xs text-gray-400 mt-1">{product.category}</p>
                 </CardContent>
 
                 <CardFooter className="p-4 pt-0 flex gap-2">
