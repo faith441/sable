@@ -61,7 +61,6 @@ const BrandAuth = () => {
         return;
       }
 
-      toast.success("Welcome back!");
       navigate("/brand");
     } catch (error: any) {
       console.error("Login error:", error);

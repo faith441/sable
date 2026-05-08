@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Search, Filter, Heart, ShoppingCart, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Filter, Heart, ShoppingCart, Plus, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -14,13 +15,18 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { shoppingAPI, Product, SearchFilters } from '@/integrations/shopping-api';
+import MobileNav from '@/components/MobileNav';
+import ProfileMenu from '@/components/ProfileMenu';
+import ProfileSheet from '@/components/ProfileSheet';
 
 export default function Shop() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<SearchFilters>({});
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [profileOpen, setProfileOpen] = useState(false);
 
   // Load products on mount and when filters change
   useEffect(() => {
@@ -75,19 +81,30 @@ export default function Shop() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pb-20">
       {/* Header */}
       <header className="bg-white border-b sticky top-0 z-10 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-3xl font-bold text-gray-900">Shop Fashion</h1>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate(-1)}
+                className="shrink-0"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <h1 className="text-2xl font-bold text-gray-900">Shop Fashion</h1>
+            </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="icon">
+              <Button variant="outline" size="icon" onClick={() => navigate('/favorites')}>
                 <Heart className="w-5 h-5" />
               </Button>
-              <Button variant="outline" size="icon">
+              <Button variant="outline" size="icon" onClick={() => navigate('/cart')}>
                 <ShoppingCart className="w-5 h-5" />
               </Button>
+              <ProfileMenu onProfileClick={() => setProfileOpen(true)} />
             </div>
           </div>
 
@@ -248,6 +265,12 @@ export default function Shop() {
           </div>
         )}
       </div>
+
+      {/* Mobile Navigation */}
+      <MobileNav />
+
+      {/* Profile Sheet */}
+      <ProfileSheet open={profileOpen} onOpenChange={setProfileOpen} />
     </div>
   );
 }

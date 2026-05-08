@@ -71,7 +71,6 @@ const Auth = () => {
 
         if (data.session) {
           console.log('Login successful, session created:', data.session.user.id);
-          toast.success("Welcome back!");
           // Navigation will be handled by the auth state change listener
         }
       } else {

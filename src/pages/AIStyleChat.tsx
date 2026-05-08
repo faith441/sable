@@ -8,7 +8,7 @@ import { ArrowLeft, Send, Sparkles, Loader2, Image as ImageIcon, X, Heart, Shopp
 import { Card, CardContent } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { saveOutfitRecommendations } from "@/utils/outfitStorage";
-import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
+import { useProducts } from "@/hooks/useProducts";
 
 interface OutfitRecommendation {
   name: string;
@@ -30,7 +30,7 @@ interface Message {
 
 const AIStyleChat = () => {
   const navigate = useNavigate();
-  const { links: affiliateLinks, loading: affiliateLoading } = useAffiliateLinks();
+  const { products, loading: productsLoading } = useProducts();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -262,191 +262,144 @@ const AIStyleChat = () => {
   };
 
   const generateMockOutfits = (query: string, gender: 'woman' | 'man'): OutfitRecommendation[] => {
-    // Return empty if affiliate links not loaded yet
-    if (!affiliateLinks || affiliateLinks.length === 0) {
-      console.log('Affiliate links not loaded yet');
+    // Return empty if products not loaded yet
+    if (!products || products.length === 0) {
+      console.log('Products not loaded yet');
       return [];
     }
 
-    // Helper function to get placeholder image for category
-    const getPlaceholderImage = (category: string, gender: string): string => {
-      if (gender === 'man') {
-        if (category.includes('Suits') || category.includes('Suit')) return "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&h=600&fit=crop";
-        if (category.includes('Shirts') || category.includes('Shirt')) return "https://images.unsplash.com/photo-1602810318660-d2c46b45a6a1?w=400&h=600&fit=crop";
-        if (category.includes('Pants')) return "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=400&h=600&fit=crop";
-        if (category.includes('Shoes')) return "https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?w=400&h=600&fit=crop";
-        if (category.includes('Accessories')) return "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=600&fit=crop";
-        if (category.includes('Outerwear')) return "https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?w=400&h=600&fit=crop";
-      } else {
-        if (category.includes('Outerwear') || category.includes('Blazer')) return "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400&h=600&fit=crop";
-        if (category.includes('Tops') || category.includes('Blouse')) return "https://images.unsplash.com/photo-1618932260643-eee4a2f652a6?w=400&h=600&fit=crop";
-        if (category.includes('Skirts') || category.includes('Skirt')) return "https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?w=400&h=600&fit=crop";
-        if (category.includes('Pants')) return "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&h=600&fit=crop";
-        if (category.includes('Shoes')) return "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400&h=600&fit=crop";
-        if (category.includes('Accessories')) return "https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?w=400&h=600&fit=crop";
-      }
-      return "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=400&h=600&fit=crop"; // Generic fashion
-    };
-
     // Filter products by gender
-    const genderPrefix = gender === 'man' ? "Men's" : "Women's";
-    const genderProducts = affiliateLinks.filter(link =>
-      link.category.startsWith(genderPrefix)
+    const genderProducts = products.filter(p =>
+      p.gender === (gender === 'man' ? 'men' : 'women') || p.gender === 'unisex'
     );
 
-    console.log(`Found ${genderProducts.length} products for ${genderPrefix}`);
+    console.log(`Found ${genderProducts.length} products for ${gender === 'man' ? 'men' : 'women'}`);
 
     // Group products by category type
-    const suits = genderProducts.filter(p => p.category.includes('Suits'));
-    const outerwear = genderProducts.filter(p => p.category.includes('Outerwear'));
-    const shirts = genderProducts.filter(p => p.category.includes('Shirts') || p.category.includes('Tops'));
-    const pants = genderProducts.filter(p => p.category.includes('Pants'));
-    const skirts = genderProducts.filter(p => p.category.includes('Skirts'));
-    const shoes = genderProducts.filter(p => p.category.includes('Shoes'));
-    const accessories = genderProducts.filter(p => p.category.includes('Accessories'));
+    const tops = genderProducts.filter(p =>
+      p.category.toLowerCase().includes('top') ||
+      p.category.toLowerCase().includes('shirt') ||
+      p.category.toLowerCase().includes('blouse')
+    );
+    const bottoms = genderProducts.filter(p =>
+      p.category.toLowerCase().includes('pants') ||
+      p.category.toLowerCase().includes('jeans') ||
+      p.category.toLowerCase().includes('skirt') ||
+      p.category.toLowerCase().includes('trouser')
+    );
+    const outerwear = genderProducts.filter(p =>
+      p.category.toLowerCase().includes('jacket') ||
+      p.category.toLowerCase().includes('blazer') ||
+      p.category.toLowerCase().includes('coat')
+    );
+    const shoes = genderProducts.filter(p =>
+      p.category.toLowerCase().includes('shoe') ||
+      p.category.toLowerCase().includes('boot') ||
+      p.category.toLowerCase().includes('sneaker')
+    );
+    const accessories = genderProducts.filter(p =>
+      p.category.toLowerCase().includes('accessories') ||
+      p.category.toLowerCase().includes('bag') ||
+      p.category.toLowerCase().includes('jewelry')
+    );
 
     const outfits: OutfitRecommendation[] = [];
 
-    // Create outfit 1: Professional/Business (Suit-based or Outerwear-based)
-    if (gender === 'man') {
-      if (suits.length > 0 && shirts.length > 0 && shoes.length > 0) {
-        outfits.push({
-          name: "Business Professional",
-          style: "professional",
-          items: [
-            {
-              name: suits[0].product_name,
-              category: "Suit",
-              image_url: getPlaceholderImage(suits[0].category, gender)
-            },
-            {
-              name: shirts[0].product_name,
-              category: "Shirt",
-              image_url: getPlaceholderImage(shirts[0].category, gender)
-            },
-            {
-              name: shoes[0].product_name,
-              category: "Shoes",
-              image_url: getPlaceholderImage(shoes[0].category, gender)
-            },
-            ...(accessories.length > 0 ? [{
-              name: accessories[0].product_name,
-              category: "Accessories",
-              image_url: getPlaceholderImage(accessories[0].category, gender)
-            }] : [])
-          ]
-        });
-      }
+    // Create outfit combinations from available products
+    if (genderProducts.length > 0) {
+      // Outfit 1: If we have tops and bottoms
+      if (tops.length > 0 && bottoms.length > 0) {
+        const outfit1Items = [
+          {
+            name: tops[0].name,
+            category: tops[0].category,
+            image_url: tops[0].image_url
+          },
+          {
+            name: bottoms[0].name,
+            category: bottoms[0].category,
+            image_url: bottoms[0].image_url
+          }
+        ];
 
-      // Create outfit 2: Smart Casual
-      if (shirts.length > 0 && pants.length > 0 && shoes.length > 0) {
-        outfits.push({
-          name: "Smart Casual",
-          style: "casual",
-          items: [
-            {
-              name: shirts[0].product_name,
-              category: "Shirt",
-              image_url: getPlaceholderImage(shirts[0].category, gender)
-            },
-            {
-              name: pants[0].product_name,
-              category: "Pants",
-              image_url: getPlaceholderImage(pants[0].category, gender)
-            },
-            {
-              name: shoes[0].product_name,
-              category: "Shoes",
-              image_url: getPlaceholderImage(shoes[0].category, gender)
-            }
-          ]
-        });
-      }
-    } else {
-      // Women's outfits
-      if (outerwear.length > 0 && shirts.length > 0 && (pants.length > 0 || skirts.length > 0) && shoes.length > 0) {
-        outfits.push({
-          name: "Business Chic",
-          style: "professional",
-          items: [
-            {
-              name: outerwear[0].product_name,
-              category: "Blazer",
-              image_url: getPlaceholderImage(outerwear[0].category, gender)
-            },
-            {
-              name: shirts[0].product_name,
-              category: "Top",
-              image_url: getPlaceholderImage(shirts[0].category, gender)
-            },
-            {
-              name: skirts.length > 0 ? skirts[0].product_name : pants[0].product_name,
-              category: skirts.length > 0 ? "Skirt" : "Pants",
-              image_url: skirts.length > 0 ? getPlaceholderImage(skirts[0].category, gender) : getPlaceholderImage(pants[0].category, gender)
-            },
-            {
-              name: shoes[0].product_name,
-              category: "Shoes",
-              image_url: getPlaceholderImage(shoes[0].category, gender)
-            }
-          ]
-        });
-      }
+        // Add shoes if available
+        if (shoes.length > 0) {
+          outfit1Items.push({
+            name: shoes[0].name,
+            category: shoes[0].category,
+            image_url: shoes[0].image_url
+          });
+        }
 
-      // Create outfit 2: Office Comfort
-      if (shirts.length > 0 && pants.length > 0 && shoes.length > 0) {
-        outfits.push({
-          name: "Office Comfort",
-          style: "professional-casual",
-          items: [
-            {
-              name: shirts[0].product_name,
-              category: "Top",
-              image_url: getPlaceholderImage(shirts[0].category, gender)
-            },
-            {
-              name: pants[0].product_name,
-              category: "Pants",
-              image_url: getPlaceholderImage(pants[0].category, gender)
-            },
-            {
-              name: shoes[0].product_name,
-              category: "Shoes",
-              image_url: getPlaceholderImage(shoes[0].category, gender)
-            },
-            ...(accessories.length > 0 ? [{
-              name: accessories[0].product_name,
-              category: "Accessories",
-              image_url: getPlaceholderImage(accessories[0].category, gender)
-            }] : [])
-          ]
-        });
-      }
-    }
-
-    // If no outfits could be created, return fallback
-    if (outfits.length === 0) {
-      console.warn('Could not create outfits from available products');
-      // Create basic outfit from whatever products are available
-      const availableItems = [];
-      if (genderProducts.length > 0) {
-        for (let i = 0; i < Math.min(4, genderProducts.length); i++) {
-          availableItems.push({
-            name: genderProducts[i].product_name,
-            category: genderProducts[i].category.replace(`${genderPrefix} `, ''),
-            image_url: getPlaceholderImage(genderProducts[i].category, gender)
+        // Add accessories if available
+        if (accessories.length > 0) {
+          outfit1Items.push({
+            name: accessories[0].name,
+            category: accessories[0].category,
+            image_url: accessories[0].image_url
           });
         }
 
         outfits.push({
-          name: "Curated Selection",
+          name: "Casual Chic",
+          style: "casual",
+          items: outfit1Items
+        });
+      }
+
+      // Outfit 2: With outerwear if available
+      if (outerwear.length > 0 && tops.length > 0 && bottoms.length > 0) {
+        const outfit2Items = [
+          {
+            name: outerwear[0].name,
+            category: outerwear[0].category,
+            image_url: outerwear[0].image_url
+          },
+          {
+            name: tops[0].name,
+            category: tops[0].category,
+            image_url: tops[0].image_url
+          },
+          {
+            name: bottoms[0].name,
+            category: bottoms[0].category,
+            image_url: bottoms[0].image_url
+          }
+        ];
+
+        if (shoes.length > 0) {
+          outfit2Items.push({
+            name: shoes[0].name,
+            category: shoes[0].category,
+            image_url: shoes[0].image_url
+          });
+        }
+
+        outfits.push({
+          name: "Professional Style",
           style: "professional",
+          items: outfit2Items
+        });
+      }
+
+      // Fallback: Create a simple outfit from any available products
+      if (outfits.length === 0) {
+        console.warn('Creating basic outfit from available products');
+        const availableItems = genderProducts.slice(0, 3).map(p => ({
+          name: p.name,
+          category: p.category,
+          image_url: p.image_url
+        }));
+
+        outfits.push({
+          name: "Curated Selection",
+          style: "casual",
           items: availableItems
         });
       }
     }
 
-    console.log(`Created ${outfits.length} outfits`);
+    console.log(`Created ${outfits.length} outfits from ${genderProducts.length} products`);
     return outfits;
   };
 
